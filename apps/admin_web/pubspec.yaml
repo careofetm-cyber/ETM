@@ -1,0 +1,39 @@
+name: admin_web
+description: ETM Admin Web Panel
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.4.9
+  go_router: ^13.0.0
+  google_fonts: ^6.1.0
+  fl_chart: ^0.66.0
+  data_table_2: ^2.5.8
+  flutter_staggered_animations: ^1.1.1
+  responsive_builder: ^0.7.0
+  dio: ^5.4.0
+  shared_preferences: ^2.2.2
+  etm_core:
+    path: ../../packages/core
+  etm_networking:
+    path: ../../packages/networking
+  excel: ^4.0.6
+  pdf: ^3.11.1
+  file_saver: ^0.2.9
+  csv: ^6.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/

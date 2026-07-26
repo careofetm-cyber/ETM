@@ -1,0 +1,96 @@
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:etm_networking/etm_networking.dart';
+
+String get baseUrl {
+  if (kIsWeb) return 'http://localhost:8080/api/v1';
+  if (Platform.isAndroid) return 'http://172.20.10.6:8080/api/v1';
+  return 'http://localhost:8080/api/v1';
+}
+
+final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async {
+  return await SharedPreferences.getInstance();
+});
+
+final dioProvider = Provider<Dio>((ref) {
+  final dio = Dio(BaseOptions(
+    baseUrl: baseUrl,
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
+  ));
+
+  dio.interceptors.add(InterceptorsWrapper(
+    onRequest: (options, handler) async {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
+      options.headers['Content-Type'] = 'application/json';
+      options.headers['Accept'] = 'application/json';
+      handler.next(options);
+    },
+    onError: (error, handler) async {
+      if (error.response?.statusCode == 401) {
+        final prefs = await SharedPreferences.getInstance();
+        final refreshToken = prefs.getString('refresh_token');
+        if (refreshToken != null) {
+          try {
+            final refreshDio = Dio(BaseOptions(baseUrl: baseUrl));
+            final response = await refreshDio.post('/auth/refresh', data: {'refreshToken': refreshToken});
+            final data = response.data;
+            await prefs.setString('auth_token', data['token']);
+            await prefs.setString('refresh_token', data['refreshToken']);
+            error.requestOptions.headers['Authorization'] = 'Bearer ${data['token']}';
+            final retryResponse = await dio.fetch(error.requestOptions);
+            return handler.resolve(retryResponse);
+          } catch (_) {
+            await prefs.clear();
+          }
+        }
+      }
+      handler.next(error);
+    },
+  ));
+
+  return dio;
+});
+
+final apiClientProvider = FutureProvider<ApiClient>((ref) async {
+  final dio = ref.watch(dioProvider);
+  final prefs = await ref.watch(sharedPreferencesProvider.future);
+  return ApiClient(dio, prefs, baseUrl: baseUrl);
+});
+
+final authApiProvider = FutureProvider<AuthApi>((ref) async {
+  final client = await ref.watch(apiClientProvider.future);
+  return AuthApi(client);
+});
+
+final dashboardApiProvider = FutureProvider<DashboardApi>((ref) async {
+  final client = await ref.watch(apiClientProvider.future);
+  return DashboardApi(client);
+});
+
+final tripApiProvider = FutureProvider<TripApi>((ref) async {
+  final client = await ref.watch(apiClientProvider.future);
+  return TripApi(client);
+});
+
+final rosterApiProvider = FutureProvider<RosterApi>((ref) async {
+  final client = await ref.watch(apiClientProvider.future);
+  return RosterApi(client.dio);
+});
+
+final otpApiProvider = FutureProvider<OtpApi>((ref) async {
+  final client = await ref.watch(apiClientProvider.future);
+  return OtpApi(client);
+});
+
+final attendanceApiProvider = FutureProvider<AttendanceApi>((ref) async {
+  final client = await ref.watch(apiClientProvider.future);
+  return AttendanceApi(client);
+});

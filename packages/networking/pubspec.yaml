@@ -1,0 +1,20 @@
+name: etm_networking
+description: API client and networking utilities for ETM system
+version: 1.0.0
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  http: ^1.1.0
+  dio: ^5.4.0
+  flutter_riverpod: ^2.4.9
+  shared_preferences: ^2.2.2
+  etm_core:
+    path: ../core
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mocktail: ^1.0.1
+  flutter_lints: ^3.0.1

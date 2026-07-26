@@ -1,0 +1,331 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:etm_core/etm_core.dart';
+import '../../shared/providers/api_providers.dart';
+
+final _companyProvider = FutureProvider<Company?>((ref) async {
+  try {
+    final api = await ref.watch(companyApiProvider.future);
+    return await api.getCompany('current');
+  } catch (e) {
+    return null;
+  }
+});
+
+class SettingsScreen extends ConsumerStatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _stateController = TextEditingController();
+  final _logoController = TextEditingController();
+  final _bgImageController = TextEditingController();
+  final _faviconController = TextEditingController();
+  final _tripCostController = TextEditingController();
+  final _minKmController = TextEditingController();
+  bool _isLoading = false;
+  bool _initialized = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    _logoController.dispose();
+    _bgImageController.dispose();
+    _faviconController.dispose();
+    _tripCostController.dispose();
+    _minKmController.dispose();
+    super.dispose();
+  }
+
+  void _initControllers(Company company) {
+    if (_initialized) return;
+    _nameController.text = company.name;
+    _emailController.text = company.email ?? '';
+    _phoneController.text = company.phone ?? '';
+    _addressController.text = company.address ?? '';
+    _cityController.text = company.city ?? '';
+    _stateController.text = company.state ?? '';
+    _logoController.text = company.logo ?? '';
+    _tripCostController.text = (company.tripCostPerTrip ?? 0).toString();
+    _minKmController.text = (company.minimumKmForBilling ?? 0).toString();
+    _initialized = true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final companyAsync = ref.watch(_companyProvider);
+
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Settings',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const Spacer(),
+                companyAsync.when(
+                  data: (company) {
+                    if (company != null) {
+                      return ElevatedButton.icon(
+                        onPressed: _isLoading ? null : () => _saveCompany(context),
+                        icon: _isLoading
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.save),
+                        label: const Text('Save'),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: companyAsync.when(
+                data: (company) {
+                  if (company == null) {
+                    return const Center(child: Text('Could not load company data'));
+                  }
+                  _initControllers(company);
+                  return _buildForm(company);
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text('Error: $error')),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForm(Company company) {
+    return Form(
+      key: _formKey,
+      child: ListView(
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Company Profile', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(labelText: 'Company Name *'),
+                    validator: (v) => v == null || v.isEmpty ? 'Company name is required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _emailController,
+                          decoration: const InputDecoration(labelText: 'Email'),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return null;
+                            if (!v.contains('@') || !v.contains('.')) return 'Invalid email format';
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _phoneController,
+                          decoration: const InputDecoration(labelText: 'Phone'),
+                          keyboardType: TextInputType.phone,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _addressController,
+                    decoration: const InputDecoration(labelText: 'Address'),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _cityController,
+                          decoration: const InputDecoration(labelText: 'City'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _stateController,
+                          decoration: const InputDecoration(labelText: 'State'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Branding', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _logoController,
+                    decoration: const InputDecoration(
+                      labelText: 'Logo URL',
+                      hintText: 'https://example.com/logo.png',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _bgImageController,
+                    decoration: const InputDecoration(
+                      labelText: 'Background Image URL',
+                      hintText: 'https://example.com/bg.jpg',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _faviconController,
+                    decoration: const InputDecoration(
+                      labelText: 'Favicon URL',
+                      hintText: 'https://example.com/favicon.ico',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Billing Settings', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _tripCostController,
+                          decoration: const InputDecoration(labelText: 'Trip Cost Per Trip (\$)'),
+                          keyboardType: TextInputType.number,
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return null;
+                            if (double.tryParse(v) == null) return 'Must be a number';
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _minKmController,
+                          decoration: const InputDecoration(labelText: 'Minimum KM for Billing'),
+                          keyboardType: TextInputType.number,
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return null;
+                            if (double.tryParse(v) == null) return 'Must be a number';
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Company URL Slug'),
+                    subtitle: Text(company.name.toLowerCase().replaceAll(' ', '-')),
+                    trailing: const Icon(Icons.copy),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Slug copied to clipboard'), backgroundColor: AppColors.success),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Plan'),
+                    subtitle: Text((company.plan ?? 'basic')[0].toUpperCase() + (company.plan ?? 'basic').substring(1)),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Subscription Status'),
+                    subtitle: Text((company.subscriptionStatus ?? 'active')[0].toUpperCase() + (company.subscriptionStatus ?? 'active').substring(1)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveCompany(BuildContext context) async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final api = await ref.read(companyApiProvider.future);
+      await api.updateCompany('current', {
+        'name': _nameController.text,
+        'email': _emailController.text,
+        'phone': _phoneController.text,
+        'address': _addressController.text,
+        'city': _cityController.text,
+        'state': _stateController.text,
+        'logo': _logoController.text,
+        'tripCostPerTrip': double.tryParse(_tripCostController.text) ?? 0,
+        'minimumKmForBilling': double.tryParse(_minKmController.text) ?? 0,
+      });
+      ref.invalidate(_companyProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Company settings saved'), backgroundColor: AppColors.success),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+}

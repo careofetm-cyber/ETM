@@ -1,0 +1,57 @@
+# Dart/Flutter
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/
+
+# Android
+*.jks
+*.keystore
+local.properties
+
+# iOS
+*.xcworkspace
+*.xcuserdata
+Pods/
+Runner.xcworkspace/xcshareddata/
+
+# macOS
+**/macos/Pods/
+**/macos/Flutter/ephemeral/
+
+# Web build output
+apps/admin_web/build/
+
+# APK outputs
+apps/employee_app/build/
+apps/driver_app/build/
+
+# Backend build
+backend/.dart_tool/
+backend/.packages
+backend/pubspec.lock
+
+# Packages
+packages/core/.dart_tool/
+packages/core/build/
+packages/core/pubspec.lock
+packages/networking/.dart_tool/
+packages/networking/build/
+packages/networking/pubspec.lock
+packages/maps/.dart_tool/
+packages/maps/build/
+packages/maps/pubspec.lock
+
+# OS files
+Thumbs.db
+.DS_Store
+*.swp
+*.swo
+
+# Misc
+*.log
+New Text Document.txt
