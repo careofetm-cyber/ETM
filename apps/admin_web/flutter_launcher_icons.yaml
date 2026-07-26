@@ -1,0 +1,10 @@
+flutter_launcher_icons:
+  image_path: "C:/Users/Harry/Documents/ETM/logo.png"
+  android: false
+  ios: false
+  web:
+    generate: true
+    image_path: "C:/Users/Harry/Documents/ETM/logo.png"
+    image_size: 512
+    background_color: "#0D1B2A"
+    theme_color: "#1B5E20"

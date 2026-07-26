@@ -1,0 +1,14 @@
+flutter_launcher_icons:
+  image_path: "C:/Users/Harry/Documents/ETM/logo.png"
+  android: true
+  ios: true
+  web:
+    generate: true
+    image_path: "C:/Users/Harry/Documents/ETM/logo.png"
+    image_size: 512
+    background_color: "#0D1B2A"
+    theme_color: "#1B5E20"
+  adaptive_icon_background: "#0D1B2A"
+  adaptive_icon_foreground: "C:/Users/Harry/Documents/ETM/logo.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
