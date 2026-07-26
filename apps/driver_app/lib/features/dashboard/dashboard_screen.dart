@@ -41,16 +41,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final width = MediaQuery.of(context).size.width;
+    final padding = width < 600 ? 16.0 : width < 900 ? 24.0 : 32.0;
     final greeting = DateTime.now().hour < 12 ? 'Good Morning' : DateTime.now().hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Dashboard'), centerTitle: false),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadData,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _loadData,
+                child: ListView(
+                  padding: EdgeInsets.all(padding),
                 children: [
                   Card(
                     child: Padding(
@@ -176,6 +179,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ],
               ),
             ),
+          ),
     );
   }
 }

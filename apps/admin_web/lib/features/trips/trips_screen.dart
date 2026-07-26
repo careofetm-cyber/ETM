@@ -121,84 +121,87 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   }
 
   Widget _buildTripsTable(List<Trip> trips) {
-    return DataTable2(
-      columns: const [
-        DataColumn2(label: Text('Route'), size: ColumnSize.L),
-        DataColumn2(label: Text('Vehicle')),
-        DataColumn2(label: Text('Driver')),
-        DataColumn2(label: Text('Type')),
-        DataColumn2(label: Text('Time')),
-        DataColumn2(label: Text('Status')),
-        DataColumn2(label: Text('Passengers')),
-        DataColumn2(label: Text('Actions'), size: ColumnSize.S),
-      ],
-      rows: trips.map((trip) {
-        return DataRow2(cells: [
-          DataCell(Text(trip.routeId)),
-          DataCell(Text(trip.vehicleId)),
-          DataCell(Text(trip.driverId)),
-          DataCell(_buildTypeChip(trip.type)),
-          DataCell(Text(
-            '${trip.scheduledTime.hour}:${trip.scheduledTime.minute.toString().padLeft(2, '0')}',
-          )),
-          DataCell(_buildStatusChip(trip.status)),
-          DataCell(Text(
-            '${trip.boardedPassengers ?? 0}/${trip.totalPassengers ?? 0}',
-          )),
-          DataCell(Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.visibility, size: 20),
-                onPressed: () => _showTripDetail(context, trip),
-              ),
-              if (trip.status == TripStatus.scheduled)
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable2(
+        columns: const [
+          DataColumn2(label: Text('Route'), size: ColumnSize.L),
+          DataColumn2(label: Text('Vehicle')),
+          DataColumn2(label: Text('Driver')),
+          DataColumn2(label: Text('Type')),
+          DataColumn2(label: Text('Time')),
+          DataColumn2(label: Text('Status')),
+          DataColumn2(label: Text('Passengers')),
+          DataColumn2(label: Text('Actions'), size: ColumnSize.S),
+        ],
+        rows: trips.map((trip) {
+          return DataRow2(cells: [
+            DataCell(Text(trip.routeId)),
+            DataCell(Text(trip.vehicleId)),
+            DataCell(Text(trip.driverId)),
+            DataCell(_buildTypeChip(trip.type)),
+            DataCell(Text(
+              '${trip.scheduledTime.hour}:${trip.scheduledTime.minute.toString().padLeft(2, '0')}',
+            )),
+            DataCell(_buildStatusChip(trip.status)),
+            DataCell(Text(
+              '${trip.boardedPassengers ?? 0}/${trip.totalPassengers ?? 0}',
+            )),
+            DataCell(Row(
+              children: [
                 IconButton(
-                  icon: const Icon(Icons.play_arrow, size: 20),
-                  onPressed: () async {
-                    try {
-                      final api = await ref.read(tripApiProvider.future);
-                      await api.startTrip(trip.id);
-                      ref.invalidate(tripsProvider);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Trip started'), backgroundColor: AppColors.success),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to start trip: $e'), backgroundColor: AppColors.error),
-                        );
-                      }
-                    }
-                  },
+                  icon: const Icon(Icons.visibility, size: 20),
+                  onPressed: () => _showTripDetail(context, trip),
                 ),
-              if (trip.status == TripStatus.inProgress)
-                IconButton(
-                  icon: const Icon(Icons.check_circle, size: 20, color: AppColors.success),
-                  onPressed: () async {
-                    try {
-                      final api = await ref.read(tripApiProvider.future);
-                      await api.completeTrip(trip.id);
-                      ref.invalidate(tripsProvider);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Trip completed'), backgroundColor: AppColors.success),
-                        );
+                if (trip.status == TripStatus.scheduled)
+                  IconButton(
+                    icon: const Icon(Icons.play_arrow, size: 20),
+                    onPressed: () async {
+                      try {
+                        final api = await ref.read(tripApiProvider.future);
+                        await api.startTrip(trip.id);
+                        ref.invalidate(tripsProvider);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Trip started'), backgroundColor: AppColors.success),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to start trip: $e'), backgroundColor: AppColors.error),
+                          );
+                        }
                       }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to complete trip: $e'), backgroundColor: AppColors.error),
-                        );
+                    },
+                  ),
+                if (trip.status == TripStatus.inProgress)
+                  IconButton(
+                    icon: const Icon(Icons.check_circle, size: 20, color: AppColors.success),
+                    onPressed: () async {
+                      try {
+                        final api = await ref.read(tripApiProvider.future);
+                        await api.completeTrip(trip.id);
+                        ref.invalidate(tripsProvider);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Trip completed'), backgroundColor: AppColors.success),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to complete trip: $e'), backgroundColor: AppColors.error),
+                          );
+                        }
                       }
-                    }
-                  },
-                ),
-            ],
-          )),
-        ]);
-      }).toList(),
+                    },
+                  ),
+              ],
+            )),
+          ]);
+        }).toList(),
+      ),
     );
   }
 

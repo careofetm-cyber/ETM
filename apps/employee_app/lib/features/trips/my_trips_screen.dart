@@ -52,15 +52,17 @@ class _MyTripsScreenState extends ConsumerState<MyTripsScreen> with SingleTicker
           ],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildTripList(_upcomingTrips, isUpcoming: true),
-                _buildTripList(_completedTrips, isUpcoming: false),
-              ],
-            ),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildTripList(_upcomingTrips, isUpcoming: true),
+                  _buildTripList(_completedTrips, isUpcoming: false),
+                ],
+              ),
+      ),
     );
   }
 

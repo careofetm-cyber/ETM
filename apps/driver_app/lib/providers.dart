@@ -84,3 +84,30 @@ final otpApiProvider = FutureProvider<OtpApi>((ref) async {
   final client = await ref.watch(apiClientProvider.future);
   return OtpApi(client);
 });
+
+enum AppThemeMode { light, dark, system }
+
+final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, AppThemeMode>((ref) {
+  return ThemeModeNotifier();
+});
+
+class ThemeModeNotifier extends StateNotifier<AppThemeMode> {
+  ThemeModeNotifier() : super(AppThemeMode.system) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getString('theme_mode') ?? 'system';
+    state = AppThemeMode.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => AppThemeMode.system,
+    );
+  }
+
+  Future<void> setTheme(AppThemeMode mode) async {
+    state = mode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('theme_mode', mode.name);
+  }
+}

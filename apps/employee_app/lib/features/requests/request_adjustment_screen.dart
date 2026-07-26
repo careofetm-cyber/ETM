@@ -52,8 +52,15 @@ class _RequestAdjustmentScreenState extends ConsumerState<RequestAdjustmentScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Request Adjustment')),
-      body: ListView(
+      appBar: AppBar(
+        title: const Text('Request Adjustment'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: SafeArea(
+        child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           const Text('Request Type', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -87,6 +94,7 @@ class _RequestAdjustmentScreenState extends ConsumerState<RequestAdjustmentScree
             ),
           ),
         ],
+      ),
       ),
     );
   }

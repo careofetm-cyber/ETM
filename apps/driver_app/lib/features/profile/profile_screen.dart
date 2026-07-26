@@ -87,14 +87,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final width = MediaQuery.of(context).size.width;
+    final padding = width < 600 ? 16.0 : width < 900 ? 24.0 : 32.0;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Profile'), centerTitle: false),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadProfile,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _loadProfile,
+                child: ListView(
+                  padding: EdgeInsets.all(padding),
                 children: [
                   Center(
                     child: CircleAvatar(
@@ -151,6 +155,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ],
               ),
             ),
+          ),
     );
   }
 }

@@ -174,8 +174,33 @@ class AdminLayout extends StatelessWidget {
 
   const AdminLayout({super.key, required this.child});
 
+  static const double _sidebarWidth = 260;
+  static const double _breakpoint = 768;
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < _breakpoint;
+
+    if (isMobile) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('ETM Admin'),
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
+        ),
+        drawer: const SizedBox(
+          width: _sidebarWidth,
+          child: Sidebar(),
+        ),
+        body: child,
+      );
+    }
+
     return Scaffold(
       body: Row(
         children: [

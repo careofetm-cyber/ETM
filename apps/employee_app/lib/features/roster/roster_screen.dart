@@ -44,42 +44,44 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('My Roster')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadRosters,
-              child: _rosters.isEmpty
-                  ? const Center(child: Text('No roster entries this week'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _rosters.length,
-                      itemBuilder: (context, index) {
-                        final roster = _rosters[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: roster['shiftType'] == 'morning' ? Colors.orange : Colors.indigo,
-                              child: Icon(
-                                roster['shiftType'] == 'morning' ? Icons.wb_sunny : Icons.nightlight_round,
-                                color: Colors.white,
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _loadRosters,
+                child: _rosters.isEmpty
+                    ? const Center(child: Text('No roster entries this week'))
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _rosters.length,
+                        itemBuilder: (context, index) {
+                          final roster = _rosters[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: roster['shiftType'] == 'morning' ? Colors.orange : Colors.indigo,
+                                child: Icon(
+                                  roster['shiftType'] == 'morning' ? Icons.wb_sunny : Icons.nightlight_round,
+                                  color: Colors.white,
+                                ),
                               ),
+                              title: Text(roster['date'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Route: ${roster['routeId'] ?? "N/A"}'),
+                                  Text('Stop: ${roster['stopId'] ?? "N/A"}'),
+                                  Text('Shift: ${roster['shiftType'] ?? "N/A"} | Status: ${roster['status'] ?? "N/A"}'),
+                                ],
+                              ),
+                              isThreeLine: true,
                             ),
-                            title: Text(roster['date'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Route: ${roster['routeId'] ?? "N/A"}'),
-                                Text('Stop: ${roster['stopId'] ?? "N/A"}'),
-                                Text('Shift: ${roster['shiftType'] ?? "N/A"} | Status: ${roster['status'] ?? "N/A"}'),
-                              ],
-                            ),
-                            isThreeLine: true,
-                          ),
-                        );
-                      },
-                    ),
-            ),
+                          );
+                        },
+                      ),
+              ),
+      ),
     );
   }
 }

@@ -142,61 +142,58 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
   }
 
   Widget _buildEmployeesTable(List<Employee> employees) {
-    return Column(
-      children: [
-        Expanded(
-          child: DataTable2(
-            columns: const [
-              DataColumn2(label: Text('Employee'), size: ColumnSize.L),
-              DataColumn2(label: Text('Code')),
-              DataColumn2(label: Text('Department')),
-              DataColumn2(label: Text('Email')),
-              DataColumn2(label: Text('Transport')),
-              DataColumn2(label: Text('Actions'), size: ColumnSize.S),
-            ],
-            rows: employees.map((employee) {
-              return DataRow2(cells: [
-                DataCell(Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(employee.userId),
-                    Text(
-                      employee.email ?? '-',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                )),
-                DataCell(Text(employee.employeeCode ?? '-')),
-                DataCell(Text(employee.department ?? '-')),
-                DataCell(Text(employee.email ?? '-')),
-                DataCell(Switch(
-                  value: employee.isTransportRequired ?? false,
-                  onChanged: (value) async {
-                    final api = await ref.read(employeeApiProvider.future);
-                    await api.updateEmployee(employee.id, {
-                      'isTransportRequired': value,
-                    });
-                    ref.invalidate(employeesProvider);
-                  },
-                )),
-                DataCell(Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 20),
-                      onPressed: () => _showEditEmployeeDialog(context, employee),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, size: 20, color: AppColors.error),
-                      onPressed: () => _showDeleteConfirmation(context, employee),
-                    ),
-                  ],
-                )),
-              ]);
-            }).toList(),
-          ),
-        ),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable2(
+        columns: const [
+          DataColumn2(label: Text('Employee'), size: ColumnSize.L),
+          DataColumn2(label: Text('Code')),
+          DataColumn2(label: Text('Department')),
+          DataColumn2(label: Text('Email')),
+          DataColumn2(label: Text('Transport')),
+          DataColumn2(label: Text('Actions'), size: ColumnSize.S),
+        ],
+        rows: employees.map((employee) {
+          return DataRow2(cells: [
+            DataCell(Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(employee.userId),
+                Text(
+                  employee.email ?? '-',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            )),
+            DataCell(Text(employee.employeeCode ?? '-')),
+            DataCell(Text(employee.department ?? '-')),
+            DataCell(Text(employee.email ?? '-')),
+            DataCell(Switch(
+              value: employee.isTransportRequired ?? false,
+              onChanged: (value) async {
+                final api = await ref.read(employeeApiProvider.future);
+                await api.updateEmployee(employee.id, {
+                  'isTransportRequired': value,
+                });
+                ref.invalidate(employeesProvider);
+              },
+            )),
+            DataCell(Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20),
+                  onPressed: () => _showEditEmployeeDialog(context, employee),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, size: 20, color: AppColors.error),
+                  onPressed: () => _showDeleteConfirmation(context, employee),
+                ),
+              ],
+            )),
+          ]);
+        }).toList(),
+      ),
     );
   }
 

@@ -160,29 +160,32 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   }
 
   Widget _buildAttendanceTable(List<Attendance> records) {
-    return DataTable2(
-      columns: const [
-        DataColumn2(label: Text('Employee'), size: ColumnSize.L),
-        DataColumn2(label: Text('Status')),
-        DataColumn2(label: Text('Check In')),
-        DataColumn2(label: Text('Check Out')),
-        DataColumn2(label: Text('Boarding')),
-        DataColumn2(label: Text('Trip')),
-      ],
-      rows: records.map((record) {
-        return DataRow2(cells: [
-          DataCell(Text(record.employeeId)),
-          DataCell(_buildStatusChip(record.status.name)),
-          DataCell(Text(record.checkInTime != null
-              ? '${record.checkInTime!.hour}:${record.checkInTime!.minute.toString().padLeft(2, '0')}'
-              : '-')),
-          DataCell(Text(record.checkOutTime != null
-              ? '${record.checkOutTime!.hour}:${record.checkOutTime!.minute.toString().padLeft(2, '0')}'
-              : '-')),
-          DataCell(Text(record.boardingMethod?.name.toUpperCase() ?? '-')),
-          DataCell(Text(record.tripId ?? '-')),
-        ]);
-      }).toList(),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable2(
+        columns: const [
+          DataColumn2(label: Text('Employee'), size: ColumnSize.L),
+          DataColumn2(label: Text('Status')),
+          DataColumn2(label: Text('Check In')),
+          DataColumn2(label: Text('Check Out')),
+          DataColumn2(label: Text('Boarding')),
+          DataColumn2(label: Text('Trip')),
+        ],
+        rows: records.map((record) {
+          return DataRow2(cells: [
+            DataCell(Text(record.employeeId)),
+            DataCell(_buildStatusChip(record.status.name)),
+            DataCell(Text(record.checkInTime != null
+                ? '${record.checkInTime!.hour}:${record.checkInTime!.minute.toString().padLeft(2, '0')}'
+                : '-')),
+            DataCell(Text(record.checkOutTime != null
+                ? '${record.checkOutTime!.hour}:${record.checkOutTime!.minute.toString().padLeft(2, '0')}'
+                : '-')),
+            DataCell(Text(record.boardingMethod?.name.toUpperCase() ?? '-')),
+            DataCell(Text(record.tripId ?? '-')),
+          ]);
+        }).toList(),
+      ),
     );
   }
 

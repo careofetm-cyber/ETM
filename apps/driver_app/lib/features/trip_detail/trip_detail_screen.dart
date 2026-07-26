@@ -142,8 +142,15 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
       'cancelled': 'Cancelled',
     };
 
+    final width = MediaQuery.of(context).size.width;
+    final padding = width < 600 ? 16.0 : width < 900 ? 24.0 : 32.0;
+
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text('Trip #${widget.tripId.substring(0, widget.tripId.length > 8 ? 8 : widget.tripId.length)}'),
         centerTitle: false,
         actions: [
@@ -158,25 +165,26 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 48, color: cs.error),
-                      const SizedBox(height: 12),
-                      Text(_error!, style: TextStyle(color: cs.error)),
-                      const SizedBox(height: 16),
-                      FilledButton(onPressed: _loadTrip, child: const Text('Retry')),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadTrip,
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 48, color: cs.error),
+                        const SizedBox(height: 12),
+                        Text(_error!, style: TextStyle(color: cs.error)),
+                        const SizedBox(height: 16),
+                        FilledButton(onPressed: _loadTrip, child: const Text('Retry')),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadTrip,
+                    child: ListView(
+                      padding: EdgeInsets.all(padding),
                     children: [
                       Card(
                         child: Padding(
@@ -357,6 +365,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                     ],
                   ),
                 ),
+              ),
     );
   }
 }

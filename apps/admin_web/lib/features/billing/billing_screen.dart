@@ -173,32 +173,35 @@ class _BillingRecordsTab extends ConsumerWidget {
                   if (records.isEmpty) {
                     return const Center(child: Text('No billing records found'));
                   }
-                  return DataTable2(
-                    columns: const [
-                      DataColumn2(label: Text('Company'), size: ColumnSize.L),
-                      DataColumn2(label: Text('Trip ID')),
-                      DataColumn2(label: Text('Distance')),
-                      DataColumn2(label: Text('Cost')),
-                      DataColumn2(label: Text('Billable')),
-                      DataColumn2(label: Text('Discard Reason')),
-                      DataColumn2(label: Text('Date')),
-                    ],
-                    rows: records.map((record) {
-                      return DataRow2(cells: [
-                        DataCell(Text(record.companyId)),
-                        DataCell(Text(record.tripId)),
-                        DataCell(Text('${record.distance.toStringAsFixed(2)} km')),
-                        DataCell(Text('\$${record.tripCost.toStringAsFixed(2)}')),
-                        DataCell(Chip(
-                          label: Text(record.isBillable == true ? 'Yes' : 'No'),
-                          backgroundColor: (record.isBillable == true ? AppColors.success : AppColors.textSecondary).withOpacity(0.1),
-                        )),
-                        DataCell(Text(record.discardReason ?? '-')),
-                        DataCell(Text(record.completedAt != null
-                            ? '${record.completedAt!.day}/${record.completedAt!.month}/${record.completedAt!.year}'
-                            : '-')),
-                      ]);
-                    }).toList(),
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable2(
+                      columns: const [
+                        DataColumn2(label: Text('Company'), size: ColumnSize.L),
+                        DataColumn2(label: Text('Trip ID')),
+                        DataColumn2(label: Text('Distance')),
+                        DataColumn2(label: Text('Cost')),
+                        DataColumn2(label: Text('Billable')),
+                        DataColumn2(label: Text('Discard Reason')),
+                        DataColumn2(label: Text('Date')),
+                      ],
+                      rows: records.map((record) {
+                        return DataRow2(cells: [
+                          DataCell(Text(record.companyId)),
+                          DataCell(Text(record.tripId)),
+                          DataCell(Text('${record.distance.toStringAsFixed(2)} km')),
+                          DataCell(Text('\$${record.tripCost.toStringAsFixed(2)}')),
+                          DataCell(Chip(
+                            label: Text(record.isBillable == true ? 'Yes' : 'No'),
+                            backgroundColor: (record.isBillable == true ? AppColors.success : AppColors.textSecondary).withOpacity(0.1),
+                          )),
+                          DataCell(Text(record.discardReason ?? '-')),
+                          DataCell(Text(record.completedAt != null
+                              ? '${record.completedAt!.day}/${record.completedAt!.month}/${record.completedAt!.year}'
+                              : '-')),
+                        ]);
+                      }).toList(),
+                    ),
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
@@ -275,42 +278,45 @@ class _InvoicesTab extends ConsumerWidget {
                   if (invoices.isEmpty) {
                     return const Center(child: Text('No invoices found'));
                   }
-                  return DataTable2(
-                    columns: const [
-                      DataColumn2(label: Text('Company'), size: ColumnSize.L),
-                      DataColumn2(label: Text('Month')),
-                      DataColumn2(label: Text('Total Trips')),
-                      DataColumn2(label: Text('Billable Trips')),
-                      DataColumn2(label: Text('Amount')),
-                      DataColumn2(label: Text('Status')),
-                      DataColumn2(label: Text('Due Date')),
-                      DataColumn2(label: Text('Actions'), size: ColumnSize.S),
-                    ],
-                    rows: invoices.map((invoice) {
-                      return DataRow2(cells: [
-                        DataCell(Text(invoice.companyId)),
-                        DataCell(Text(invoice.month)),
-                        DataCell(Text('${invoice.totalTrips}')),
-                        DataCell(Text('${invoice.billableTrips}')),
-                        DataCell(Text('\$${invoice.totalAmount.toStringAsFixed(2)}')),
-                        DataCell(_buildInvoiceStatusChip(invoice.status)),
-                        DataCell(Text(invoice.dueDate != null
-                            ? '${invoice.dueDate!.day}/${invoice.dueDate!.month}/${invoice.dueDate!.year}'
-                            : '-')),
-                        DataCell(
-                          invoice.status != 'paid'
-                              ? IconButton(
-                                  icon: const Icon(Icons.check_circle, size: 20, color: AppColors.success),
-                                  onPressed: () async {
-                                    final api = await ref.read(superAdminApiProvider.future);
-                                    await api.updateInvoice(invoice.id, {'status': 'paid'});
-                                    ref.invalidate(invoicesProvider);
-                                  },
-                                )
-                              : const Icon(Icons.check, color: AppColors.success, size: 20),
-                        ),
-                      ]);
-                    }).toList(),
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable2(
+                      columns: const [
+                        DataColumn2(label: Text('Company'), size: ColumnSize.L),
+                        DataColumn2(label: Text('Month')),
+                        DataColumn2(label: Text('Total Trips')),
+                        DataColumn2(label: Text('Billable Trips')),
+                        DataColumn2(label: Text('Amount')),
+                        DataColumn2(label: Text('Status')),
+                        DataColumn2(label: Text('Due Date')),
+                        DataColumn2(label: Text('Actions'), size: ColumnSize.S),
+                      ],
+                      rows: invoices.map((invoice) {
+                        return DataRow2(cells: [
+                          DataCell(Text(invoice.companyId)),
+                          DataCell(Text(invoice.month)),
+                          DataCell(Text('${invoice.totalTrips}')),
+                          DataCell(Text('${invoice.billableTrips}')),
+                          DataCell(Text('\$${invoice.totalAmount.toStringAsFixed(2)}')),
+                          DataCell(_buildInvoiceStatusChip(invoice.status)),
+                          DataCell(Text(invoice.dueDate != null
+                              ? '${invoice.dueDate!.day}/${invoice.dueDate!.month}/${invoice.dueDate!.year}'
+                              : '-')),
+                          DataCell(
+                            invoice.status != 'paid'
+                                ? IconButton(
+                                    icon: const Icon(Icons.check_circle, size: 20, color: AppColors.success),
+                                    onPressed: () async {
+                                      final api = await ref.read(superAdminApiProvider.future);
+                                      await api.updateInvoice(invoice.id, {'status': 'paid'});
+                                      ref.invalidate(invoicesProvider);
+                                    },
+                                  )
+                                : const Icon(Icons.check, color: AppColors.success, size: 20),
+                          ),
+                        ]);
+                      }).toList(),
+                    ),
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),

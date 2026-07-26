@@ -46,7 +46,10 @@ class Sidebar extends ConsumerWidget {
             label: 'Settings',
             route: '/settings',
             isSelected: currentRoute == '/settings',
-            onTap: () => context.go('/settings'),
+            onTap: () {
+              Navigator.of(context).maybePop();
+              context.go('/settings');
+            },
           ),
           Container(
             padding: const EdgeInsets.all(16),
@@ -252,7 +255,10 @@ class _NavItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-      onTap: onTap,
+      onTap: () {
+        Navigator.of(context).maybePop();
+        onTap();
+      },
     );
   }
 }

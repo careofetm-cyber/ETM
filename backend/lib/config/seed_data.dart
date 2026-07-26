@@ -375,6 +375,58 @@ class SeedData {
       'created_at': DateTime.now().toIso8601String(),
     });
 
+    // Live trip (inProgress) - always 2 minutes into the trip
+    final liveBoardingTime = now.subtract(const Duration(minutes: 5));
+    final liveStartTime = now.subtract(const Duration(minutes: 2));
+
+    db.insert('trips', {
+      'id': 'trip_004',
+      'route_id': route1Id,
+      'vehicle_id': 'veh_001',
+      'driver_id': 'usr_drv_01',
+      'type': 'pickup',
+      'status': 'inProgress',
+      'scheduled_time': now.toIso8601String(),
+      'actual_start_time': liveStartTime.toIso8601String(),
+      'boarding_time': liveBoardingTime.toIso8601String(),
+      'current_stop_id': 'stop_002',
+      'company_id': 'comp_001',
+      'total_passengers': 2,
+      'boarded_passengers': 2,
+      'total_distance': 8.2,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    // Live trip passengers (trip_004)
+    db.insert('trip_passengers', {
+      'id': 'tp_004', 'trip_id': 'trip_004', 'employee_id': 'usr_emp_01_emp', 'stop_id': 'stop_001',
+      'is_boarded': true, 'is_dropped': false, 'boarded_at': liveBoardingTime.add(const Duration(minutes: 1)).toIso8601String(),
+    });
+    db.insert('trip_passengers', {
+      'id': 'tp_005', 'trip_id': 'trip_004', 'employee_id': 'usr_emp_03_emp', 'stop_id': 'stop_002',
+      'is_boarded': true, 'is_dropped': false, 'boarded_at': liveBoardingTime.add(const Duration(minutes: 3)).toIso8601String(),
+    });
+
+    // Live trip OTP
+    db.insert('trip_otps', {
+      'id': 'otp_004',
+      'trip_id': 'trip_004',
+      'otp_code': '123456',
+      'employee_id': 'usr_emp_01_emp',
+      'is_verified': true,
+      'created_at': now.toIso8601String(),
+      'expires_at': now.add(const Duration(minutes: 30)).toIso8601String(),
+    });
+    db.insert('trip_otps', {
+      'id': 'otp_005',
+      'trip_id': 'trip_004',
+      'otp_code': '654321',
+      'employee_id': 'usr_emp_03_emp',
+      'is_verified': true,
+      'created_at': now.toIso8601String(),
+      'expires_at': now.add(const Duration(minutes: 30)).toIso8601String(),
+    });
+
     // Trip passengers
     db.insert('trip_passengers', {
       'id': 'tp_001', 'trip_id': 'trip_001', 'employee_id': 'usr_emp_01_emp', 'stop_id': 'stop_001',
@@ -508,11 +560,12 @@ class SeedData {
     print('  - ${vehicles.length} Vehicles');
     print('  - ${stops.length} Stops');
     print('  - 2 Routes');
-    print('  - 3 Trips');
-    print('  - 3 Attendance records');
+    print('  - 4 Trips (1 inProgress)');
+    print('  - 5 Attendance records');
     print('  - 2 Notifications');
     print('  - 2 Billing records');
     print('  - ${employeeIds.length * 5} Roster entries');
     print('  - 4 Vehicle documents');
+    print('  - 2 Trip OTPs');
   }
 }

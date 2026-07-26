@@ -41,9 +41,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Dashboard')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
                 padding: const EdgeInsets.all(16),
@@ -88,12 +89,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       const SizedBox(width: 12),
                       Expanded(child: _buildQuickAction(Icons.calendar_month, 'Roster', () => context.go('/roster'))),
                       const SizedBox(width: 12),
-                      Expanded(child: _buildQuickAction(Icons.swap_horiz, 'Requests', () => context.go('/request-adjustment'))),
+                      Expanded(child: _buildQuickAction(Icons.swap_horiz, 'Requests', () => context.push('/request-adjustment'))),
                     ],
                   ),
                 ],
               ),
             ),
+      ),
     );
   }
 

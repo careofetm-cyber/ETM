@@ -143,35 +143,38 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
   }
 
   Widget _buildVehiclesTable(List<Vehicle> vehicles) {
-    return DataTable2(
-      columns: const [
-        DataColumn2(label: Text('Vehicle'), size: ColumnSize.L),
-        DataColumn2(label: Text('Plate Number')),
-        DataColumn2(label: Text('Capacity')),
-        DataColumn2(label: Text('Status')),
-        DataColumn2(label: Text('Actions'), size: ColumnSize.S),
-      ],
-      rows: vehicles.map((vehicle) {
-        final statusStr = vehicle.status?.name ?? 'active';
-        return DataRow2(cells: [
-          DataCell(Text('${vehicle.brand} ${vehicle.model}')),
-          DataCell(Text(vehicle.plateNumber)),
-          DataCell(Text('${vehicle.seatingCapacity} seats')),
-          DataCell(_buildStatusChip(statusStr)),
-          DataCell(Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit, size: 20),
-                onPressed: () => _showEditVehicleDialog(context, vehicle),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete, size: 20, color: AppColors.error),
-                onPressed: () => _showDeleteConfirmation(context, vehicle),
-              ),
-            ],
-          )),
-        ]);
-      }).toList(),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable2(
+        columns: const [
+          DataColumn2(label: Text('Vehicle'), size: ColumnSize.L),
+          DataColumn2(label: Text('Plate Number')),
+          DataColumn2(label: Text('Capacity')),
+          DataColumn2(label: Text('Status')),
+          DataColumn2(label: Text('Actions'), size: ColumnSize.S),
+        ],
+        rows: vehicles.map((vehicle) {
+          final statusStr = vehicle.status?.name ?? 'active';
+          return DataRow2(cells: [
+            DataCell(Text('${vehicle.brand} ${vehicle.model}')),
+            DataCell(Text(vehicle.plateNumber)),
+            DataCell(Text('${vehicle.seatingCapacity} seats')),
+            DataCell(_buildStatusChip(statusStr)),
+            DataCell(Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20),
+                  onPressed: () => _showEditVehicleDialog(context, vehicle),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, size: 20, color: AppColors.error),
+                  onPressed: () => _showDeleteConfirmation(context, vehicle),
+                ),
+              ],
+            )),
+          ]);
+        }).toList(),
+      ),
     );
   }
 

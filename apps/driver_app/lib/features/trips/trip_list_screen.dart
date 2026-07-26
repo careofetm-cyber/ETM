@@ -62,6 +62,9 @@ class _TripListScreenState extends ConsumerState<TripListScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final width = MediaQuery.of(context).size.width;
+    final padding = width < 600 ? 16.0 : width < 900 ? 24.0 : 32.0;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Trips'),
@@ -75,33 +78,35 @@ class _TripListScreenState extends ConsumerState<TripListScreen> with SingleTick
           ],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 48, color: cs.error),
+                        const SizedBox(height: 12),
+                        Text(_error!, style: TextStyle(color: cs.error)),
+                        const SizedBox(height: 16),
+                        FilledButton(onPressed: _loadTrips, child: const Text('Retry')),
+                      ],
+                    ),
+                  )
+                : TabBarView(
+                    controller: _tabController,
                     children: [
-                      Icon(Icons.error_outline, size: 48, color: cs.error),
-                      const SizedBox(height: 12),
-                      Text(_error!, style: TextStyle(color: cs.error)),
-                      const SizedBox(height: 16),
-                      FilledButton(onPressed: _loadTrips, child: const Text('Retry')),
+                      _buildTripList(_todayTrips, showAction: true, padding: padding),
+                      _buildTripList(_upcomingTrips, showAction: false, padding: padding),
+                      _buildCompletedList(_completedTrips, padding: padding),
                     ],
                   ),
-                )
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildTripList(_todayTrips, showAction: true),
-                    _buildTripList(_upcomingTrips, showAction: false),
-                    _buildCompletedList(_completedTrips),
-                  ],
-                ),
+      ),
     );
   }
 
-  Widget _buildTripList(List<dynamic> trips, {required bool showAction}) {
+  Widget _buildTripList(List<dynamic> trips, {required bool showAction, double padding = 16}) {
     final cs = Theme.of(context).colorScheme;
     if (trips.isEmpty) {
       return Center(
@@ -119,7 +124,7 @@ class _TripListScreenState extends ConsumerState<TripListScreen> with SingleTick
     return RefreshIndicator(
       onRefresh: _loadTrips,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(padding),
         itemCount: trips.length,
         itemBuilder: (context, index) {
           final trip = trips[index];
@@ -200,7 +205,7 @@ class _TripListScreenState extends ConsumerState<TripListScreen> with SingleTick
     );
   }
 
-  Widget _buildCompletedList(List<dynamic> trips) {
+  Widget _buildCompletedList(List<dynamic> trips, {double padding = 16}) {
     final cs = Theme.of(context).colorScheme;
     if (trips.isEmpty) {
       return Center(
@@ -218,7 +223,7 @@ class _TripListScreenState extends ConsumerState<TripListScreen> with SingleTick
     return RefreshIndicator(
       onRefresh: _loadTrips,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(padding),
         itemCount: trips.length,
         itemBuilder: (context, index) {
           final trip = trips[index];

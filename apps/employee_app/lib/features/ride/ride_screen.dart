@@ -65,15 +65,17 @@ class _RideScreenState extends ConsumerState<RideScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? _buildError()
-              : _otpData == null || _trip == null
-                  ? _buildNoTrip()
-                  : _otpData!['verified'] == true
-                      ? _buildVerified()
-                      : _buildOtpView(),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? _buildError()
+                : _otpData == null || _trip == null
+                    ? _buildNoTrip()
+                    : _otpData!['verified'] == true
+                        ? _buildVerified()
+                        : _buildOtpView(),
+      ),
     );
   }
 
