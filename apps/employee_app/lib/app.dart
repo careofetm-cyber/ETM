@@ -10,6 +10,10 @@ import 'features/ride/ride_screen.dart';
 import 'features/requests/request_adjustment_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/sos/sos_screen.dart';
+import 'features/sos/incident_screen.dart';
+import 'features/tracking/tracking_screen.dart';
+import 'features/notifications/notifications_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -43,6 +47,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/request-adjustment',
         builder: (_, __) => const RequestAdjustmentScreen(),
+      ),
+      GoRoute(
+        path: '/sos',
+        builder: (_, __) => const SOSScreen(),
+      ),
+      GoRoute(
+        path: '/incidents',
+        builder: (_, __) => const IncidentScreen(),
+      ),
+      GoRoute(
+        path: '/tracking',
+        builder: (_, __) => const TrackingScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (_, __) => const NotificationsScreen(),
       ),
     ],
   );

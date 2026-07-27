@@ -223,6 +223,30 @@ class _RideScreenState extends ConsumerState<RideScreen> {
           ),
           const SizedBox(height: 16),
 
+          // SOS Button
+          SizedBox(
+            width: double.infinity,
+            child: Card(
+              color: Colors.red.shade50,
+              child: InkWell(
+                onTap: () => _showSOSDialog(),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.emergency, color: Colors.red, size: 24),
+                      const SizedBox(width: 10),
+                      Text('SOS - Emergency', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.red.shade700)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
           if (_passengers.isNotEmpty) ...[
             Text('Passengers (${_passengers.length})', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -269,6 +293,45 @@ class _RideScreenState extends ConsumerState<RideScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _showSOSDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.warning_amber_rounded, size: 48, color: Colors.red),
+        title: const Text('Send SOS Alert?'),
+        content: const Text('This will immediately alert your transport manager. Continue?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('SEND SOS'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      final dio = ref.read(dioProvider);
+      final tripId = _trip?['id'];
+      await dio.post('/sos/', data: {
+        'message': 'Emergency SOS alert from employee',
+        if (tripId != null) 'tripId': tripId,
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('SOS alert sent successfully'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send SOS: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Widget _buildVerified() {

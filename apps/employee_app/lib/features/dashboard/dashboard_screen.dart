@@ -81,6 +81,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ],
                   const SizedBox(height: 24),
+                  // SOS Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: Card(
+                      color: Colors.red.shade50,
+                      child: InkWell(
+                        onTap: () => _showSOSDialog(context),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.emergency, color: Colors.red, size: 28),
+                              const SizedBox(width: 12),
+                              Text('SOS - Emergency Alert', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red.shade700)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   Text('Quick Actions', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   Row(
@@ -90,6 +113,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       Expanded(child: _buildQuickAction(Icons.calendar_month, 'Roster', () => context.go('/roster'))),
                       const SizedBox(width: 12),
                       Expanded(child: _buildQuickAction(Icons.swap_horiz, 'Requests', () => context.push('/request-adjustment'))),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: _buildQuickAction(Icons.warning_amber, 'Report Incident', () => context.push('/incidents'))),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildQuickAction(Icons.location_on, 'Live Tracking', () => context.push('/tracking'))),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildQuickAction(Icons.notifications, 'Notifications', () => context.push('/notifications'))),
                     ],
                   ),
                 ],
@@ -113,6 +146,41 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showSOSDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.warning_amber_rounded, size: 48, color: Colors.red),
+        title: const Text('Send SOS Alert?'),
+        content: const Text('This will immediately alert your transport manager and emergency contacts. Continue?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('SEND SOS'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      final dio = ref.read(dioProvider);
+      await dio.post('/sos/', data: {'message': 'Emergency SOS alert from employee'});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('SOS alert sent successfully'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send SOS: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Widget _buildQuickAction(IconData icon, String label, VoidCallback onTap) {
