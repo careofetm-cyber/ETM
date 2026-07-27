@@ -26,10 +26,16 @@ COPY backend/ backend/
 RUN cd backend && dart compile exe bin/server.dart -o bin/server
 
 # Stage 2: Runtime
-FROM scratch
+FROM debian:bookworm-slim
 
-# Copy built binary and runtime dependencies
-COPY --from=build /runtime/lib/ /lib/
+# Install dart runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy built binary
 COPY --from=build /app/backend/bin/server/bin/server /app/server
 
 # Expose port
