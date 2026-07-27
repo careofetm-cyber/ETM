@@ -192,7 +192,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                         const SizedBox(height: 12),
                         Text(_error!, style: TextStyle(color: cs.error)),
                         const SizedBox(height: 16),
-                        FilledButton(onPressed: _loadTrip, child: const Text('Retry')),
+                        FilledButton.icon(onPressed: _loadTrip, icon: const Icon(Icons.refresh), label: const Text('Retry')),
                       ],
                     ),
                   )

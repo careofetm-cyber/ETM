@@ -143,13 +143,13 @@ class DashboardScreen extends ConsumerWidget {
                               );
                             }
                             return DataTable2(
-                              columns: const [
-                                DataColumn2(label: Text('Route'), size: ColumnSize.L),
-                                DataColumn2(label: Text('Vehicle')),
-                                DataColumn2(label: Text('Driver')),
-                                DataColumn2(label: Text('Type')),
-                                DataColumn2(label: Text('Status')),
-                                DataColumn2(label: Text('Passengers')),
+                              columns: [
+                                DataColumn2(label: Row(children: [Icon(Icons.route_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('Route')]), size: ColumnSize.L),
+                                DataColumn2(label: Row(children: [Icon(Icons.directions_bus_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('Vehicle')])),
+                                DataColumn2(label: Row(children: [Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('Driver')])),
+                                DataColumn2(label: Row(children: [Icon(Icons.swap_vert, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('Type')])),
+                                DataColumn2(label: Row(children: [Icon(Icons.info_outline, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('Status')])),
+                                DataColumn2(label: Row(children: [Icon(Icons.people_outline, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('Passengers')])),
                               ],
                               rows: trips.map((trip) {
                                 return DataRow2(cells: [
@@ -157,18 +157,20 @@ class DashboardScreen extends ConsumerWidget {
                                   DataCell(Text(trip.vehicleId)),
                                   DataCell(Text(trip.driverId)),
                                   DataCell(Text(trip.type == TripType.pickup ? 'Pickup' : 'Dropoff')),
-                                  DataCell(Chip(
-                                    label: Text(
-                                      trip.statusDisplay,
-                                      style: TextStyle(
-                                        color: AppColors.success,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
+                                  DataCell(Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.play_circle_outline_rounded, size: 14, color: AppColors.success),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        trip.statusDisplay,
+                                        style: TextStyle(
+                                          color: AppColors.success,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
-                                    ),
-                                    backgroundColor: AppColors.success.withOpacity(0.08),
-                                    side: BorderSide.none,
-                                    padding: EdgeInsets.zero,
+                                    ],
                                   )),
                                   DataCell(Text(
                                     '${trip.boardedPassengers ?? 0}/${trip.totalPassengers ?? 0}',

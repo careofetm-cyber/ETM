@@ -217,13 +217,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable2(
-        columns: const [
-          DataColumn2(label: Text('EMPLOYEE'), size: ColumnSize.L),
-          DataColumn2(label: Text('STATUS')),
-          DataColumn2(label: Text('CHECK IN')),
-          DataColumn2(label: Text('CHECK OUT')),
-          DataColumn2(label: Text('BOARDING')),
-          DataColumn2(label: Text('TRIP')),
+        columns: [
+          DataColumn2(label: Row(children: [Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('EMPLOYEE')]), size: ColumnSize.L),
+          DataColumn2(label: Row(children: [Icon(Icons.flag_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('STATUS')])),
+          DataColumn2(label: Row(children: [Icon(Icons.login_rounded, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('CHECK IN')])),
+          DataColumn2(label: Row(children: [Icon(Icons.logout_rounded, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('CHECK OUT')])),
+          DataColumn2(label: Row(children: [Icon(Icons.directions_bus_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('BOARDING')])),
+          DataColumn2(label: Row(children: [Icon(Icons.trip_origin_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('TRIP')])),
         ],
         rows: records.asMap().entries.map((entry) {
           final index = entry.key;
@@ -233,7 +233,20 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                 ? WidgetStateProperty.all(Colors.white)
                 : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
             cells: [
-              DataCell(Text(record.employeeId, style: const TextStyle(fontWeight: FontWeight.w500))),
+              DataCell(Row(
+                children: [
+                  CircleAvatar(
+                    radius: 14,
+                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    child: Text(
+                      (record.employeeId.isNotEmpty ? record.employeeId.substring(0, 1).toUpperCase() : 'U'),
+                      style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 11),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(record.employeeId, style: const TextStyle(fontWeight: FontWeight.w500)),
+                ],
+              )),
               DataCell(_buildStatusChip(record.status.name)),
               DataCell(Text(record.checkInTime != null
                   ? '${record.checkInTime!.hour}:${record.checkInTime!.minute.toString().padLeft(2, '0')}'
@@ -280,9 +293,17 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         label = status;
     }
 
-    return Chip(
-      label: Text(label, style: TextStyle(color: color)),
-      backgroundColor: color.withOpacity(0.1),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          status == 'present' ? Icons.check_circle : status == 'absent' ? Icons.cancel : status == 'late' ? Icons.access_time_rounded : Icons.event_busy_outlined,
+          size: 14,
+          color: color,
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500)),
+      ],
     );
   }
 

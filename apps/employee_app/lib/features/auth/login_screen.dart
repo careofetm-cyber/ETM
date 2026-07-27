@@ -73,9 +73,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     onPressed: _isLoading ? null : _login,
-                    child: _isLoading ? const CircularProgressIndicator() : const Text('Login'),
+                    icon: _isLoading
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.login),
+                    label: const Text('Login'),
                   ),
                 ),
               ],

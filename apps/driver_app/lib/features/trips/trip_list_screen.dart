@@ -205,9 +205,26 @@ class _TripListScreenState extends ConsumerState<TripListScreen> with SingleTick
                           color: statusColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          statusLabel,
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              status == 'inProgress'
+                                  ? Icons.play_circle_outline
+                                  : status == 'completed'
+                                      ? Icons.check_circle_outline
+                                      : status == 'cancelled'
+                                          ? Icons.cancel_outlined
+                                          : Icons.schedule_outlined,
+                              size: 11,
+                              color: statusColor,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              statusLabel,
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor),
+                            ),
+                          ],
                         ),
                       ),
                       const Spacer(),
@@ -324,7 +341,14 @@ class _TripListScreenState extends ConsumerState<TripListScreen> with SingleTick
               trailing: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
-                child: Text('Done', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green.shade700)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check, size: 12, color: Colors.green.shade700),
+                    const SizedBox(width: 4),
+                    Text('Done', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green.shade700)),
+                  ],
+                ),
               ),
             ),
           );

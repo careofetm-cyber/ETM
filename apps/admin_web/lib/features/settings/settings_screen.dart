@@ -131,11 +131,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Company Profile', style: Theme.of(context).textTheme.titleLarge),
+                  Row(
+                    children: [
+                      Icon(Icons.business_outlined, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text('Company Profile', style: Theme.of(context).textTheme.titleLarge),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Company Name *'),
+                    decoration: const InputDecoration(
+                      labelText: 'Company Name *',
+                      prefixIcon: Icon(Icons.business_outlined),
+                    ),
                     validator: (v) => v == null || v.isEmpty ? 'Company name is required' : null,
                   ),
                   const SizedBox(height: 16),
@@ -144,7 +153,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _emailController,
-                          decoration: const InputDecoration(labelText: 'Email'),
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            prefixIcon: Icon(Icons.email_outlined),
+                          ),
                           keyboardType: TextInputType.emailAddress,
                           validator: (v) {
                             if (v == null || v.isEmpty) return null;
@@ -157,7 +169,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _phoneController,
-                          decoration: const InputDecoration(labelText: 'Phone'),
+                          decoration: const InputDecoration(
+                            labelText: 'Phone',
+                            prefixIcon: Icon(Icons.phone_outlined),
+                          ),
                           keyboardType: TextInputType.phone,
                         ),
                       ),
@@ -166,7 +181,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _addressController,
-                    decoration: const InputDecoration(labelText: 'Address'),
+                    decoration: const InputDecoration(
+                      labelText: 'Address',
+                      prefixIcon: Icon(Icons.location_on_outlined),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -174,14 +192,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _cityController,
-                          decoration: const InputDecoration(labelText: 'City'),
+                          decoration: const InputDecoration(
+                            labelText: 'City',
+                            prefixIcon: Icon(Icons.location_city_outlined),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: TextFormField(
                           controller: _stateController,
-                          decoration: const InputDecoration(labelText: 'State'),
+                          decoration: const InputDecoration(
+                            labelText: 'State',
+                            prefixIcon: Icon(Icons.map_outlined),
+                          ),
                         ),
                       ),
                     ],
@@ -197,13 +221,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Branding', style: Theme.of(context).textTheme.titleLarge),
+                  Row(
+                    children: [
+                      Icon(Icons.palette_outlined, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text('Branding', style: Theme.of(context).textTheme.titleLarge),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _logoController,
                     decoration: const InputDecoration(
                       labelText: 'Logo URL',
                       hintText: 'https://example.com/logo.png',
+                      prefixIcon: Icon(Icons.image_outlined),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -212,6 +243,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Background Image URL',
                       hintText: 'https://example.com/bg.jpg',
+                      prefixIcon: Icon(Icons.photo_outlined),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -220,6 +252,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Favicon URL',
                       hintText: 'https://example.com/favicon.ico',
+                      prefixIcon: Icon(Icons.tab_outlined),
                     ),
                   ),
                 ],
@@ -233,14 +266,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Billing Settings', style: Theme.of(context).textTheme.titleLarge),
+                  Row(
+                    children: [
+                      Icon(Icons.attach_money_rounded, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text('Billing Settings', style: Theme.of(context).textTheme.titleLarge),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
                         child: TextFormField(
                           controller: _tripCostController,
-                          decoration: const InputDecoration(labelText: 'Trip Cost Per Trip (\$)'),
+                          decoration: const InputDecoration(
+                            labelText: 'Trip Cost Per Trip (\$)',
+                            prefixIcon: Icon(Icons.attach_money_rounded),
+                          ),
                           keyboardType: TextInputType.number,
                           validator: (v) {
                             if (v == null || v.isEmpty) return null;
@@ -253,7 +295,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _minKmController,
-                          decoration: const InputDecoration(labelText: 'Minimum KM for Billing'),
+                          decoration: const InputDecoration(
+                            labelText: 'Minimum KM for Billing',
+                            prefixIcon: Icon(Icons.straighten),
+                          ),
                           keyboardType: TextInputType.number,
                           validator: (v) {
                             if (v == null || v.isEmpty) return null;
@@ -267,6 +312,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 16),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.link, size: 20),
                     title: const Text('Company URL Slug'),
                     subtitle: Text(company.name.toLowerCase().replaceAll(' ', '-')),
                     trailing: const Icon(Icons.copy),
@@ -278,11 +324,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.card_membership, size: 20),
                     title: const Text('Plan'),
                     subtitle: Text((company.plan ?? 'basic')[0].toUpperCase() + (company.plan ?? 'basic').substring(1)),
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.verified_outlined, size: 20),
                     title: const Text('Subscription Status'),
                     subtitle: Text((company.subscriptionStatus ?? 'active')[0].toUpperCase() + (company.subscriptionStatus ?? 'active').substring(1)),
                   ),

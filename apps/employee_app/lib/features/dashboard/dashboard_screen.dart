@@ -99,14 +99,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         CircleAvatar(
           radius: 24,
           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: Text(
-            _userName.isNotEmpty ? _userName[0].toUpperCase() : 'E',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
+          child: _userName.isNotEmpty
+              ? Text(
+                  _userName[0].toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                )
+              : Icon(Icons.person, size: 24, color: Theme.of(context).colorScheme.primary),
         ),
       ],
     );

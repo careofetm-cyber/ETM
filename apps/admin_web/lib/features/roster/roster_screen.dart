@@ -112,10 +112,10 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
             controller: _tabController,
             isScrollable: true,
             tabs: [
-              Tab(text: 'Calendar View (${_rosters.length})'),
-              Tab(text: 'Requests (${_requests.where((r) => r['status'] == 'pending').length} pending)'),
-              const Tab(text: 'Bulk Operations'),
-              Tab(text: 'Manage Shifts (${_shifts.length})'),
+              Tab(child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.calendar_month_outlined, size: 18), const SizedBox(width: 6), Text('Calendar View (${_rosters.length})')])),
+              Tab(child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.swap_horiz_outlined, size: 18), const SizedBox(width: 6), Text('Requests (${_requests.where((r) => r['status'] == 'pending').length} pending)')])),
+              Tab(child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.admin_panel_settings_outlined, size: 18), const SizedBox(width: 6), const Text('Bulk Operations')])),
+              Tab(child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.access_time_rounded, size: 18), const SizedBox(width: 6), Text('Manage Shifts (${_shifts.length})')])),
             ],
           ),
           const SizedBox(height: 16),
@@ -156,9 +156,9 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
       child: Card(
         child: DataTable(
           columns: [
-            const DataColumn(label: Text('Employee', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Row(children: [Icon(Icons.person_outline, size: 16), const SizedBox(width: 6), const Text('Employee', style: TextStyle(fontWeight: FontWeight.bold))])),
             ...dates.map((d) => DataColumn(
-              label: Text(d.length > 5 ? d.substring(5) : d, style: const TextStyle(fontWeight: FontWeight.bold)),
+              label: Row(children: [Icon(Icons.calendar_today_outlined, size: 14), const SizedBox(width: 4), Text(d.length > 5 ? d.substring(5) : d, style: const TextStyle(fontWeight: FontWeight.bold))]),
             )),
           ],
           rows: _buildCalendarRows(dates, byDate),
@@ -173,11 +173,12 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
 
     return employeeIds.map((empId) {
       return DataRow(cells: [
-        DataCell(Text(empId.replaceAll('_emp', '').replaceAll('usr_', '').toUpperCase())),
+          DataCell(Text(empId.replaceAll('_emp', '').replaceAll('usr_', '').toUpperCase())),
         ...dates.map((date) {
           final entries = byDate[date]?.where((r) => r['employee_id'] == empId).toList() ?? [];
           if (entries.isEmpty) return const DataCell(Text('-'));
           final entry = entries.first;
+          final shiftType = entry['shift_type'] ?? '';
           return DataCell(
             Container(
               padding: const EdgeInsets.all(4),
@@ -189,7 +190,14 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(entry['shift_type'] ?? '', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(shiftType == 'morning' ? Icons.wb_sunny_outlined : Icons.nights_stay_outlined, size: 12, color: shiftType == 'morning' ? Colors.orange : Colors.indigo),
+                      const SizedBox(width: 3),
+                      Text(shiftType, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
                   Text(entry['route_id'] ?? '', style: const TextStyle(fontSize: 10, color: Colors.grey)),
                 ],
               ),
@@ -209,12 +217,12 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
       child: SingleChildScrollView(
         child: DataTable(
           columns: const [
-            DataColumn(label: Text('Employee')),
-            DataColumn(label: Text('Type')),
-            DataColumn(label: Text('Current')),
-            DataColumn(label: Text('Requested')),
-            DataColumn(label: Text('Status')),
-            DataColumn(label: Text('Actions')),
+            DataColumn(label: Row(children: [Icon(Icons.person_outline, size: 16), SizedBox(width: 6), Text('Employee')])),
+            DataColumn(label: Row(children: [Icon(Icons.swap_horiz_outlined, size: 16), SizedBox(width: 6), Text('Type')])),
+            DataColumn(label: Row(children: [Icon(Icons.event_outlined, size: 16), SizedBox(width: 6), Text('Current')])),
+            DataColumn(label: Row(children: [Icon(Icons.event_available_outlined, size: 16), SizedBox(width: 6), Text('Requested')])),
+            DataColumn(label: Row(children: [Icon(Icons.flag_outlined, size: 16), SizedBox(width: 6), Text('Status')])),
+            DataColumn(label: Row(children: [Icon(Icons.settings_outlined, size: 16), SizedBox(width: 6), Text('Actions')])),
           ],
           rows: _requests.map((req) {
             final statusColor = req['status'] == 'approved'
@@ -340,7 +348,13 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Create Roster Entry'),
+          title: const Row(
+            children: [
+              Icon(Icons.add_circle_outline, color: Color(0xFF2563EB)),
+              SizedBox(width: 8),
+              Text('Create Roster Entry'),
+            ],
+          ),
           content: SizedBox(
             width: 400,
             child: Column(
@@ -503,12 +517,12 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
                   : SingleChildScrollView(
                       child: DataTable(
                         columns: const [
-                          DataColumn(label: Text('Name', style: TextStyle(fontWeight: FontWeight.bold))),
-                          DataColumn(label: Text('Code', style: TextStyle(fontWeight: FontWeight.bold))),
-                          DataColumn(label: Text('Start Time', style: TextStyle(fontWeight: FontWeight.bold))),
-                          DataColumn(label: Text('End Time', style: TextStyle(fontWeight: FontWeight.bold))),
-                          DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
-                          DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Row(children: [Icon(Icons.badge_outlined, size: 16), const SizedBox(width: 6), Text('Name', style: TextStyle(fontWeight: FontWeight.bold))])),
+                      DataColumn(label: Row(children: [Icon(Icons.code, size: 16), const SizedBox(width: 6), Text('Code', style: TextStyle(fontWeight: FontWeight.bold))])),
+                      DataColumn(label: Row(children: [Icon(Icons.login_rounded, size: 16), const SizedBox(width: 6), Text('Start Time', style: TextStyle(fontWeight: FontWeight.bold))])),
+                      DataColumn(label: Row(children: [Icon(Icons.logout_rounded, size: 16), const SizedBox(width: 6), Text('End Time', style: TextStyle(fontWeight: FontWeight.bold))])),
+                      DataColumn(label: Row(children: [Icon(Icons.flag_outlined, size: 16), const SizedBox(width: 6), Text('Status', style: TextStyle(fontWeight: FontWeight.bold))])),
+                      DataColumn(label: Row(children: [Icon(Icons.settings_outlined, size: 16), const SizedBox(width: 6), Text('Actions', style: TextStyle(fontWeight: FontWeight.bold))])),
                         ],
                         rows: _shifts.map((shift) {
                           final isActive = shift['is_active'] == true || shift['isActive'] == true;

@@ -217,17 +217,17 @@ class _BillingRecordsTab extends ConsumerWidget {
                       ),
                     );
                   }
-                  return SingleChildScrollView(
+                    return SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: DataTable2(
-                      columns: const [
-                        DataColumn2(label: Text('COMPANY'), size: ColumnSize.L),
-                        DataColumn2(label: Text('TRIP ID')),
-                        DataColumn2(label: Text('DISTANCE')),
-                        DataColumn2(label: Text('COST')),
-                        DataColumn2(label: Text('BILLABLE')),
-                        DataColumn2(label: Text('DISCARD REASON')),
-                        DataColumn2(label: Text('DATE')),
+                      columns: [
+                        DataColumn2(label: Row(children: [Icon(Icons.business_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('COMPANY')]), size: ColumnSize.L),
+                        DataColumn2(label: Row(children: [Icon(Icons.trip_origin_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('TRIP ID')])),
+                        DataColumn2(label: Row(children: [Icon(Icons.straighten, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('DISTANCE')])),
+                        DataColumn2(label: Row(children: [Icon(Icons.attach_money_rounded, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('COST')])),
+                        DataColumn2(label: Row(children: [Icon(Icons.receipt_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('BILLABLE')])),
+                        DataColumn2(label: Row(children: [Icon(Icons.cancel_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('DISCARD REASON')])),
+                        DataColumn2(label: Row(children: [Icon(Icons.calendar_today_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('DATE')])),
                       ],
                       rows: records.asMap().entries.map((entry) {
                         final index = entry.key;
@@ -240,19 +240,29 @@ class _BillingRecordsTab extends ConsumerWidget {
                             DataCell(Text(record.companyId)),
                             DataCell(Text(record.tripId)),
                             DataCell(Text('${record.distance.toStringAsFixed(2)} km')),
-                            DataCell(Text('\$${record.tripCost.toStringAsFixed(2)}')),
-                            DataCell(Chip(
-                              label: Text(
-                                record.isBillable == true ? 'Yes' : 'No',
-                                style: TextStyle(
-                                  color: record.isBillable == true ? AppColors.success : AppColors.textSecondary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+                            DataCell(Row(
+                children: [
+                  Icon(Icons.attach_money_rounded, size: 14, color: AppColors.accent),
+                  const SizedBox(width: 4),
+                  Text(
+                    '\$${record.tripCost.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ],
+              )),
+                            DataCell(Row(
+                              children: [
+                                Icon(record.isBillable == true ? Icons.check_circle_outline : Icons.cancel_outlined, size: 14, color: record.isBillable == true ? AppColors.success : AppColors.textSecondary),
+                                const SizedBox(width: 4),
+                                Text(
+                                  record.isBillable == true ? 'Yes' : 'No',
+                                  style: TextStyle(
+                                    color: record.isBillable == true ? AppColors.success : AppColors.textSecondary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              ),
-                              backgroundColor: (record.isBillable == true ? AppColors.success : AppColors.textSecondary).withOpacity(0.08),
-                              side: BorderSide.none,
-                              padding: EdgeInsets.zero,
+                              ],
                             )),
                             DataCell(Text(record.discardReason ?? '-')),
                             DataCell(Text(record.completedAt != null
@@ -378,18 +388,18 @@ class _InvoicesTab extends ConsumerWidget {
                       ),
                     );
                   }
-                  return SingleChildScrollView(
+                    return SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: DataTable2(
-                      columns: const [
-                        DataColumn2(label: Text('COMPANY'), size: ColumnSize.L),
-                        DataColumn2(label: Text('MONTH')),
-                        DataColumn2(label: Text('TOTAL TRIPS')),
-                        DataColumn2(label: Text('BILLABLE TRIPS')),
-                        DataColumn2(label: Text('AMOUNT')),
-                        DataColumn2(label: Text('STATUS')),
-                        DataColumn2(label: Text('DUE DATE')),
-                        DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
+                      columns: [
+                        DataColumn2(label: Row(children: [Icon(Icons.business_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('COMPANY')]), size: ColumnSize.L),
+                        DataColumn2(label: Row(children: [Icon(Icons.calendar_today_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('MONTH')])),
+                        DataColumn2(label: Row(children: [Icon(Icons.trip_origin_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('TOTAL TRIPS')])),
+                        DataColumn2(label: Row(children: [Icon(Icons.receipt_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('BILLABLE TRIPS')])),
+                        DataColumn2(label: Row(children: [Icon(Icons.attach_money_rounded, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('AMOUNT')])),
+                        DataColumn2(label: Row(children: [Icon(Icons.flag_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('STATUS')])),
+                        DataColumn2(label: Row(children: [Icon(Icons.event_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('DUE DATE')])),
+                        DataColumn2(label: Row(children: [Icon(Icons.settings_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('ACTIONS')]), size: ColumnSize.S),
                       ],
                       rows: invoices.asMap().entries.map((entry) {
                         final index = entry.key;
@@ -458,6 +468,7 @@ class _InvoicesTab extends ConsumerWidget {
         color = AppColors.textSecondary;
     }
     return Chip(
+      avatar: Icon(status == 'paid' ? Icons.check_circle : status == 'overdue' ? Icons.warning_amber_rounded : Icons.schedule, size: 14, color: color),
       label: Text(status[0].toUpperCase() + status.substring(1), style: TextStyle(color: color)),
       backgroundColor: color.withOpacity(0.1),
     );

@@ -115,10 +115,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   CircleAvatar(
                     radius: isWide ? 32 : 28,
                     backgroundColor: Colors.white.withOpacity(0.2),
-                    child: Text(
-                      _userName.isNotEmpty ? _userName[0].toUpperCase() : 'E',
-                      style: TextStyle(fontSize: isWide ? 28 : 24, color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
+                    child: _userName.isNotEmpty
+                        ? Text(
+                            _userName[0].toUpperCase(),
+                            style: TextStyle(fontSize: isWide ? 28 : 24, color: Colors.white, fontWeight: FontWeight.bold),
+                          )
+                        : Icon(Icons.person, size: isWide ? 28 : 24, color: Colors.white),
                   ),
                   const SizedBox(width: 16),
                   Expanded(

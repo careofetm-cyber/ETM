@@ -172,9 +172,16 @@ class _MyTripsScreenState extends ConsumerState<MyTripsScreen> with SingleTicker
                           color: statusColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(
-                          status[0].toUpperCase() + status.substring(1),
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(_statusIcon(status), size: 12, color: statusColor),
+                            const SizedBox(width: 4),
+                            Text(
+                              status[0].toUpperCase() + status.substring(1),
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor),
+                            ),
+                          ],
                         ),
                       ),
                     ],

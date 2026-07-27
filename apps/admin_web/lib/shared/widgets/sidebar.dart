@@ -352,7 +352,7 @@ class Sidebar extends ConsumerWidget {
           onTap: () => context.go('/roster'),
         ),
         _NavItem(
-          icon: Icons.swap_horiz_rounded,
+          icon: Icons.swap_horiz_outlined,
           selectedIcon: Icons.swap_horiz_rounded,
           label: 'Transport Requests',
           route: '/transport-requests',

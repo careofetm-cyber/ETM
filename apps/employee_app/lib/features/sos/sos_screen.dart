@@ -262,7 +262,14 @@ class _SOSScreenState extends ConsumerState<SOSScreen> {
                           color: Colors.red.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text('ACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.red)),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.warning_amber, size: 10, color: Colors.red),
+                            SizedBox(width: 4),
+                            Text('ACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.red)),
+                          ],
+                        ),
                       ),
                     ],
                   ),

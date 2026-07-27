@@ -179,12 +179,12 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable2(
-        columns: const [
-          DataColumn2(label: Text('VEHICLE'), size: ColumnSize.L),
-          DataColumn2(label: Text('PLATE NUMBER')),
-          DataColumn2(label: Text('CAPACITY')),
-          DataColumn2(label: Text('STATUS')),
-          DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
+        columns: [
+          DataColumn2(label: Row(children: [Icon(Icons.directions_bus_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('VEHICLE')]), size: ColumnSize.L),
+          DataColumn2(label: Row(children: [Icon(Icons.pin_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('PLATE NUMBER')])),
+          DataColumn2(label: Row(children: [Icon(Icons.people_outline, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('CAPACITY')])),
+          DataColumn2(label: Row(children: [Icon(Icons.flag_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('STATUS')])),
+          DataColumn2(label: Row(children: [Icon(Icons.settings_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('ACTIONS')]), size: ColumnSize.S),
         ],
         rows: vehicles.asMap().entries.map((entry) {
           final index = entry.key;
@@ -195,9 +195,22 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                 ? WidgetStateProperty.all(Colors.white)
                 : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
             cells: [
-              DataCell(Text(
-                '${vehicle.brand} ${vehicle.model}',
-                style: const TextStyle(fontWeight: FontWeight.w500),
+              DataCell(Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(Icons.directions_bus_rounded, size: 16, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '${vehicle.brand} ${vehicle.model}',
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ],
               )),
               DataCell(Text(vehicle.plateNumber)),
               DataCell(Text('${vehicle.seatingCapacity} seats')),
@@ -205,6 +218,13 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
               DataCell(Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Tooltip(
+                    message: 'View',
+                    child: IconButton(
+                      icon: Icon(Icons.visibility_outlined, size: 18, color: AppColors.info),
+                      onPressed: () {},
+                    ),
+                  ),
                   Tooltip(
                     message: 'Edit',
                     child: IconButton(
@@ -250,10 +270,13 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
         label = status;
     }
 
-    return Chip(
-      label: Text(label, style: TextStyle(color: color)),
-      backgroundColor: color.withOpacity(0.1),
-      padding: EdgeInsets.zero,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(status == 'active' ? Icons.check_circle : status == 'maintenance' ? Icons.build_circle_outlined : Icons.cancel_outlined, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500)),
+      ],
     );
   }
 

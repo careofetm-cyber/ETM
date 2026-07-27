@@ -178,13 +178,13 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable2(
-        columns: const [
-          DataColumn2(label: Text('EMPLOYEE'), size: ColumnSize.L),
-          DataColumn2(label: Text('CODE')),
-          DataColumn2(label: Text('DEPARTMENT')),
-          DataColumn2(label: Text('EMAIL')),
-          DataColumn2(label: Text('TRANSPORT')),
-          DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
+        columns: [
+          DataColumn2(label: Row(children: [Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('EMPLOYEE')]), size: ColumnSize.L),
+          DataColumn2(label: Row(children: [Icon(Icons.badge_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('CODE')])),
+          DataColumn2(label: Row(children: [Icon(Icons.business_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('DEPARTMENT')])),
+          DataColumn2(label: Row(children: [Icon(Icons.email_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('EMAIL')])),
+          DataColumn2(label: Row(children: [Icon(Icons.directions_bus_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('TRANSPORT')])),
+          DataColumn2(label: Row(children: [Icon(Icons.settings_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('ACTIONS')]), size: ColumnSize.S),
         ],
         rows: employees.asMap().entries.map((entry) {
           final index = entry.key;
@@ -194,18 +194,35 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                 ? WidgetStateProperty.all(Colors.white)
                 : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
             cells: [
-              DataCell(Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              DataCell(Row(
                 children: [
-                  Text(
-                    employee.userId,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    child: Text(
+                      (employee.userId.isNotEmpty ? employee.userId.substring(0, 1).toUpperCase() : 'U'),
+                      style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12),
+                    ),
                   ),
-                  Text(
-                    employee.email ?? '-',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textTertiary,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          employee.userId,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          employee.email ?? '-',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -226,6 +243,13 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
               DataCell(Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Tooltip(
+                    message: 'View',
+                    child: IconButton(
+                      icon: Icon(Icons.visibility_outlined, size: 18, color: AppColors.info),
+                      onPressed: () {},
+                    ),
+                  ),
                   Tooltip(
                     message: 'Edit',
                     child: IconButton(

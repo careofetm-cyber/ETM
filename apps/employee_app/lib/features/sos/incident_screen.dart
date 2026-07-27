@@ -272,9 +272,16 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
                     color: severityColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    severity.toUpperCase(),
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: severityColor),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(_severityIcon(severity), size: 10, color: severityColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        severity.toUpperCase(),
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: severityColor),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -284,9 +291,23 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
                     color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    status.toUpperCase(),
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: statusColor),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        status == 'reported' ? Icons.report
+                            : status == 'investigating' ? Icons.search
+                            : status == 'resolved' ? Icons.check_circle
+                            : Icons.circle,
+                        size: 10,
+                        color: statusColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        status.toUpperCase(),
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: statusColor),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -400,10 +421,10 @@ class _ReportIncidentSheetState extends ConsumerState<_ReportIncidentSheet> {
               const SizedBox(height: 8),
               SegmentedButton<String>(
                 segments: const [
-                  ButtonSegment(value: 'low', label: Text('Low')),
-                  ButtonSegment(value: 'medium', label: Text('Medium')),
-                  ButtonSegment(value: 'high', label: Text('High')),
-                  ButtonSegment(value: 'critical', label: Text('Critical')),
+                  ButtonSegment(value: 'low', label: Text('Low'), icon: Icon(Icons.info_outline, size: 16)),
+                  ButtonSegment(value: 'medium', label: Text('Medium'), icon: Icon(Icons.info, size: 16)),
+                  ButtonSegment(value: 'high', label: Text('High'), icon: Icon(Icons.warning, size: 16)),
+                  ButtonSegment(value: 'critical', label: Text('Critical'), icon: Icon(Icons.error, size: 16)),
                 ],
                 selected: {_severity},
                 onSelectionChanged: (s) => setState(() => _severity = s.first),

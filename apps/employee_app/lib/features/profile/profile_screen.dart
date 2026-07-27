@@ -116,10 +116,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   CircleAvatar(
                     radius: 40,
                     backgroundColor: Colors.white.withOpacity(0.2),
-                    child: Text(
-                      _userName.isNotEmpty ? _userName[0].toUpperCase() : 'E',
-                      style: const TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
+                    child: _userName.isNotEmpty
+                        ? Text(
+                            _userName[0].toUpperCase(),
+                            style: const TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.bold),
+                          )
+                        : const Icon(Icons.person, size: 40, color: Colors.white),
                   ),
                   const SizedBox(height: 12),
                   Text(

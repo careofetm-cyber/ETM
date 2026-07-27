@@ -157,15 +157,15 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable2(
-        columns: const [
-          DataColumn2(label: Text('ROUTE'), size: ColumnSize.L),
-          DataColumn2(label: Text('VEHICLE')),
-          DataColumn2(label: Text('DRIVER')),
-          DataColumn2(label: Text('TYPE')),
-          DataColumn2(label: Text('TIME')),
-          DataColumn2(label: Text('STATUS')),
-          DataColumn2(label: Text('PASSENGERS')),
-          DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
+        columns: [
+          DataColumn2(label: Row(children: [Icon(Icons.route_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('ROUTE')]), size: ColumnSize.L),
+          DataColumn2(label: Row(children: [Icon(Icons.directions_bus_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('VEHICLE')])),
+          DataColumn2(label: Row(children: [Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('DRIVER')])),
+          DataColumn2(label: Row(children: [Icon(Icons.swap_vert, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('TYPE')])),
+          DataColumn2(label: Row(children: [Icon(Icons.access_time_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('TIME')])),
+          DataColumn2(label: Row(children: [Icon(Icons.flag_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('STATUS')])),
+          DataColumn2(label: Row(children: [Icon(Icons.people_outline, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('PASSENGERS')])),
+          DataColumn2(label: Row(children: [Icon(Icons.settings_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('ACTIONS')]), size: ColumnSize.S),
         ],
         rows: trips.asMap().entries.map((entry) {
           final index = entry.key;
@@ -175,9 +175,27 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                 ? WidgetStateProperty.all(Colors.white)
                 : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
             cells: [
-              DataCell(Text(trip.routeId, style: const TextStyle(fontWeight: FontWeight.w500))),
-              DataCell(Text(trip.vehicleId)),
-              DataCell(Text(trip.driverId)),
+              DataCell(Row(
+                children: [
+                  Icon(Icons.route_outlined, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  Text(trip.routeId, style: const TextStyle(fontWeight: FontWeight.w500)),
+                ],
+              )),
+              DataCell(Row(
+                children: [
+                  Icon(Icons.directions_bus_outlined, size: 16, color: AppColors.textSecondary),
+                  const SizedBox(width: 6),
+                  Text(trip.vehicleId),
+                ],
+              )),
+              DataCell(Row(
+                children: [
+                  Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary),
+                  const SizedBox(width: 6),
+                  Text(trip.driverId),
+                ],
+              )),
               DataCell(_buildTypeChip(trip.type)),
               DataCell(Text(
                 '${trip.scheduledTime.hour}:${trip.scheduledTime.minute.toString().padLeft(2, '0')}',
@@ -256,11 +274,14 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   }
 
   Widget _buildTypeChip(TripType type) {
-    return Chip(
-      label: Text(type == TripType.pickup ? 'Pickup' : 'Dropoff'),
-      backgroundColor: type == TripType.pickup
-          ? AppColors.primary.withOpacity(0.1)
-          : AppColors.secondary.withOpacity(0.1),
+    final isPickup = type == TripType.pickup;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(isPickup ? Icons.login_rounded : Icons.logout_rounded, size: 14, color: isPickup ? AppColors.primary : AppColors.secondary),
+        const SizedBox(width: 4),
+        Text(isPickup ? 'Pickup' : 'Dropoff', style: TextStyle(color: isPickup ? AppColors.primary : AppColors.secondary, fontSize: 12, fontWeight: FontWeight.w500)),
+      ],
     );
   }
 
@@ -287,9 +308,13 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
         break;
     }
 
-    return Chip(
-      label: Text(label, style: TextStyle(color: color)),
-      backgroundColor: color.withOpacity(0.1),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(status == TripStatus.scheduled ? Icons.schedule_outlined : status == TripStatus.inProgress ? Icons.play_circle_outline_rounded : status == TripStatus.completed ? Icons.check_circle_outline_rounded : Icons.cancel_outlined, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500)),
+      ],
     );
   }
 
