@@ -1,0 +1,74 @@
+name: Deploy ETM to Firebase
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  FIREBASE_PROJECT: etm-transport
+
+jobs:
+  deploy-admin-web:
+    name: Deploy Admin Web to Firebase Hosting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: apps/admin_web
+
+      - name: Build web
+        run: flutter build web --release
+        working-directory: apps/admin_web
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          channelId: live
+          projectId: ${{ env.FIREBASE_PROJECT }}
+
+  deploy-backend:
+    name: Deploy Backend to Cloud Run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.FIREBASE_PROJECT }}
+          service_account_key: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
+
+      - name: Build Docker image
+        run: docker build -t gcr.io/${{ env.FIREBASE_PROJECT }}/etm-backend ./backend
+
+      - name: Push to Container Registry
+        run: docker push gcr.io/${{ env.FIREBASE_PROJECT }}/etm-backend
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy etm-backend \
+            --image gcr.io/${{ env.FIREBASE_PROJECT }}/etm-backend \
+            --platform managed \
+            --region asia-south1 \
+            --allow-unauthenticated \
+            --port 8080 \
+            --memory 512Mi \
+            --min-instances 0 \
+            --max-instances 3

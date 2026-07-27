@@ -1,27 +1,39 @@
-# Build stage
-FROM dart:stable AS build
+# Dockerfile for ETM Backend (Dart Shelf API)
+# Multi-stage build for smaller final image
+
+# Stage 1: Build
+FROM dart:3.5-sdk AS build
 
 WORKDIR /app
 
-# Copy dependency files
-COPY pubspec.* ./
-RUN dart pub get
+# Copy dependency files first for better caching
+COPY pubspec.yaml pubspec.lock* ./
+COPY packages/core/pubspec.yaml packages/core/
+COPY packages/networking/pubspec.yaml packages/networking/
+COPY packages/maps/pubspec.yaml packages/maps/
+
+# Copy backend pubspec
+COPY backend/pubspec.yaml backend/
+
+# Get dependencies
+RUN cd backend && dart pub get
 
 # Copy source code
-COPY . .
+COPY packages/ packages/
+COPY backend/ backend/
 
-# Build the server
-RUN dart compile exe bin/server.dart -o bin/server
+# Build
+RUN cd backend && dart compile exe bin/server.dart -o bin/server
 
-# Runtime stage
+# Stage 2: Runtime
 FROM scratch
 
-# Copy built binary
-COPY --from=build /runtime/ /
-COPY --from=build /app/bin/server /app/bin/server
+# Copy built binary and runtime dependencies
+COPY --from=build /runtime/lib/ /lib/
+COPY --from=build /app/backend/bin/server/bin/server /app/server
 
 # Expose port
 EXPOSE 8080
 
-# Run the server
-CMD ["/app/bin/server"]
+# Run
+CMD ["/app/server"]
