@@ -6,9 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:etm_networking/etm_networking.dart';
 
 String get baseUrl {
-  if (kIsWeb) return 'http://localhost:8080/api/v1';
-  if (Platform.isAndroid) return 'http://172.20.10.6:8080/api/v1';
-  return 'http://localhost:8080/api/v1';
+  if (kIsWeb) return 'https://etm-gp12.onrender.com/api/v1';
+  return 'https://etm-gp12.onrender.com/api/v1';
 }
 
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async {
@@ -18,8 +17,8 @@ final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
     baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
+    connectTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(seconds: 60),
   ));
 
   dio.interceptors.add(InterceptorsWrapper(
