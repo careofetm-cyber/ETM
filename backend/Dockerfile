@@ -9,11 +9,11 @@ WORKDIR /app
 # Copy all source
 COPY . .
 
-# Get backend dependencies (Flutter SDK provides Dart + Flutter)
+# Get backend dependencies
 RUN cd backend && flutter pub get --no-example
 
 # Build the server binary
-RUN cd backend && dart compile exe bin/server.dart -o bin/server
+RUN cd backend && dart compile exe bin/server.dart -o /app/server
 
 # Stage 2: Runtime (minimal image)
 FROM debian:bookworm-slim
@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY --from=build /app/backend/bin/server/bin/server /app/server
+COPY --from=build /app/server /app/server
 
 EXPOSE 8080
 CMD ["/app/server"]
