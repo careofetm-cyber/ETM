@@ -40,16 +40,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: currentPwController, decoration: const InputDecoration(labelText: 'Current Password', border: OutlineInputBorder()), obscureText: true),
+            TextField(controller: currentPwController, decoration: const InputDecoration(labelText: 'Current Password', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock_outline)), obscureText: true),
             const SizedBox(height: 12),
-            TextField(controller: newPwController, decoration: const InputDecoration(labelText: 'New Password', border: OutlineInputBorder()), obscureText: true),
+            TextField(controller: newPwController, decoration: const InputDecoration(labelText: 'New Password', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock_reset)), obscureText: true),
             const SizedBox(height: 12),
-            TextField(controller: confirmPwController, decoration: const InputDecoration(labelText: 'Confirm New Password', border: OutlineInputBorder()), obscureText: true),
+            TextField(controller: confirmPwController, decoration: const InputDecoration(labelText: 'Confirm New Password', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock)), obscureText: true),
           ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
+          FilledButton.icon(
             onPressed: () async {
               if (newPwController.text != confirmPwController.text) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
@@ -71,7 +71,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 }
               }
             },
-            child: const Text('Change'),
+            icon: const Icon(Icons.check),
+            label: const Text('Change'),
           ),
         ],
       ),
@@ -84,58 +85,117 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth >= 600;
     final horizontalPadding = isWide ? screenWidth * 0.15 : 16.0;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
         child: ListView(
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 16),
           children: [
-            Center(
-              child: CircleAvatar(
-                radius: isWide ? 48 : 40,
-                backgroundColor: const Color(0xFF2563EB),
-                child: Text(
-                  _userName.isNotEmpty ? _userName[0].toUpperCase() : 'E',
-                  style: TextStyle(fontSize: isWide ? 36 : 32, color: Colors.white),
+            // Profile Header
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primary, cs.primary.withOpacity(0.8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: cs.primary.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-            Center(child: Text(_userName, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold))),
-            Center(child: Text(_userRole.toUpperCase(), style: const TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w500))),
-            const SizedBox(height: 24),
-
-            Card(
-              child: Column(
+              child: Row(
                 children: [
-                  SwitchListTile(
-                    secondary: Icon(isDarkMode ? Icons.dark_mode : Icons.light_mode),
-                    title: const Text('Dark Mode'),
-                    subtitle: Text(isDarkMode ? 'Dark theme active' : 'Light theme active'),
-                    value: isDarkMode,
-                    onChanged: (value) {
-                      ref.read(themeModeProvider.notifier).state = value;
-                    },
+                  CircleAvatar(
+                    radius: isWide ? 32 : 28,
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    child: Text(
+                      _userName.isNotEmpty ? _userName[0].toUpperCase() : 'E',
+                      style: TextStyle(fontSize: isWide ? 28 : 24, color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_userName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(height: 2),
+                        Text(
+                          _userRole.toUpperCase(),
+                          style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+
+            // Appearance
+            _buildSectionHeader('Appearance'),
+            const SizedBox(height: 8),
+            Card(
+              child: SwitchListTile(
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: (isDarkMode ? const Color(0xFF6366F1) : const Color(0xFFF59E0B)).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                    color: isDarkMode ? const Color(0xFF6366F1) : const Color(0xFFF59E0B),
+                    size: 20,
+                  ),
+                ),
+                title: const Text('Dark Mode'),
+                subtitle: Text(isDarkMode ? 'Dark theme active' : 'Light theme active'),
+                value: isDarkMode,
+                onChanged: (value) {
+                  ref.read(themeModeProvider.notifier).state = value;
+                },
+              ),
+            ),
             const SizedBox(height: 16),
 
+            // Account
+            _buildSectionHeader('Account'),
+            const SizedBox(height: 8),
             Card(
               child: Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.lock_reset, color: Colors.orange),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59E0B).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.lock_reset, color: Color(0xFFF59E0B), size: 20),
+                    ),
                     title: const Text('Change Password'),
                     subtitle: const Text('Update your account password'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: _showChangePasswordDialog,
                   ),
-                  const Divider(height: 1),
+                  const Divider(height: 1, indent: 72),
                   ListTile(
-                    leading: const Icon(Icons.info_outline, color: Colors.blue),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2563EB).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.info_outline, color: Color(0xFF2563EB), size: 20),
+                    ),
                     title: const Text('About'),
                     subtitle: const Text('App version & details'),
                     trailing: const Icon(Icons.chevron_right),
@@ -153,10 +213,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       );
                     },
                   ),
-                  const Divider(height: 1),
+                  const Divider(height: 1, indent: 72),
                   ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.red),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.logout, color: Colors.red, size: 20),
+                    ),
                     title: const Text('Logout', style: TextStyle(color: Colors.red)),
+                    subtitle: const Text('Sign out of your account'),
+                    trailing: const Icon(Icons.chevron_right),
                     onTap: () async {
                       final prefs = await ref.read(sharedPreferencesProvider.future);
                       await prefs.clear();
@@ -167,6 +236,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Theme.of(context).colorScheme.primary,
+          letterSpacing: 0.5,
         ),
       ),
     );

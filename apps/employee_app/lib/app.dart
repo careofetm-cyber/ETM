@@ -82,11 +82,47 @@ class EmployeeApp extends ConsumerWidget {
         useMaterial3: true,
         colorSchemeSeed: const Color(0xFF2563EB),
         brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF5F7FA),
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          scrolledUnderElevation: 1,
+          centerTitle: false,
+          backgroundColor: Color(0xFFF5F7FA),
+          foregroundColor: Colors.black87,
+          titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
+        ),
+        cardTheme: CardThemeData(
+          elevation: 1,
+          shadowColor: Colors.black12,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          margin: EdgeInsets.zero,
+        ),
+        navigationBarTheme: NavigationBarThemeData(
+          elevation: 2,
+          backgroundColor: Colors.white,
+          indicatorColor: const Color(0xFF2563EB).withOpacity(0.12),
+        ),
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: const Color(0xFF2563EB),
         brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          scrolledUnderElevation: 1,
+          centerTitle: false,
+        ),
+        cardTheme: CardThemeData(
+          elevation: 1,
+          shadowColor: Colors.black26,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          margin: EdgeInsets.zero,
+        ),
+        navigationBarTheme: NavigationBarThemeData(
+          elevation: 2,
+          indicatorColor: const Color(0xFF2563EB).withOpacity(0.2),
+        ),
       ),
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       routerConfig: router,
@@ -105,8 +141,10 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   static const _tabs = ['/home', '/trips', '/roster', '/ride', '/profile', '/settings'];
 
+  static const _tabTitles = ['Dashboard', 'My Trips', 'Roster', 'My Ride', 'Profile', 'Settings'];
+
   static const _destinations = [
-    NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
+    NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Home'),
     NavigationDestination(icon: Icon(Icons.route_outlined), selectedIcon: Icon(Icons.route), label: 'Trips'),
     NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Roster'),
     NavigationDestination(icon: Icon(Icons.directions_bus_outlined), selectedIcon: Icon(Icons.directions_bus), label: 'Ride'),
@@ -115,7 +153,7 @@ class _AppShellState extends State<AppShell> {
   ];
 
   static const _railDestinations = [
-    NavigationRailDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: Text('Home')),
+    NavigationRailDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: Text('Home')),
     NavigationRailDestination(icon: Icon(Icons.route_outlined), selectedIcon: Icon(Icons.route), label: Text('Trips')),
     NavigationRailDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: Text('Roster')),
     NavigationRailDestination(icon: Icon(Icons.directions_bus_outlined), selectedIcon: Icon(Icons.directions_bus), label: Text('Ride')),
@@ -130,18 +168,31 @@ class _AppShellState extends State<AppShell> {
     final selectedIndex = index >= 0 ? index : 0;
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth >= 600;
+    final cs = Theme.of(context).colorScheme;
+
+    final actions = [
+      IconButton(
+        icon: const Icon(Icons.notifications_outlined),
+        onPressed: () => context.push('/notifications'),
+        tooltip: 'Notifications',
+      ),
+    ];
 
     if (isWide) {
       return Scaffold(
+        appBar: AppBar(
+          title: Text(_tabTitles[selectedIndex]),
+          actions: actions,
+        ),
         body: Row(
           children: [
             NavigationRail(
               selectedIndex: selectedIndex,
               onDestinationSelected: (i) => context.go(_tabs[i]),
               labelType: NavigationRailLabelType.all,
-              leading: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Icon(Icons.directions_bus, size: 32, color: Color(0xFF2563EB)),
+              leading: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Icon(Icons.directions_bus, size: 32, color: cs.primary),
               ),
               destinations: _railDestinations,
             ),
@@ -153,11 +204,17 @@ class _AppShellState extends State<AppShell> {
     }
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(_tabTitles[selectedIndex]),
+        actions: actions,
+      ),
       body: widget.child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (i) => context.go(_tabs[i]),
         destinations: _destinations,
+        height: 72,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
     );
   }

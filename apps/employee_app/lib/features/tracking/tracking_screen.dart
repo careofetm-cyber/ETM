@@ -42,11 +42,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         return;
       }
 
-      // Get employee info to find current trip
       final empResp = await dio.get('/employees/$userId');
       final employeeId = empResp.data['id'] ?? '${userId}_emp';
 
-      // Try to get OTP/trip info
       try {
         final otpResp = await dio.get('/otp/employee/$employeeId');
         _activeTrip = otpResp.data['trip'];
@@ -73,7 +71,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       appBar: AppBar(
         title: const Text('Live Tracking'),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: () => _loadTracking()),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: () => _loadTracking(), tooltip: 'Refresh'),
         ],
       ),
       body: SafeArea(
@@ -93,11 +91,22 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: _loadTracking, child: const Text('Retry')),
+            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15)),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: _loadTracking,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
           ],
         ),
       ),
@@ -112,11 +121,18 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.location_off_outlined, size: 64, color: Colors.grey.shade400),
-              const SizedBox(height: 16),
-              Text('No Active Trip', style: TextStyle(fontSize: 18, color: Colors.grey.shade600)),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.location_off_outlined, size: 56, color: Theme.of(context).colorScheme.outline),
+              ),
+              const SizedBox(height: 20),
+              Text('No Active Trip', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey.shade600)),
               const SizedBox(height: 8),
-              const Text('No trip is currently in progress to track.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+              Text('No trip is currently in progress to track.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade500)),
             ],
           ),
         ),
@@ -127,12 +143,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     final driverName = _activeTrip!['driverName'] ?? '';
     final vehiclePlate = _activeTrip!['vehiclePlate'] ?? _activeTrip!['plate_number'] ?? '';
     final latestLog = _gpsLogs.isNotEmpty ? _gpsLogs.last : null;
+    final cs = Theme.of(context).colorScheme;
 
     return RefreshIndicator(
       onRefresh: () => _loadTracking(),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Trip Info Card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -144,10 +162,10 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
+                          color: cs.primaryContainer,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(Icons.directions_bus, color: Theme.of(context).colorScheme.onPrimaryContainer),
+                        child: Icon(Icons.directions_bus, color: cs.onPrimaryContainer),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -163,14 +181,24 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: Colors.green.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF059669).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
-                            const SizedBox(width: 4),
-                            const Text('LIVE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green)),
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(color: Color(0xFF059669), shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'LIVE',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF059669)),
+                            ),
                           ],
                         ),
                       ),
@@ -182,22 +210,43 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
           ),
           const SizedBox(height: 16),
 
+          // Location Card
           if (latestLog != null) ...[
             Card(
-              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Current Location', style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: cs.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(Icons.location_on, color: cs.primary, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Text('Current Location', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(height: 1),
+                    const SizedBox(height: 12),
                     _locationRow('Latitude', '${latestLog['latitude']}'),
+                    const SizedBox(height: 4),
                     _locationRow('Longitude', '${latestLog['longitude']}'),
-                    if (latestLog['speed'] != null)
+                    if (latestLog['speed'] != null) ...[
+                      const SizedBox(height: 4),
                       _locationRow('Speed', '${latestLog['speed']} km/h'),
-                    if (latestLog['heading'] != null)
+                    ],
+                    if (latestLog['heading'] != null) ...[
+                      const SizedBox(height: 4),
                       _locationRow('Heading', '${latestLog['heading']}°'),
+                    ],
+                    const SizedBox(height: 4),
                     _locationRow('Last Updated', '${latestLog['timestamp'] ?? 'Unknown'}'),
                   ],
                 ),
@@ -206,13 +255,31 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             const SizedBox(height: 16),
           ],
 
-          Text('GPS History (${_gpsLogs.length} points)', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          // GPS History
+          Row(
+            children: [
+              Icon(Icons.history, size: 20, color: cs.primary),
+              const SizedBox(width: 8),
+              Text(
+                'GPS History (${_gpsLogs.length} points)',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
           if (_gpsLogs.isEmpty)
-            const Card(
+            Card(
               child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: Text('No GPS data available yet')),
+                padding: const EdgeInsets.all(24),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.gps_off, size: 40, color: Colors.grey.shade400),
+                      const SizedBox(height: 8),
+                      Text('No GPS data available yet', style: TextStyle(color: Colors.grey.shade500)),
+                    ],
+                  ),
+                ),
               ),
             )
           else
@@ -224,23 +291,40 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final log = _gpsLogs[_gpsLogs.length - 1 - index];
+                  final isLatest = index == 0;
+
                   return ListTile(
                     dense: true,
-                    leading: Icon(
-                      index == 0 ? Icons.location_on : Icons.circle,
-                      size: index == 0 ? 24 : 8,
-                      color: index == 0 ? Colors.red : Colors.grey,
+                    leading: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: isLatest ? cs.primary.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isLatest ? Icons.location_on : Icons.circle,
+                        size: isLatest ? 18 : 8,
+                        color: isLatest ? cs.primary : Colors.grey,
+                      ),
                     ),
                     title: Text(
                       '${log['latitude']}, ${log['longitude']}',
-                      style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
+                      style: TextStyle(fontSize: 13, fontFamily: 'monospace', fontWeight: isLatest ? FontWeight.w600 : FontWeight.normal),
                     ),
                     subtitle: Text(
                       '${log['timestamp'] ?? ''}',
                       style: const TextStyle(fontSize: 11),
                     ),
                     trailing: log['speed'] != null
-                        ? Text('${log['speed']} km/h', style: const TextStyle(fontSize: 12))
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text('${log['speed']} km/h', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500)),
+                          )
                         : null,
                   );
                 },
@@ -252,15 +336,12 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   }
 
   Widget _locationRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w500, fontFamily: 'monospace', fontSize: 13)),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w500, fontFamily: 'monospace', fontSize: 13)),
+      ],
     );
   }
 }

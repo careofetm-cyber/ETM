@@ -71,13 +71,31 @@ class DriverApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF059669),
+        colorSchemeSeed: const Color(0xFF2563EB),
         brightness: Brightness.light,
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          scrolledUnderElevation: 1,
+        ),
+        cardTheme: CardThemeData(
+          elevation: 1,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          margin: const EdgeInsets.only(bottom: 12),
+        ),
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF059669),
+        colorSchemeSeed: const Color(0xFF2563EB),
         brightness: Brightness.dark,
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          scrolledUnderElevation: 1,
+        ),
+        cardTheme: CardThemeData(
+          elevation: 1,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          margin: const EdgeInsets.only(bottom: 12),
+        ),
       ),
       themeMode: themeMode,
       routerConfig: router,
@@ -100,17 +118,32 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final currentPath = GoRouterState.of(context).matchedLocation;
     final index = _tabs.indexOf(currentPath);
+    final cs = Theme.of(context).colorScheme;
+    final titles = {'/dashboard': 'Dashboard', '/trips': 'My Trips', '/profile': 'Profile', '/settings': 'Settings'};
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(titles[currentPath] ?? 'ETM Driver'),
+        centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {},
+          ),
+        ],
+      ),
       body: widget.child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: index >= 0 ? index : 0,
         onDestinationSelected: (i) => context.go(_tabs[i]),
+        indicatorColor: cs.primaryContainer,
+        height: 72,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Home'),
           NavigationDestination(icon: Icon(Icons.route_outlined), selectedIcon: Icon(Icons.route), label: 'Trips'),
           NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
+          NavigationDestination(icon: Icon(Icons.tune_outlined), selectedIcon: Icon(Icons.tune), label: 'Settings'),
         ],
       ),
     );

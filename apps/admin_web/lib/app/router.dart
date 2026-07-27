@@ -177,6 +177,38 @@ class AdminLayout extends StatelessWidget {
   static const double _sidebarWidth = 260;
   static const double _breakpoint = 768;
 
+  String _getPageTitle(BuildContext context) {
+    final location = GoRouterState.of(context).matchedLocation;
+    switch (location) {
+      case '/dashboard': return 'Dashboard';
+      case '/super-dashboard': return 'Dashboard';
+      case '/vehicles': return 'Vehicles';
+      case '/routes': return 'Routes';
+      case '/trips': return 'Trips';
+      case '/employees': return 'Employees';
+      case '/drivers': return 'Drivers';
+      case '/attendance': return 'Attendance';
+      case '/incidents': return 'Incidents';
+      case '/notifications': return 'Notifications';
+      case '/settings': return 'Settings';
+      case '/companies': return 'Companies';
+      case '/billing': return 'Billing';
+      case '/super-settings': return 'System Settings';
+      case '/user-management': return 'User Management';
+      case '/role-permissions': return 'Role Permissions';
+      case '/employee-portal': return 'Employee Portal';
+      case '/reports': return 'Reports';
+      case '/transport-manager': return 'Transport Manager';
+      case '/roster': return 'Roster';
+      case '/vehicle-documents': return 'Vehicle Documents';
+      case '/transport-requests': return 'Transport Requests';
+      case '/sos-alerts': return 'SOS Alerts';
+      case '/ncns': return 'NCNS';
+      case '/hcm-integration': return 'HCM Integration';
+      default: return 'Dashboard';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
@@ -201,11 +233,83 @@ class AdminLayout extends StatelessWidget {
       );
     }
 
+    final pageTitle = _getPageTitle(context);
+
     return Scaffold(
       body: Row(
         children: [
           const Sidebar(),
-          Expanded(child: child),
+          Expanded(
+            child: Column(
+              children: [
+                Container(
+                  height: 56,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: const Color(0xFFE8ECF0),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.home_outlined,
+                        size: 16,
+                        color: AppColors.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Home',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textTertiary,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 16,
+                        color: AppColors.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        pageTitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.notifications_outlined, size: 20),
+                        color: AppColors.textTertiary,
+                        tooltip: 'Notifications',
+                        onPressed: () {},
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.help_outline_rounded, size: 20),
+                        color: AppColors.textTertiary,
+                        tooltip: 'Help',
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    color: const Color(0xFFF0F4F8),
+                    child: child,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -104,11 +104,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   Color _typeColor(String type) {
     switch (type) {
-      case 'trip': return Colors.blue;
-      case 'attendance': return Colors.green;
-      case 'emergency': return Colors.red;
-      case 'maintenance': return Colors.orange;
-      case 'system': return Colors.purple;
+      case 'trip': return const Color(0xFF2563EB);
+      case 'attendance': return const Color(0xFF059669);
+      case 'emergency': return const Color(0xFFDC2626);
+      case 'maintenance': return const Color(0xFFD97706);
+      case 'system': return const Color(0xFF7C3AED);
       default: return Colors.grey;
     }
   }
@@ -120,11 +120,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         title: const Text('Notifications'),
         actions: [
           if (_unreadCount > 0)
-            TextButton(
+            TextButton.icon(
               onPressed: _markAllAsRead,
-              child: const Text('Mark all read'),
+              icon: const Icon(Icons.done_all, size: 18),
+              label: const Text('Mark all read'),
             ),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData, tooltip: 'Refresh'),
         ],
       ),
       body: SafeArea(
@@ -139,29 +140,33 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         if (_unreadCount > 0)
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
                             child: Row(
                               children: [
-                                Icon(Icons.circle, size: 10, color: Theme.of(context).colorScheme.primary),
+                                Icon(Icons.circle_notifications, size: 20, color: Theme.of(context).colorScheme.primary),
                                 const SizedBox(width: 8),
-                                Text('$_unreadCount unread notification${_unreadCount == 1 ? '' : 's'}',
-                                    style: const TextStyle(fontWeight: FontWeight.w500)),
+                                Text(
+                                  '$_unreadCount unread notification${_unreadCount == 1 ? '' : 's'}',
+                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                ),
                               ],
                             ),
                           ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                           child: Row(
                             children: [
                               FilterChip(
                                 label: const Text('All'),
+                                avatar: const Icon(Icons.notifications, size: 18),
                                 selected: !_showUnreadOnly,
                                 onSelected: (_) { _showUnreadOnly = false; _loadData(); },
                               ),
                               const SizedBox(width: 8),
                               FilterChip(
                                 label: Text('Unread ($_unreadCount)'),
+                                avatar: Icon(Icons.mark_email_unread, size: 18, color: _showUnreadOnly ? Theme.of(context).colorScheme.primary : null),
                                 selected: _showUnreadOnly,
                                 onSelected: (_) { _showUnreadOnly = true; _loadData(); },
                               ),
@@ -174,9 +179,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.notifications_none, size: 64, color: Colors.grey.shade300),
-                                      const SizedBox(height: 12),
-                                      Text('No notifications', style: TextStyle(color: Colors.grey.shade500)),
+                                      Icon(Icons.notifications_none, size: 64, color: Theme.of(context).colorScheme.outlineVariant),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'No notifications',
+                                        style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                      ),
                                     ],
                                   ),
                                 )
@@ -188,7 +196,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                                       return Center(
                                         child: Padding(
                                           padding: const EdgeInsets.all(16),
-                                          child: FilledButton(onPressed: _loadMore, child: const Text('Load More')),
+                                          child: FilledButton.icon(
+                                            onPressed: _loadMore,
+                                            icon: const Icon(Icons.expand_more),
+                                            label: const Text('Load More'),
+                                          ),
                                         ),
                                       );
                                     }
@@ -210,11 +222,22 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: _loadData, child: const Text('Retry')),
+            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15)),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: _loadData,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
           ],
         ),
       ),
@@ -224,31 +247,43 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget _buildNotificationTile(dynamic notification) {
     final isRead = notification['is_read'] == true || notification['isRead'] == true;
     final type = notification['type'] ?? 'general';
+    final typeColor = _typeColor(type);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: isRead ? null : Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1),
+      color: isRead ? null : Theme.of(context).colorScheme.primaryContainer.withOpacity(0.08),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: _typeColor(type).withOpacity(0.15),
-          child: Icon(_typeIcon(type), color: _typeColor(type), size: 20),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: typeColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(_typeIcon(type), color: typeColor, size: 20),
         ),
         title: Text(
           notification['title'] ?? 'Notification',
-          style: TextStyle(fontWeight: isRead ? FontWeight.normal : FontWeight.bold),
+          style: TextStyle(fontWeight: isRead ? FontWeight.normal : FontWeight.w600, fontSize: 14),
         ),
-        subtitle: Text(
-          notification['body'] ?? '',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            notification['body'] ?? '',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+          ),
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (!isRead)
               Container(
-                width: 8, height: 8,
-                decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(color: Color(0xFF2563EB), shape: BoxShape.circle),
               ),
             const SizedBox(height: 4),
             Text(

@@ -35,55 +35,72 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final themeMode = ref.watch(themeModeProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings'), centerTitle: false),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
               child: ListView(
                 padding: EdgeInsets.all(padding),
                 children: [
-                  Center(
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: cs.primaryContainer,
-                      child: Text(
-                        _userName.isNotEmpty ? _userName[0].toUpperCase() : 'D',
-                        style: TextStyle(
-                          color: cs.onPrimaryContainer,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [cs.primary, cs.primary.withOpacity(0.8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: cs.primary.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Text(
-                      _userName,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        _userRole[0].toUpperCase() + _userRole.substring(1),
-                        style: TextStyle(
-                          color: cs.onPrimaryContainer,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 36,
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          child: Text(
+                            _userName.isNotEmpty ? _userName[0].toUpperCase() : 'D',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 10),
+                        Text(
+                          _userName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            _userRole[0].toUpperCase() + _userRole.substring(1),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
 
                   Text(
                     'Appearance',
@@ -133,20 +150,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     child: Column(
                       children: [
                         ListTile(
-                          leading: Icon(Icons.info_outline, color: cs.primary),
-                          title: const Text('App Version'),
-                          trailing: Text(
-                            '1.0.0',
-                            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: cs.primaryContainer, borderRadius: BorderRadius.circular(10)),
+                            child: Icon(Icons.info_outline, color: cs.onPrimaryContainer, size: 20),
+                          ),
+                          title: const Text('App Version', style: TextStyle(fontWeight: FontWeight.w500)),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(color: cs.primaryContainer, borderRadius: BorderRadius.circular(8)),
+                            child: Text('1.0.0', style: TextStyle(color: cs.onPrimaryContainer, fontSize: 13, fontWeight: FontWeight.w600)),
                           ),
                         ),
                         Divider(height: 1, indent: 56, color: cs.outlineVariant),
                         ListTile(
-                          leading: Icon(Icons.business, color: cs.primary),
-                          title: const Text('Organization'),
-                          trailing: Text(
-                            'ETM',
-                            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: BorderRadius.circular(10)),
+                            child: Icon(Icons.business, color: Colors.teal.shade700, size: 20),
+                          ),
+                          title: const Text('Organization', style: TextStyle(fontWeight: FontWeight.w500)),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: BorderRadius.circular(8)),
+                            child: Text('ETM', style: TextStyle(color: Colors.teal.shade700, fontSize: 13, fontWeight: FontWeight.w600)),
                           ),
                         ),
                       ],
@@ -164,8 +191,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 8),
                   Card(
                     child: ListTile(
-                      leading: const Icon(Icons.logout, color: Colors.red),
-                      title: const Text('Logout', style: TextStyle(color: Colors.red)),
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(10)),
+                        child: Icon(Icons.logout, color: Colors.red.shade600, size: 20),
+                      ),
+                      title: Text('Logout', style: TextStyle(color: Colors.red.shade600, fontWeight: FontWeight.w500)),
                       onTap: () async {
                         final prefs = await ref.read(sharedPreferencesProvider.future);
                         await prefs.clear();
@@ -198,8 +229,15 @@ class _ThemeOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return ListTile(
-      leading: Icon(icon, color: selected ? cs.primary : cs.onSurfaceVariant),
-      title: Text(title),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: selected ? cs.primaryContainer : cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: selected ? cs.onPrimaryContainer : cs.onSurfaceVariant, size: 20),
+      ),
+      title: Text(title, style: TextStyle(fontWeight: selected ? FontWeight.w600 : FontWeight.w500)),
       trailing: selected
           ? Icon(Icons.check_circle, color: cs.primary)
           : Icon(Icons.circle_outlined, color: cs.outline),

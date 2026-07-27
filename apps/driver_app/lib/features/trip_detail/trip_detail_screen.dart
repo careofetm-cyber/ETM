@@ -145,6 +145,14 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     final width = MediaQuery.of(context).size.width;
     final padding = width < 600 ? 16.0 : width < 900 ? 24.0 : 32.0;
 
+    final statusColors = {
+      'scheduled': cs.primary,
+      'in_progress': Colors.orange,
+      'inProgress': Colors.orange,
+      'completed': Colors.green,
+      'cancelled': Colors.red,
+    };
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -156,12 +164,19 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: status == 'completed' ? cs.tertiary.withOpacity(0.15) : cs.primaryContainer,
-              borderRadius: BorderRadius.circular(6),
+              color: (statusColors[status] ?? cs.primary).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(statusLabels[status] ?? status, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: status == 'completed' ? cs.tertiary : cs.onPrimaryContainer)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.circle, size: 8, color: statusColors[status] ?? cs.primary),
+                const SizedBox(width: 6),
+                Text(statusLabels[status] ?? status, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: statusColors[status] ?? cs.primary)),
+              ],
+            ),
           ),
         ],
       ),
@@ -195,9 +210,14 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(color: cs.primaryContainer, borderRadius: BorderRadius.circular(10)),
-                                    child: Icon(Icons.directions_bus, color: cs.onPrimaryContainer),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [cs.primary, cs.primary.withOpacity(0.8)],
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(Icons.directions_bus, color: Colors.white, size: 24),
                                   ),
                                   const SizedBox(width: 14),
                                   Expanded(
@@ -229,32 +249,42 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
 
                       if (status == 'scheduled') ...[
                         Card(
-                          color: cs.primaryContainer.withOpacity(0.3),
                           child: Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(20),
                             child: Column(
                               children: [
-                                Icon(Icons.pin, size: 36, color: cs.primary),
-                                const SizedBox(height: 8),
-                                Text('Ask the passenger for their OTP', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: cs.primaryContainer,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.lock_outline, size: 32, color: cs.onPrimaryContainer),
+                                ),
+                                const SizedBox(height: 12),
+                                Text('Enter OTP to Start Trip', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 4),
+                                Text('Ask the passenger for their OTP', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                                 const SizedBox(height: 16),
                                 TextField(
                                   controller: _otpController,
                                   decoration: InputDecoration(
-                                    hintText: 'Enter 6-digit OTP',
+                                    hintText: '• • • • • •',
                                     border: const OutlineInputBorder(),
-                                    prefixIcon: const Icon(Icons.lock_outline),
+                                    prefixIcon: const Icon(Icons.pin_outlined),
                                     errorText: _otpError,
+                                    filled: true,
+                                    fillColor: cs.surfaceContainerHighest.withOpacity(0.3),
                                   ),
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 24, letterSpacing: 8),
+                                  style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
                                   maxLength: 6,
                                 ),
                                 const SizedBox(height: 12),
                                 SizedBox(
                                   width: double.infinity,
-                                  height: 48,
+                                  height: 50,
                                   child: FilledButton.icon(
                                     onPressed: _isVerifyingOtp ? null : _verifyOtp,
                                     icon: _isVerifyingOtp
@@ -273,43 +303,60 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                       if (status == 'in_progress' || status == 'inProgress') ...[
                         SizedBox(
                           width: double.infinity,
-                          height: 48,
-                          child: FilledButton(
+                          height: 50,
+                          child: FilledButton.icon(
                             onPressed: _isCompleting ? null : _completeTrip,
-                            style: FilledButton.styleFrom(backgroundColor: cs.tertiary),
-                            child: _isCompleting
+                            icon: _isCompleting
                                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                : const Text('Complete Trip'),
+                                : const Icon(Icons.check_circle_outline),
+                            label: const Text('Complete Trip'),
+                            style: FilledButton.styleFrom(backgroundColor: Colors.green.shade600),
                           ),
                         ),
                         const SizedBox(height: 16),
                       ],
 
                       if (status == 'completed') ...[
-                        Card(
-                          color: cs.tertiary.withOpacity(0.1),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.check_circle, color: cs.tertiary),
-                                const SizedBox(width: 8),
-                                Text('Trip Completed', style: TextStyle(fontWeight: FontWeight.bold, color: cs.tertiary)),
-                              ],
-                            ),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green.shade200),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.check_circle, color: Colors.green.shade600),
+                              const SizedBox(width: 8),
+                              Text('Trip Completed', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green.shade700)),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 16),
                       ],
 
-                      Text('Passengers', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.people_outlined, color: cs.primary, size: 20),
+                          const SizedBox(width: 8),
+                          Text('Passengers (${_passengers.length})', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
                       if (_passengers.isEmpty)
                         Card(
                           child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Center(child: Text('No passengers assigned', style: TextStyle(color: cs.onSurfaceVariant))),
+                            padding: const EdgeInsets.all(20),
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  Icon(Icons.people_outline, size: 36, color: cs.onSurfaceVariant.withOpacity(0.4)),
+                                  const SizedBox(height: 8),
+                                  Text('No passengers assigned', style: TextStyle(color: cs.onSurfaceVariant)),
+                                ],
+                              ),
+                            ),
                           ),
                         )
                       else
@@ -328,29 +375,39 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                               return Column(
                                 children: [
                                   ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                     leading: CircleAvatar(
-                                      backgroundColor: isDropped ? cs.tertiary.withOpacity(0.15) : isBoarded ? Colors.orange.withOpacity(0.15) : cs.surfaceContainerHighest,
+                                      backgroundColor: isDropped ? Colors.green.shade50 : isBoarded ? Colors.orange.shade50 : cs.surfaceContainerHighest,
                                       child: Icon(
                                         isDropped ? Icons.check_circle : isBoarded ? Icons.person : Icons.person_outline,
-                                        color: isDropped ? cs.tertiary : isBoarded ? Colors.orange : cs.onSurfaceVariant,
+                                        color: isDropped ? Colors.green.shade600 : isBoarded ? Colors.orange.shade600 : cs.onSurfaceVariant,
                                         size: 20,
                                       ),
                                     ),
-                                    title: Text(name.isNotEmpty ? name : 'Unknown', style: const TextStyle(fontWeight: FontWeight.w500)),
-                                    subtitle: Text(isDropped ? 'Dropped' : isBoarded ? 'Boarded' : 'Pending'),
+                                    title: Text(name.isNotEmpty ? name : 'Unknown', style: const TextStyle(fontWeight: FontWeight.w600)),
+                                    subtitle: Text(
+                                      isDropped ? 'Dropped' : isBoarded ? 'Boarded' : 'Pending',
+                                      style: TextStyle(
+                                        color: isDropped ? Colors.green.shade600 : isBoarded ? Colors.orange.shade600 : cs.onSurfaceVariant,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                     trailing: (status == 'in_progress' || status == 'inProgress')
                                         ? Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               if (!isBoarded)
-                                                TextButton(
+                                                FilledButton.tonalIcon(
                                                   onPressed: () => _boardPassenger(employeeId),
-                                                  child: const Text('Board'),
+                                                  icon: const Icon(Icons.login, size: 16),
+                                                  label: const Text('Board'),
                                                 ),
                                               if (isBoarded && !isDropped)
-                                                TextButton(
+                                                FilledButton.tonalIcon(
                                                   onPressed: () => _dropPassenger(employeeId),
-                                                  child: const Text('Drop'),
+                                                  icon: const Icon(Icons.logout, size: 16),
+                                                  label: const Text('Drop'),
+                                                  style: FilledButton.styleFrom(backgroundColor: Colors.green.shade50),
                                                 ),
                                             ],
                                           )
@@ -381,9 +438,17 @@ class _TripStat extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Column(
       children: [
-        Icon(icon, color: cs.primary, size: 20),
-        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: cs.primaryContainer,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: cs.onPrimaryContainer, size: 20),
+        ),
+        const SizedBox(height: 8),
         Text(value, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
         Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
       ],
     );

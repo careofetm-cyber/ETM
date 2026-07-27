@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dio/dio.dart';
+
 import '../../providers.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -49,16 +49,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: currentPwController, decoration: const InputDecoration(labelText: 'Current Password', border: OutlineInputBorder()), obscureText: true),
+            TextField(controller: currentPwController, decoration: const InputDecoration(labelText: 'Current Password', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock_outline)), obscureText: true),
             const SizedBox(height: 12),
-            TextField(controller: newPwController, decoration: const InputDecoration(labelText: 'New Password', border: OutlineInputBorder()), obscureText: true),
+            TextField(controller: newPwController, decoration: const InputDecoration(labelText: 'New Password', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock_reset)), obscureText: true),
             const SizedBox(height: 12),
-            TextField(controller: confirmPwController, decoration: const InputDecoration(labelText: 'Confirm New Password', border: OutlineInputBorder()), obscureText: true),
+            TextField(controller: confirmPwController, decoration: const InputDecoration(labelText: 'Confirm New Password', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock)), obscureText: true),
           ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
+          FilledButton.icon(
             onPressed: () async {
               if (newPwController.text != confirmPwController.text) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
@@ -76,7 +76,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
               }
             },
-            child: const Text('Change'),
+            icon: const Icon(Icons.check),
+            label: const Text('Change'),
           ),
         ],
       ),
@@ -85,62 +86,140 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
       body: SafeArea(
         child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Center(
-            child: CircleAvatar(
-              radius: 40,
-              backgroundColor: const Color(0xFF2563EB),
-              child: Text(_userName.isNotEmpty ? _userName[0].toUpperCase() : 'E', style: const TextStyle(fontSize: 32, color: Colors.white)),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Center(child: Text(_userName, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold))),
-          Center(child: Text(_userEmail, style: const TextStyle(color: Colors.grey))),
-          Center(child: Text(_userRole.toUpperCase(), style: const TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w500))),
-          const SizedBox(height: 24),
-          Card(
-            child: Column(
-              children: [
-                ListTile(leading: const Icon(Icons.phone), title: Text(_profile?['phone'] ?? '+91 98765 43210'), subtitle: const Text('Phone')),
-                const Divider(height: 1),
-                ListTile(leading: const Icon(Icons.business), title: Text(_profile?['department'] ?? 'Engineering'), subtitle: const Text('Department')),
-                const Divider(height: 1),
-                ListTile(leading: const Icon(Icons.work), title: Text(_profile?['designation'] ?? 'Employee'), subtitle: const Text('Designation')),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.lock_reset, color: Colors.orange),
-                  title: const Text('Change Password'),
-                  subtitle: const Text('Update your account password'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: _showChangePasswordDialog,
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Profile Header
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primary, cs.primary.withOpacity(0.8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.red),
-                  title: const Text('Logout', style: TextStyle(color: Colors.red)),
-                  onTap: () async {
-                    final prefs = await ref.read(sharedPreferencesProvider.future);
-                    await prefs.clear();
-                    if (context.mounted) context.go('/login');
-                  },
-                ),
-              ],
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: cs.primary.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    child: Text(
+                      _userName.isNotEmpty ? _userName[0].toUpperCase() : 'E',
+                      style: const TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _userName,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _userEmail,
+                    style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.8)),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      _userRole.toUpperCase(),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+
+            // Info Card
+            Card(
+              child: Column(
+                children: [
+                  _buildInfoTile(Icons.phone, 'Phone', _profile?['phone'] ?? '+91 98765 43210'),
+                  const Divider(height: 1, indent: 56),
+                  _buildInfoTile(Icons.business, 'Department', _profile?['department'] ?? 'Engineering'),
+                  const Divider(height: 1, indent: 56),
+                  _buildInfoTile(Icons.work, 'Designation', _profile?['designation'] ?? 'Employee'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Actions Card
+            Card(
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59E0B).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.lock_reset, color: Color(0xFFF59E0B), size: 20),
+                    ),
+                    title: const Text('Change Password'),
+                    subtitle: const Text('Update your account password'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _showChangePasswordDialog,
+                  ),
+                  const Divider(height: 1, indent: 72),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.logout, color: Colors.red, size: 20),
+                    ),
+                    title: const Text('Logout', style: TextStyle(color: Colors.red)),
+                    subtitle: const Text('Sign out of your account'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () async {
+                      final prefs = await ref.read(sharedPreferencesProvider.future);
+                      await prefs.clear();
+                      if (context.mounted) context.go('/login');
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildInfoTile(IconData icon, String label, String value) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
       ),
+      title: Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+      subtitle: Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
     );
   }
 }

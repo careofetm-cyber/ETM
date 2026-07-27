@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import 'package:go_router/go_router.dart';
 import '../../providers.dart';
 
 class IncidentScreen extends ConsumerStatefulWidget {
@@ -72,19 +71,29 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
 
   Color _severityColor(String severity) {
     switch (severity) {
-      case 'critical': return Colors.red;
-      case 'high': return Colors.orange;
-      case 'medium': return Colors.amber;
-      case 'low': return Colors.green;
+      case 'critical': return const Color(0xFFDC2626);
+      case 'high': return const Color(0xFFEA580C);
+      case 'medium': return const Color(0xFFF59E0B);
+      case 'low': return const Color(0xFF059669);
       default: return Colors.grey;
+    }
+  }
+
+  IconData _severityIcon(String severity) {
+    switch (severity) {
+      case 'critical': return Icons.error;
+      case 'high': return Icons.warning;
+      case 'medium': return Icons.info;
+      case 'low': return Icons.info_outline;
+      default: return Icons.help_outline;
     }
   }
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'reported': return Colors.orange;
-      case 'investigating': return Colors.blue;
-      case 'resolved': return Colors.green;
+      case 'reported': return const Color(0xFFEA580C);
+      case 'investigating': return const Color(0xFF2563EB);
+      case 'resolved': return const Color(0xFF059669);
       case 'closed': return Colors.grey;
       default: return Colors.grey;
     }
@@ -96,13 +105,14 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
       appBar: AppBar(
         title: const Text('Incidents'),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadIncidents),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadIncidents, tooltip: 'Refresh'),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showReportForm,
-        icon: const Icon(Icons.add_alert),
-        label: const Text('Report'),
+        backgroundColor: const Color(0xFFEA580C),
+        icon: const Icon(Icons.add_alert, color: Colors.white),
+        label: const Text('Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
       body: SafeArea(
         child: _isLoading
@@ -114,25 +124,34 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
                     child: Column(
                       children: [
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: Row(
                               children: [
-                                _filterChip('All', null),
+                                _filterChip('All', null, Icons.list),
                                 const SizedBox(width: 8),
-                                _filterChip('Reported', 'reported'),
+                                _filterChip('Reported', 'reported', Icons.report),
                                 const SizedBox(width: 8),
-                                _filterChip('Investigating', 'investigating'),
+                                _filterChip('Investigating', 'investigating', Icons.search),
                                 const SizedBox(width: 8),
-                                _filterChip('Resolved', 'resolved'),
+                                _filterChip('Resolved', 'resolved', Icons.check_circle),
                               ],
                             ),
                           ),
                         ),
                         Expanded(
                           child: _incidents.isEmpty
-                              ? const Center(child: Text('No incidents found'))
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.verified, size: 64, color: Theme.of(context).colorScheme.outlineVariant),
+                                      const SizedBox(height: 16),
+                                      Text('No incidents found', style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                                    ],
+                                  ),
+                                )
                               : ListView.builder(
                                   padding: const EdgeInsets.all(16),
                                   itemCount: _incidents.length + (_hasMore ? 1 : 0),
@@ -141,7 +160,11 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
                                       return Center(
                                         child: Padding(
                                           padding: const EdgeInsets.all(16),
-                                          child: FilledButton(onPressed: _loadMore, child: const Text('Load More')),
+                                          child: FilledButton.icon(
+                                            onPressed: _loadMore,
+                                            icon: const Icon(Icons.expand_more),
+                                            label: const Text('Load More'),
+                                          ),
                                         ),
                                       );
                                     }
@@ -156,10 +179,11 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
     );
   }
 
-  Widget _filterChip(String label, String? status) {
+  Widget _filterChip(String label, String? status, IconData icon) {
     final isSelected = _statusFilter == status;
     return FilterChip(
       label: Text(label),
+      avatar: Icon(icon, size: 18),
       selected: isSelected,
       onSelected: (_) {
         setState(() => _statusFilter = status);
@@ -175,11 +199,22 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: _loadIncidents, child: const Text('Retry')),
+            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15)),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: _loadIncidents,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
           ],
         ),
       ),
@@ -189,6 +224,9 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
   Widget _buildIncidentCard(dynamic incident) {
     final severity = incident['severity'] ?? 'low';
     final status = incident['status'] ?? 'reported';
+    final severityColor = _severityColor(severity);
+    final statusColor = _statusColor(status);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -199,35 +237,74 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _severityColor(severity).withOpacity(0.15),
+                    color: severityColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(_severityIcon(severity), color: severityColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        incident['description'] ?? 'No description',
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        incident['createdAt']?.substring(0, 10) ?? '',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: severityColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(severity.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _severityColor(severity))),
+                  child: Text(
+                    severity.toUpperCase(),
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: severityColor),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: _statusColor(status).withOpacity(0.15),
+                    color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(status.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _statusColor(status))),
+                  child: Text(
+                    status.toUpperCase(),
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: statusColor),
+                  ),
                 ),
-                const Spacer(),
-                Text(incident['createdAt']?.substring(0, 10) ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(incident['description'] ?? 'No description', style: const TextStyle(fontWeight: FontWeight.w500)),
             if (incident['location'] != null) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                  Icon(Icons.location_on, size: 16, color: Colors.grey.shade500),
                   const SizedBox(width: 4),
-                  Text(incident['location'], style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  Expanded(
+                    child: Text(
+                      incident['location'],
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -306,12 +383,19 @@ class _ReportIncidentSheetState extends ConsumerState<_ReportIncidentSheet> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.add_alert, color: Colors.orange),
-                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEA580C).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.add_alert, color: Color(0xFFEA580C), size: 20),
+                  ),
+                  const SizedBox(width: 12),
                   Text('Report Incident', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               Text('Severity', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               SegmentedButton<String>(
@@ -324,7 +408,7 @@ class _ReportIncidentSheetState extends ConsumerState<_ReportIncidentSheet> {
                 selected: {_severity},
                 onSelectionChanged: (s) => setState(() => _severity = s.first),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _descController,
                 maxLines: 3,
@@ -332,10 +416,11 @@ class _ReportIncidentSheetState extends ConsumerState<_ReportIncidentSheet> {
                   labelText: 'Description *',
                   hintText: 'Describe the incident...',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.description),
                 ),
                 validator: (v) => v == null || v.trim().isEmpty ? 'Description is required' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _locationController,
                 decoration: const InputDecoration(
@@ -345,9 +430,10 @@ class _ReportIncidentSheetState extends ConsumerState<_ReportIncidentSheet> {
                   prefixIcon: Icon(Icons.location_on_outlined),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
+                height: 48,
                 child: FilledButton.icon(
                   onPressed: _isSubmitting ? null : _submit,
                   icon: _isSubmitting

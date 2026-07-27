@@ -91,7 +91,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final padding = width < 600 ? 16.0 : width < 900 ? 24.0 : 32.0;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile'), centerTitle: false),
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -100,49 +99,114 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: ListView(
                   padding: EdgeInsets.all(padding),
                 children: [
-                  Center(
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: cs.primaryContainer,
-                      child: Text(
-                        _userName.isNotEmpty ? _userName[0].toUpperCase() : 'D',
-                        style: TextStyle(color: cs.onPrimaryContainer, fontSize: 28, fontWeight: FontWeight.bold),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [cs.primary, cs.primary.withOpacity(0.8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: cs.primary.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Center(child: Text(_userName, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold))),
-                  const SizedBox(height: 4),
-                  Center(child: Text('Driver', style: TextStyle(color: cs.onSurfaceVariant))),
-                  const SizedBox(height: 24),
-
-                  Card(
                     child: Column(
                       children: [
-                        ListTile(leading: const Icon(Icons.email_outlined), title: Text(_userEmail), subtitle: const Text('Email')),
-                        const Divider(height: 1),
-                        ListTile(leading: const Icon(Icons.phone_outlined), title: Text(_profile?['phone'] ?? 'N/A'), subtitle: const Text('Phone')),
-                        const Divider(height: 1),
-                        ListTile(leading: const Icon(Icons.badge_outlined), title: Text(_profile?['license_number'] ?? 'N/A'), subtitle: const Text('License')),
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          child: Text(
+                            _userName.isNotEmpty ? _userName[0].toUpperCase() : 'D',
+                            style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(_userName, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text(_userEmail, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text('Driver', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
 
+                  Text('Account Info', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurfaceVariant)),
+                  const SizedBox(height: 8),
                   Card(
                     child: Column(
                       children: [
                         ListTile(
-                          leading: const Icon(Icons.lock_reset, color: Colors.orange),
-                          title: const Text('Change Password'),
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: cs.primaryContainer, borderRadius: BorderRadius.circular(10)),
+                            child: Icon(Icons.email_outlined, color: cs.onPrimaryContainer, size: 20),
+                          ),
+                          title: Text(_userEmail, style: const TextStyle(fontWeight: FontWeight.w500)),
+                          subtitle: const Text('Email'),
+                        ),
+                        const Divider(height: 1, indent: 56),
+                        ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: BorderRadius.circular(10)),
+                            child: Icon(Icons.phone_outlined, color: Colors.teal.shade700, size: 20),
+                          ),
+                          title: Text(_profile?['phone'] ?? 'N/A', style: const TextStyle(fontWeight: FontWeight.w500)),
+                          subtitle: const Text('Phone'),
+                        ),
+                        const Divider(height: 1, indent: 56),
+                        ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(10)),
+                            child: Icon(Icons.badge_outlined, color: Colors.orange.shade700, size: 20),
+                          ),
+                          title: Text(_profile?['license_number'] ?? 'N/A', style: const TextStyle(fontWeight: FontWeight.w500)),
+                          subtitle: const Text('License'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Text('Actions', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurfaceVariant)),
+                  const SizedBox(height: 8),
+                  Card(
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(10)),
+                            child: Icon(Icons.lock_reset, color: Colors.orange.shade700, size: 20),
+                          ),
+                          title: const Text('Change Password', style: TextStyle(fontWeight: FontWeight.w500)),
                           subtitle: const Text('Update your account password'),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: _showChangePasswordDialog,
                         ),
-                        const Divider(height: 1),
+                        const Divider(height: 1, indent: 56),
                         ListTile(
-                          leading: const Icon(Icons.logout, color: Colors.red),
-                          title: const Text('Logout', style: TextStyle(color: Colors.red)),
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(10)),
+                            child: Icon(Icons.logout, color: Colors.red.shade600, size: 20),
+                          ),
+                          title: Text('Logout', style: TextStyle(color: Colors.red.shade600, fontWeight: FontWeight.w500)),
                           onTap: () async {
                             final prefs = await ref.read(sharedPreferencesProvider.future);
                             await prefs.clear();
@@ -152,6 +216,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),

@@ -50,6 +50,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
     final selectedDate = ref.watch(tripsDateProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF0F4F8),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -59,52 +60,84 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               children: [
                 Text(
                   'Trips',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 24,
+                  ),
                 ),
                 const Spacer(),
                 ElevatedButton.icon(
                   onPressed: () => _showScheduleTripDialog(context),
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(Icons.add_rounded, size: 18),
                   label: const Text('Schedule Trip'),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Row(
               children: [
                 OutlinedButton.icon(
                   onPressed: () => _selectDate(context),
-                  icon: const Icon(Icons.calendar_today),
+                  icon: const Icon(Icons.calendar_today_rounded, size: 18),
                   label: Text(
                     '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
                   ),
                 ),
                 const SizedBox(width: 16),
-                DropdownButton<String>(
-                  value: ref.watch(tripsStatusProvider),
-                  items: const [
-                    DropdownMenuItem(value: 'all', child: Text('All Status')),
-                    DropdownMenuItem(value: 'scheduled', child: Text('Scheduled')),
-                    DropdownMenuItem(value: 'inProgress', child: Text('In Progress')),
-                    DropdownMenuItem(value: 'completed', child: Text('Completed')),
-                    DropdownMenuItem(value: 'cancelled', child: Text('Cancelled')),
-                  ],
-                  onChanged: (value) {
-                    ref.read(tripsStatusProvider.notifier).state = value!;
-                    ref.read(tripsPageProvider.notifier).state = 1;
-                  },
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFDDE2E8)),
+                  ),
+                  child: DropdownButton<String>(
+                    value: ref.watch(tripsStatusProvider),
+                    underline: const SizedBox(),
+                    isDense: true,
+                    items: const [
+                      DropdownMenuItem(value: 'all', child: Text('All Status')),
+                      DropdownMenuItem(value: 'scheduled', child: Text('Scheduled')),
+                      DropdownMenuItem(value: 'inProgress', child: Text('In Progress')),
+                      DropdownMenuItem(value: 'completed', child: Text('Completed')),
+                      DropdownMenuItem(value: 'cancelled', child: Text('Cancelled')),
+                    ],
+                    onChanged: (value) {
+                      ref.read(tripsStatusProvider.notifier).state = value!;
+                      ref.read(tripsPageProvider.notifier).state = 1;
+                    },
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Expanded(
               child: Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: Color(0xFFE8ECF0), width: 1),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: tripsAsync.when(
                     data: (trips) {
                       if (trips.isEmpty) {
-                        return const Center(child: Text('No trips found'));
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.trip_origin_outlined, size: 48, color: AppColors.textTertiary),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No trips found',
+                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
                       }
                       return _buildTripsTable(trips);
                     },
@@ -125,81 +158,98 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
       scrollDirection: Axis.horizontal,
       child: DataTable2(
         columns: const [
-          DataColumn2(label: Text('Route'), size: ColumnSize.L),
-          DataColumn2(label: Text('Vehicle')),
-          DataColumn2(label: Text('Driver')),
-          DataColumn2(label: Text('Type')),
-          DataColumn2(label: Text('Time')),
-          DataColumn2(label: Text('Status')),
-          DataColumn2(label: Text('Passengers')),
-          DataColumn2(label: Text('Actions'), size: ColumnSize.S),
+          DataColumn2(label: Text('ROUTE'), size: ColumnSize.L),
+          DataColumn2(label: Text('VEHICLE')),
+          DataColumn2(label: Text('DRIVER')),
+          DataColumn2(label: Text('TYPE')),
+          DataColumn2(label: Text('TIME')),
+          DataColumn2(label: Text('STATUS')),
+          DataColumn2(label: Text('PASSENGERS')),
+          DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
         ],
-        rows: trips.map((trip) {
-          return DataRow2(cells: [
-            DataCell(Text(trip.routeId)),
-            DataCell(Text(trip.vehicleId)),
-            DataCell(Text(trip.driverId)),
-            DataCell(_buildTypeChip(trip.type)),
-            DataCell(Text(
-              '${trip.scheduledTime.hour}:${trip.scheduledTime.minute.toString().padLeft(2, '0')}',
-            )),
-            DataCell(_buildStatusChip(trip.status)),
-            DataCell(Text(
-              '${trip.boardedPassengers ?? 0}/${trip.totalPassengers ?? 0}',
-            )),
-            DataCell(Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.visibility, size: 20),
-                  onPressed: () => _showTripDetail(context, trip),
-                ),
-                if (trip.status == TripStatus.scheduled)
-                  IconButton(
-                    icon: const Icon(Icons.play_arrow, size: 20),
-                    onPressed: () async {
-                      try {
-                        final api = await ref.read(tripApiProvider.future);
-                        await api.startTrip(trip.id);
-                        ref.invalidate(tripsProvider);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Trip started'), backgroundColor: AppColors.success),
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to start trip: $e'), backgroundColor: AppColors.error),
-                          );
-                        }
-                      }
-                    },
+        rows: trips.asMap().entries.map((entry) {
+          final index = entry.key;
+          final trip = entry.value;
+          return DataRow2(
+            color: index % 2 == 0
+                ? WidgetStateProperty.all(Colors.white)
+                : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+            cells: [
+              DataCell(Text(trip.routeId, style: const TextStyle(fontWeight: FontWeight.w500))),
+              DataCell(Text(trip.vehicleId)),
+              DataCell(Text(trip.driverId)),
+              DataCell(_buildTypeChip(trip.type)),
+              DataCell(Text(
+                '${trip.scheduledTime.hour}:${trip.scheduledTime.minute.toString().padLeft(2, '0')}',
+              )),
+              DataCell(_buildStatusChip(trip.status)),
+              DataCell(Text(
+                '${trip.boardedPassengers ?? 0}/${trip.totalPassengers ?? 0}',
+              )),
+              DataCell(Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Tooltip(
+                    message: 'View Details',
+                    child: IconButton(
+                      icon: Icon(Icons.visibility_outlined, size: 18, color: AppColors.primary),
+                      onPressed: () => _showTripDetail(context, trip),
+                    ),
                   ),
-                if (trip.status == TripStatus.inProgress)
-                  IconButton(
-                    icon: const Icon(Icons.check_circle, size: 20, color: AppColors.success),
-                    onPressed: () async {
-                      try {
-                        final api = await ref.read(tripApiProvider.future);
-                        await api.completeTrip(trip.id);
-                        ref.invalidate(tripsProvider);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Trip completed'), backgroundColor: AppColors.success),
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to complete trip: $e'), backgroundColor: AppColors.error),
-                          );
-                        }
-                      }
-                    },
-                  ),
-              ],
-            )),
-          ]);
+                  if (trip.status == TripStatus.scheduled)
+                    Tooltip(
+                      message: 'Start Trip',
+                      child: IconButton(
+                        icon: Icon(Icons.play_circle_outline_rounded, size: 18, color: AppColors.success),
+                        onPressed: () async {
+                          try {
+                            final api = await ref.read(tripApiProvider.future);
+                            await api.startTrip(trip.id);
+                            ref.invalidate(tripsProvider);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Trip started'), backgroundColor: AppColors.success),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to start trip: $e'), backgroundColor: AppColors.error),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                  if (trip.status == TripStatus.inProgress)
+                    Tooltip(
+                      message: 'Complete Trip',
+                      child: IconButton(
+                        icon: Icon(Icons.check_circle_outline_rounded, size: 18, color: AppColors.success),
+                        onPressed: () async {
+                          try {
+                            final api = await ref.read(tripApiProvider.future);
+                            await api.completeTrip(trip.id);
+                            ref.invalidate(tripsProvider);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Trip completed'), backgroundColor: AppColors.success),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to complete trip: $e'), backgroundColor: AppColors.error),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                ],
+              )),
+            ],
+          );
         }).toList(),
       ),
     );

@@ -51,6 +51,8 @@ class _RequestAdjustmentScreenState extends ConsumerState<RequestAdjustmentScree
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Request Adjustment'),
@@ -61,40 +63,131 @@ class _RequestAdjustmentScreenState extends ConsumerState<RequestAdjustmentScree
       ),
       body: SafeArea(
         child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text('Request Type', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'routeChange', label: Text('Route'), icon: Icon(Icons.route)),
-              ButtonSegment(value: 'stopChange', label: Text('Stop'), icon: Icon(Icons.location_on)),
-              ButtonSegment(value: 'cancellation', label: Text('Cancel'), icon: Icon(Icons.cancel)),
-            ],
-            selected: {_requestType},
-            onSelectionChanged: (v) => setState(() => _requestType = v.first),
-          ),
-          const SizedBox(height: 16),
-          if (_requestType == 'routeChange') ...[
-            TextField(controller: _routeIdController, decoration: const InputDecoration(labelText: 'New Route ID', border: OutlineInputBorder(), hintText: 'e.g., route_001')),
-            const SizedBox(height: 12),
-          ],
-          if (_requestType == 'stopChange') ...[
-            TextField(controller: _stopIdController, decoration: const InputDecoration(labelText: 'New Stop ID', border: OutlineInputBorder(), hintText: 'e.g., stop_003')),
-            const SizedBox(height: 12),
-          ],
-          TextField(controller: _reasonController, decoration: const InputDecoration(labelText: 'Reason', border: OutlineInputBorder(), hintText: 'Why do you need this change?'), maxLines: 3),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _submitRequest,
-              child: _isSubmitting ? const CircularProgressIndicator() : const Text('Submit Request'),
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primaryContainer.withOpacity(0.5), cs.primaryContainer.withOpacity(0.2)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.swap_horiz, color: cs.primary, size: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Submit a Request',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Request changes to your transport route or schedule',
+                          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(height: 24),
+
+            // Request Type
+            Text('Request Type', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'routeChange', label: Text('Route'), icon: Icon(Icons.route)),
+                ButtonSegment(value: 'stopChange', label: Text('Stop'), icon: Icon(Icons.location_on)),
+                ButtonSegment(value: 'cancellation', label: Text('Cancel'), icon: Icon(Icons.cancel)),
+              ],
+              selected: {_requestType},
+              onSelectionChanged: (v) => setState(() => _requestType = v.first),
+            ),
+            const SizedBox(height: 20),
+
+            // Dynamic Fields
+            if (_requestType == 'routeChange') ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: TextField(
+                    controller: _routeIdController,
+                    decoration: const InputDecoration(
+                      labelText: 'New Route ID',
+                      border: OutlineInputBorder(),
+                      hintText: 'e.g., route_001',
+                      prefixIcon: Icon(Icons.route),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (_requestType == 'stopChange') ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: TextField(
+                    controller: _stopIdController,
+                    decoration: const InputDecoration(
+                      labelText: 'New Stop ID',
+                      border: OutlineInputBorder(),
+                      hintText: 'e.g., stop_003',
+                      prefixIcon: Icon(Icons.location_on),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // Reason
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextField(
+                  controller: _reasonController,
+                  decoration: const InputDecoration(
+                    labelText: 'Reason *',
+                    border: OutlineInputBorder(),
+                    hintText: 'Why do you need this change?',
+                    prefixIcon: Icon(Icons.notes),
+                  ),
+                  maxLines: 3,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: _isSubmitting ? null : _submitRequest,
+                icon: _isSubmitting
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.send),
+                label: Text(_isSubmitting ? 'Submitting...' : 'Submit Request'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

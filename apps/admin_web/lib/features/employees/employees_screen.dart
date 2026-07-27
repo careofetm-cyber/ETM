@@ -59,6 +59,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
     final employeesAsync = ref.watch(employeesProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF0F4F8),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -68,48 +69,61 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
               children: [
                 Text(
                   'Employees',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 24,
+                  ),
                 ),
                 const Spacer(),
                 OutlinedButton.icon(
                   onPressed: () => _exportXLS(employeesAsync),
-                  icon: const Icon(Icons.table_chart, size: 16),
+                  icon: const Icon(Icons.table_chart_outlined, size: 18),
                   label: const Text('Export XLS'),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: () => _exportPDF(employeesAsync),
-                  icon: const Icon(Icons.picture_as_pdf, size: 16),
+                  icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
                   label: const Text('Export PDF'),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: () => _showBulkImportDialog(context),
-                  icon: const Icon(Icons.upload_file),
+                  icon: const Icon(Icons.upload_file_rounded, size: 18),
                   label: const Text('Import CSV'),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: () => _showBulkUploadDialog(context),
-                  icon: const Icon(Icons.cloud_upload),
+                  icon: const Icon(Icons.cloud_upload_outlined, size: 18),
                   label: const Text('Bulk Upload'),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () => _showAddEmployeeDialog(context),
-                  icon: const Icon(Icons.person_add),
+                  icon: const Icon(Icons.person_add_rounded, size: 18),
                   label: const Text('Add Employee'),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             SizedBox(
-              width: 300,
+              width: 320,
               child: TextField(
                 controller: _searchController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Search employees...',
-                  prefixIcon: Icon(Icons.search),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, size: 18),
+                          onPressed: () {
+                            _searchController.clear();
+                            ref.read(employeesSearchProvider.notifier).state = '';
+                            ref.read(employeesPageProvider.notifier).state = 1;
+                          },
+                        )
+                      : null,
                 ),
                 onChanged: (value) {
                   ref.read(employeesSearchProvider.notifier).state = value;
@@ -117,15 +131,34 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Expanded(
               child: Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: Color(0xFFE8ECF0), width: 1),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: employeesAsync.when(
                     data: (employees) {
                       if (employees.isEmpty) {
-                        return const Center(child: Text('No employees found'));
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.people_outline, size: 48, color: AppColors.textTertiary),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No employees found',
+                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
                       }
                       return _buildEmployeesTable(employees);
                     },
@@ -146,52 +179,71 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
       scrollDirection: Axis.horizontal,
       child: DataTable2(
         columns: const [
-          DataColumn2(label: Text('Employee'), size: ColumnSize.L),
-          DataColumn2(label: Text('Code')),
-          DataColumn2(label: Text('Department')),
-          DataColumn2(label: Text('Email')),
-          DataColumn2(label: Text('Transport')),
-          DataColumn2(label: Text('Actions'), size: ColumnSize.S),
+          DataColumn2(label: Text('EMPLOYEE'), size: ColumnSize.L),
+          DataColumn2(label: Text('CODE')),
+          DataColumn2(label: Text('DEPARTMENT')),
+          DataColumn2(label: Text('EMAIL')),
+          DataColumn2(label: Text('TRANSPORT')),
+          DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
         ],
-        rows: employees.map((employee) {
-          return DataRow2(cells: [
-            DataCell(Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(employee.userId),
-                Text(
-                  employee.email ?? '-',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            )),
-            DataCell(Text(employee.employeeCode ?? '-')),
-            DataCell(Text(employee.department ?? '-')),
-            DataCell(Text(employee.email ?? '-')),
-            DataCell(Switch(
-              value: employee.isTransportRequired ?? false,
-              onChanged: (value) async {
-                final api = await ref.read(employeeApiProvider.future);
-                await api.updateEmployee(employee.id, {
-                  'isTransportRequired': value,
-                });
-                ref.invalidate(employeesProvider);
-              },
-            )),
-            DataCell(Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, size: 20),
-                  onPressed: () => _showEditEmployeeDialog(context, employee),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, size: 20, color: AppColors.error),
-                  onPressed: () => _showDeleteConfirmation(context, employee),
-                ),
-              ],
-            )),
-          ]);
+        rows: employees.asMap().entries.map((entry) {
+          final index = entry.key;
+          final employee = entry.value;
+          return DataRow2(
+            color: index % 2 == 0
+                ? WidgetStateProperty.all(Colors.white)
+                : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+            cells: [
+              DataCell(Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    employee.userId,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  Text(
+                    employee.email ?? '-',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ],
+              )),
+              DataCell(Text(employee.employeeCode ?? '-')),
+              DataCell(Text(employee.department ?? '-')),
+              DataCell(Text(employee.email ?? '-')),
+              DataCell(Switch(
+                value: employee.isTransportRequired ?? false,
+                onChanged: (value) async {
+                  final api = await ref.read(employeeApiProvider.future);
+                  await api.updateEmployee(employee.id, {
+                    'isTransportRequired': value,
+                  });
+                  ref.invalidate(employeesProvider);
+                },
+              )),
+              DataCell(Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Tooltip(
+                    message: 'Edit',
+                    child: IconButton(
+                      icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+                      onPressed: () => _showEditEmployeeDialog(context, employee),
+                    ),
+                  ),
+                  Tooltip(
+                    message: 'Delete',
+                    child: IconButton(
+                      icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.error),
+                      onPressed: () => _showDeleteConfirmation(context, employee),
+                    ),
+                  ),
+                ],
+              )),
+            ],
+          );
         }).toList(),
       ),
     );

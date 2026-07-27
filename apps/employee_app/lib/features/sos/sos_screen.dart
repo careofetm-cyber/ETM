@@ -68,10 +68,11 @@ class _SOSScreenState extends ConsumerState<SOSScreen> {
         content: const Text('This will alert your transport manager and emergency contacts immediately. Continue?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(
+          FilledButton.icon(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('SEND SOS'),
+            icon: const Icon(Icons.send),
+            label: const Text('SEND SOS'),
           ),
         ],
       ),
@@ -110,12 +111,12 @@ class _SOSScreenState extends ConsumerState<SOSScreen> {
       appBar: AppBar(
         title: const Text('SOS Alerts'),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData, tooltip: 'Refresh'),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _sendSOS,
-        backgroundColor: Colors.red,
+        backgroundColor: const Color(0xFFDC2626),
         icon: const Icon(Icons.emergency, color: Colors.white),
         label: const Text('SEND SOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
@@ -129,14 +130,22 @@ class _SOSScreenState extends ConsumerState<SOSScreen> {
                     child: Column(
                       children: [
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                           child: Row(
                             children: [
                               Expanded(
                                 child: SegmentedButton<bool>(
                                   segments: [
-                                    ButtonSegment(value: true, label: Text('Active (${_activeAlerts.length})')),
-                                    ButtonSegment(value: false, label: Text('History')),
+                                    ButtonSegment(
+                                      value: true,
+                                      label: Text('Active (${_activeAlerts.length})'),
+                                      icon: Icon(_activeAlerts.isNotEmpty ? Icons.warning_amber : Icons.check_circle_outline, size: 18),
+                                    ),
+                                    ButtonSegment(
+                                      value: false,
+                                      label: const Text('History'),
+                                      icon: const Icon(Icons.history, size: 18),
+                                    ),
                                   ],
                                   selected: {_showingActive},
                                   onSelectionChanged: (s) => setState(() => _showingActive = s.first),
@@ -162,11 +171,22 @@ class _SOSScreenState extends ConsumerState<SOSScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: _loadData, child: const Text('Retry')),
+            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15)),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: _loadData,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
           ],
         ),
       ),
@@ -179,9 +199,18 @@ class _SOSScreenState extends ConsumerState<SOSScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle_outline, size: 64, color: Colors.green.shade300),
-            const SizedBox(height: 12),
-            Text('No Active Alerts', style: TextStyle(fontSize: 18, color: Colors.grey.shade600)),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF059669).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.check_circle_outline, size: 56, color: const Color(0xFF059669).withOpacity(0.5)),
+            ),
+            const SizedBox(height: 16),
+            Text('No Active Alerts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey.shade600)),
+            const SizedBox(height: 4),
+            Text('All clear!', style: TextStyle(color: Colors.grey.shade500)),
           ],
         ),
       );
@@ -192,19 +221,68 @@ class _SOSScreenState extends ConsumerState<SOSScreen> {
       itemBuilder: (context, index) {
         final alert = _activeAlerts[index];
         return Card(
-          color: Colors.red.shade50,
-          child: ListTile(
-            leading: CircleAvatar(backgroundColor: Colors.red, child: const Icon(Icons.emergency, color: Colors.white)),
-            title: Text(alert['message'] ?? 'SOS Alert', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('From: ${alert['userName'] ?? alert['user_id'] ?? 'Unknown'}'),
-                Text('Role: ${alert['userRole'] ?? alert['user_type'] ?? 'Unknown'}'),
-                Text('Time: ${alert['createdAt'] ?? 'Unknown'}', style: const TextStyle(fontSize: 12)),
-              ],
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.red.withOpacity(0.2)),
             ),
-            isThreeLine: true,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.emergency, color: Colors.red, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(alert['message'] ?? 'SOS Alert', style: const TextStyle(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text(
+                              'From: ${alert['userName'] ?? alert['user_id'] ?? 'Unknown'}',
+                              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text('ACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(Icons.person, size: 16, color: Colors.grey.shade500),
+                      const SizedBox(width: 4),
+                      Text('Role: ${alert['userRole'] ?? alert['user_type'] ?? 'Unknown'}', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                      const SizedBox(width: 16),
+                      Icon(Icons.access_time, size: 16, color: Colors.grey.shade500),
+                      const SizedBox(width: 4),
+                      Text('${alert['createdAt'] ?? 'Unknown'}', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -213,7 +291,16 @@ class _SOSScreenState extends ConsumerState<SOSScreen> {
 
   Widget _buildHistoryList() {
     if (_history.isEmpty) {
-      return const Center(child: Text('No SOS history'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history, size: 64, color: Theme.of(context).colorScheme.outlineVariant),
+            const SizedBox(height: 16),
+            Text('No SOS history', style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          ],
+        ),
+      );
     }
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -223,20 +310,45 @@ class _SOSScreenState extends ConsumerState<SOSScreen> {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: FilledButton(onPressed: _loadMoreHistory, child: const Text('Load More')),
+              child: FilledButton.icon(
+                onPressed: _loadMoreHistory,
+                icon: const Icon(Icons.expand_more),
+                label: const Text('Load More'),
+              ),
             ),
           );
         }
         final alert = _history[index];
         final isResolved = alert['isResolved'] == true || alert['is_resolved'] == true;
+        final statusColor = isResolved ? const Color(0xFF059669) : const Color(0xFFDC2626);
+
         return Card(
+          margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: isResolved ? Colors.green.shade100 : Colors.red.shade100,
-              child: Icon(isResolved ? Icons.check_circle : Icons.warning_amber, color: isResolved ? Colors.green : Colors.red),
+              backgroundColor: statusColor.withOpacity(0.12),
+              child: Icon(
+                isResolved ? Icons.check_circle : Icons.warning_amber,
+                color: statusColor,
+                size: 20,
+              ),
             ),
-            title: Text(alert['message'] ?? 'SOS Alert'),
-            subtitle: Text('Status: ${isResolved ? 'Resolved' : 'Active'} | ${alert['createdAt'] ?? ''}', style: const TextStyle(fontSize: 12)),
+            title: Text(alert['message'] ?? 'SOS Alert', style: const TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text(
+              '${isResolved ? 'Resolved' : 'Active'} | ${alert['createdAt'] ?? ''}',
+              style: const TextStyle(fontSize: 12),
+            ),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                isResolved ? 'Resolved' : 'Active',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: statusColor),
+              ),
+            ),
           ),
         );
       },

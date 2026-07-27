@@ -52,6 +52,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
     final vehiclesAsync = ref.watch(vehiclesProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF0F4F8),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -61,26 +62,29 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
               children: [
                 Text(
                   'Vehicles',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 24,
+                  ),
                 ),
                 const Spacer(),
                 ElevatedButton.icon(
                   onPressed: () => _showAddVehicleDialog(context),
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(Icons.add_rounded, size: 18),
                   label: const Text('Add Vehicle'),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Row(
               children: [
                 SizedBox(
-                  width: 300,
+                  width: 320,
                   child: TextField(
                     controller: _searchController,
                     decoration: const InputDecoration(
                       hintText: 'Search vehicles...',
-                      prefixIcon: Icon(Icons.search),
+                      prefixIcon: Icon(Icons.search_rounded, size: 20),
                     ),
                     onChanged: (value) {
                       ref.read(vehiclesSearchProvider.notifier).state = value;
@@ -88,24 +92,39 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                DropdownButton<String>(
-                  value: ref.watch(vehiclesStatusProvider),
-                  items: const [
-                    DropdownMenuItem(value: 'all', child: Text('All Status')),
-                    DropdownMenuItem(value: 'active', child: Text('Active')),
-                    DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
-                    DropdownMenuItem(value: 'maintenance', child: Text('Maintenance')),
-                  ],
-                  onChanged: (value) {
-                    ref.read(vehiclesStatusProvider.notifier).state = value!;
-                    ref.read(vehiclesPageProvider.notifier).state = 1;
-                  },
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFDDE2E8)),
+                  ),
+                  child: DropdownButton<String>(
+                    value: ref.watch(vehiclesStatusProvider),
+                    underline: const SizedBox(),
+                    isDense: true,
+                    items: const [
+                      DropdownMenuItem(value: 'all', child: Text('All Status')),
+                      DropdownMenuItem(value: 'active', child: Text('Active')),
+                      DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
+                      DropdownMenuItem(value: 'maintenance', child: Text('Maintenance')),
+                    ],
+                    onChanged: (value) {
+                      ref.read(vehiclesStatusProvider.notifier).state = value!;
+                      ref.read(vehiclesPageProvider.notifier).state = 1;
+                    },
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Expanded(
               child: Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: Color(0xFFE8ECF0), width: 1),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -122,7 +141,21 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                                     v.brand.toLowerCase().contains(query) ||
                                     v.model.toLowerCase().contains(query)).toList();
                             if (filtered.isEmpty) {
-                              return const Center(child: Text('No vehicles found'));
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.directions_bus_outlined, size: 48, color: AppColors.textTertiary),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'No vehicles found',
+                                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
                             }
                             return _buildVehiclesTable(filtered);
                           },
@@ -147,32 +180,49 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
       scrollDirection: Axis.horizontal,
       child: DataTable2(
         columns: const [
-          DataColumn2(label: Text('Vehicle'), size: ColumnSize.L),
-          DataColumn2(label: Text('Plate Number')),
-          DataColumn2(label: Text('Capacity')),
-          DataColumn2(label: Text('Status')),
-          DataColumn2(label: Text('Actions'), size: ColumnSize.S),
+          DataColumn2(label: Text('VEHICLE'), size: ColumnSize.L),
+          DataColumn2(label: Text('PLATE NUMBER')),
+          DataColumn2(label: Text('CAPACITY')),
+          DataColumn2(label: Text('STATUS')),
+          DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
         ],
-        rows: vehicles.map((vehicle) {
+        rows: vehicles.asMap().entries.map((entry) {
+          final index = entry.key;
+          final vehicle = entry.value;
           final statusStr = vehicle.status?.name ?? 'active';
-          return DataRow2(cells: [
-            DataCell(Text('${vehicle.brand} ${vehicle.model}')),
-            DataCell(Text(vehicle.plateNumber)),
-            DataCell(Text('${vehicle.seatingCapacity} seats')),
-            DataCell(_buildStatusChip(statusStr)),
-            DataCell(Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, size: 20),
-                  onPressed: () => _showEditVehicleDialog(context, vehicle),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, size: 20, color: AppColors.error),
-                  onPressed: () => _showDeleteConfirmation(context, vehicle),
-                ),
-              ],
-            )),
-          ]);
+          return DataRow2(
+            color: index % 2 == 0
+                ? WidgetStateProperty.all(Colors.white)
+                : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+            cells: [
+              DataCell(Text(
+                '${vehicle.brand} ${vehicle.model}',
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              )),
+              DataCell(Text(vehicle.plateNumber)),
+              DataCell(Text('${vehicle.seatingCapacity} seats')),
+              DataCell(_buildStatusChip(statusStr)),
+              DataCell(Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Tooltip(
+                    message: 'Edit',
+                    child: IconButton(
+                      icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+                      onPressed: () => _showEditVehicleDialog(context, vehicle),
+                    ),
+                  ),
+                  Tooltip(
+                    message: 'Delete',
+                    child: IconButton(
+                      icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.error),
+                      onPressed: () => _showDeleteConfirmation(context, vehicle),
+                    ),
+                  ),
+                ],
+              )),
+            ],
+          );
         }).toList(),
       ),
     );
@@ -208,28 +258,40 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
   }
 
   Widget _buildPagination() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'Page ${ref.watch(vehiclesPageProvider)}',
-          style: Theme.of(context).textTheme.bodySmall,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Color(0xFFE8ECF0), width: 1),
         ),
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: ref.read(vehiclesPageProvider) > 1
-                  ? () => ref.read(vehiclesPageProvider.notifier).state--
-                  : null,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Page ${ref.watch(vehiclesPageProvider)}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
             ),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: () => ref.read(vehiclesPageProvider.notifier).state++,
-            ),
-          ],
-        ),
-      ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left_rounded, size: 20),
+                color: AppColors.textSecondary,
+                onPressed: ref.read(vehiclesPageProvider) > 1
+                    ? () => ref.read(vehiclesPageProvider.notifier).state--
+                    : null,
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right_rounded, size: 20),
+                color: AppColors.textSecondary,
+                onPressed: () => ref.read(vehiclesPageProvider.notifier).state++,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

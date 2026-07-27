@@ -49,6 +49,7 @@ class BillingScreen extends ConsumerWidget {
     final tabIndex = ref.watch(billingTabProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF0F4F8),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -56,7 +57,10 @@ class BillingScreen extends ConsumerWidget {
           children: [
             Text(
               'Billing',
-              style: Theme.of(context).textTheme.headlineMedium,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 24,
+              ),
             ),
             const SizedBox(height: 16),
             SegmentedButton<int>(
@@ -106,33 +110,43 @@ class _BillingRecordsTab extends ConsumerWidget {
               spacing: 16,
               runSpacing: 16,
               children: [
-                StatCard(title: 'Total Trips', value: totalTrips.toString(), icon: Icons.trip_origin, color: AppColors.primary),
-                StatCard(title: 'Billable Trips', value: billableTrips.toString(), icon: Icons.check_circle, color: AppColors.success),
-                StatCard(title: 'Discarded Trips', value: discardedTrips.toString(), icon: Icons.cancel, color: AppColors.error),
-                StatCard(title: 'Total Revenue', value: '\$${totalRevenue.toStringAsFixed(2)}', icon: Icons.attach_money, color: AppColors.accent),
+                StatCard(title: 'Total Trips', value: totalTrips.toString(), icon: Icons.trip_origin_outlined, color: AppColors.primary),
+                StatCard(title: 'Billable Trips', value: billableTrips.toString(), icon: Icons.check_circle_outline, color: AppColors.success),
+                StatCard(title: 'Discarded Trips', value: discardedTrips.toString(), icon: Icons.cancel_outlined, color: AppColors.error),
+                StatCard(title: 'Total Revenue', value: '\$${totalRevenue.toStringAsFixed(2)}', icon: Icons.attach_money_rounded, color: AppColors.accent),
               ],
             );
           },
           loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
           error: (e, _) => SizedBox(height: 100, child: Center(child: Text('Error: $e'))),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         Row(
           children: [
             Consumer(
               builder: (context, ref, _) {
                 final companiesAsync = ref.watch(_billingCompaniesProvider);
                 return companiesAsync.when(
-                  data: (companies) => DropdownButton<String>(
-                    value: ref.watch(billingCompanyFilterProvider),
-                    items: [
-                      const DropdownMenuItem(value: 'all', child: Text('All Companies')),
-                      ...companies.map((c) => DropdownMenuItem(
-                        value: c.id,
-                        child: Text(c.name),
-                      )),
-                    ],
-                    onChanged: (v) => ref.read(billingCompanyFilterProvider.notifier).state = v!,
+                  data: (companies) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFDDE2E8)),
+                    ),
+                    child: DropdownButton<String>(
+                      value: ref.watch(billingCompanyFilterProvider),
+                      underline: const SizedBox(),
+                      isDense: true,
+                      items: [
+                        const DropdownMenuItem(value: 'all', child: Text('All Companies')),
+                        ...companies.map((c) => DropdownMenuItem(
+                          value: c.id,
+                          child: Text(c.name),
+                        )),
+                      ],
+                      onChanged: (v) => ref.read(billingCompanyFilterProvider.notifier).state = v!,
+                    ),
                   ),
                   loading: () => const SizedBox(width: 200, child: LinearProgressIndicator()),
                   error: (_, __) => DropdownButton<String>(
@@ -144,62 +158,108 @@ class _BillingRecordsTab extends ConsumerWidget {
               },
             ),
             const SizedBox(width: 16),
-            DropdownButton<String>(
-              value: ref.watch(billingBillableFilterProvider),
-              items: const [
-                DropdownMenuItem(value: 'all', child: Text('All')),
-                DropdownMenuItem(value: 'yes', child: Text('Billable')),
-                DropdownMenuItem(value: 'no', child: Text('Non-Billable')),
-              ],
-              onChanged: (v) => ref.read(billingBillableFilterProvider.notifier).state = v!,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFDDE2E8)),
+              ),
+              child: DropdownButton<String>(
+                value: ref.watch(billingBillableFilterProvider),
+                underline: const SizedBox(),
+                isDense: true,
+                items: const [
+                  DropdownMenuItem(value: 'all', child: Text('All')),
+                  DropdownMenuItem(value: 'yes', child: Text('Billable')),
+                  DropdownMenuItem(value: 'no', child: Text('Non-Billable')),
+                ],
+                onChanged: (v) => ref.read(billingBillableFilterProvider.notifier).state = v!,
+              ),
             ),
             const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.refresh),
+            OutlinedButton.icon(
               onPressed: () {
                 ref.invalidate(billingRecordsProvider);
                 ref.invalidate(billingSummaryProvider);
               },
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Refresh'),
             ),
           ],
         ),
         const SizedBox(height: 16),
         Expanded(
           child: Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Color(0xFFE8ECF0), width: 1),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: recordsAsync.when(
                 data: (records) {
                   if (records.isEmpty) {
-                    return const Center(child: Text('No billing records found'));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.receipt_long_outlined, size: 48, color: AppColors.textTertiary),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No billing records found',
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   }
                   return SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: DataTable2(
                       columns: const [
-                        DataColumn2(label: Text('Company'), size: ColumnSize.L),
-                        DataColumn2(label: Text('Trip ID')),
-                        DataColumn2(label: Text('Distance')),
-                        DataColumn2(label: Text('Cost')),
-                        DataColumn2(label: Text('Billable')),
-                        DataColumn2(label: Text('Discard Reason')),
-                        DataColumn2(label: Text('Date')),
+                        DataColumn2(label: Text('COMPANY'), size: ColumnSize.L),
+                        DataColumn2(label: Text('TRIP ID')),
+                        DataColumn2(label: Text('DISTANCE')),
+                        DataColumn2(label: Text('COST')),
+                        DataColumn2(label: Text('BILLABLE')),
+                        DataColumn2(label: Text('DISCARD REASON')),
+                        DataColumn2(label: Text('DATE')),
                       ],
-                      rows: records.map((record) {
-                        return DataRow2(cells: [
-                          DataCell(Text(record.companyId)),
-                          DataCell(Text(record.tripId)),
-                          DataCell(Text('${record.distance.toStringAsFixed(2)} km')),
-                          DataCell(Text('\$${record.tripCost.toStringAsFixed(2)}')),
-                          DataCell(Chip(
-                            label: Text(record.isBillable == true ? 'Yes' : 'No'),
-                            backgroundColor: (record.isBillable == true ? AppColors.success : AppColors.textSecondary).withOpacity(0.1),
-                          )),
-                          DataCell(Text(record.discardReason ?? '-')),
-                          DataCell(Text(record.completedAt != null
-                              ? '${record.completedAt!.day}/${record.completedAt!.month}/${record.completedAt!.year}'
-                              : '-')),
-                        ]);
+                      rows: records.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final record = entry.value;
+                        return DataRow2(
+                          color: index % 2 == 0
+                              ? WidgetStateProperty.all(Colors.white)
+                              : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+                          cells: [
+                            DataCell(Text(record.companyId)),
+                            DataCell(Text(record.tripId)),
+                            DataCell(Text('${record.distance.toStringAsFixed(2)} km')),
+                            DataCell(Text('\$${record.tripCost.toStringAsFixed(2)}')),
+                            DataCell(Chip(
+                              label: Text(
+                                record.isBillable == true ? 'Yes' : 'No',
+                                style: TextStyle(
+                                  color: record.isBillable == true ? AppColors.success : AppColors.textSecondary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              backgroundColor: (record.isBillable == true ? AppColors.success : AppColors.textSecondary).withOpacity(0.08),
+                              side: BorderSide.none,
+                              padding: EdgeInsets.zero,
+                            )),
+                            DataCell(Text(record.discardReason ?? '-')),
+                            DataCell(Text(record.completedAt != null
+                                ? '${record.completedAt!.day}/${record.completedAt!.month}/${record.completedAt!.year}'
+                                : '-')),
+                          ],
+                        );
                       }).toList(),
                     ),
                   );
@@ -230,16 +290,26 @@ class _InvoicesTab extends ConsumerWidget {
               builder: (context, ref, _) {
                 final companiesAsync = ref.watch(_billingCompaniesProvider);
                 return companiesAsync.when(
-                  data: (companies) => DropdownButton<String>(
-                    value: ref.watch(invoiceCompanyFilterProvider),
-                    items: [
-                      const DropdownMenuItem(value: 'all', child: Text('All Companies')),
-                      ...companies.map((c) => DropdownMenuItem(
-                        value: c.id,
-                        child: Text(c.name),
-                      )),
-                    ],
-                    onChanged: (v) => ref.read(invoiceCompanyFilterProvider.notifier).state = v!,
+                  data: (companies) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFDDE2E8)),
+                    ),
+                    child: DropdownButton<String>(
+                      value: ref.watch(invoiceCompanyFilterProvider),
+                      underline: const SizedBox(),
+                      isDense: true,
+                      items: [
+                        const DropdownMenuItem(value: 'all', child: Text('All Companies')),
+                        ...companies.map((c) => DropdownMenuItem(
+                          value: c.id,
+                          child: Text(c.name),
+                        )),
+                      ],
+                      onChanged: (v) => ref.read(invoiceCompanyFilterProvider.notifier).state = v!,
+                    ),
                   ),
                   loading: () => const SizedBox(width: 200, child: LinearProgressIndicator()),
                   error: (_, __) => DropdownButton<String>(
@@ -251,70 +321,113 @@ class _InvoicesTab extends ConsumerWidget {
               },
             ),
             const SizedBox(width: 16),
-            DropdownButton<String>(
-              value: ref.watch(invoiceStatusFilterProvider),
-              items: const [
-                DropdownMenuItem(value: 'all', child: Text('All Status')),
-                DropdownMenuItem(value: 'pending', child: Text('Pending')),
-                DropdownMenuItem(value: 'paid', child: Text('Paid')),
-                DropdownMenuItem(value: 'overdue', child: Text('Overdue')),
-              ],
-              onChanged: (v) => ref.read(invoiceStatusFilterProvider.notifier).state = v!,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFDDE2E8)),
+              ),
+              child: DropdownButton<String>(
+                value: ref.watch(invoiceStatusFilterProvider),
+                underline: const SizedBox(),
+                isDense: true,
+                items: const [
+                  DropdownMenuItem(value: 'all', child: Text('All Status')),
+                  DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                  DropdownMenuItem(value: 'paid', child: Text('Paid')),
+                  DropdownMenuItem(value: 'overdue', child: Text('Overdue')),
+                ],
+                onChanged: (v) => ref.read(invoiceStatusFilterProvider.notifier).state = v!,
+              ),
             ),
             const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.refresh),
+            OutlinedButton.icon(
               onPressed: () => ref.invalidate(invoicesProvider),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Refresh'),
             ),
           ],
         ),
         const SizedBox(height: 16),
         Expanded(
           child: Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Color(0xFFE8ECF0), width: 1),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: invoicesAsync.when(
                 data: (invoices) {
                   if (invoices.isEmpty) {
-                    return const Center(child: Text('No invoices found'));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.receipt_outlined, size: 48, color: AppColors.textTertiary),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No invoices found',
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   }
                   return SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: DataTable2(
                       columns: const [
-                        DataColumn2(label: Text('Company'), size: ColumnSize.L),
-                        DataColumn2(label: Text('Month')),
-                        DataColumn2(label: Text('Total Trips')),
-                        DataColumn2(label: Text('Billable Trips')),
-                        DataColumn2(label: Text('Amount')),
-                        DataColumn2(label: Text('Status')),
-                        DataColumn2(label: Text('Due Date')),
-                        DataColumn2(label: Text('Actions'), size: ColumnSize.S),
+                        DataColumn2(label: Text('COMPANY'), size: ColumnSize.L),
+                        DataColumn2(label: Text('MONTH')),
+                        DataColumn2(label: Text('TOTAL TRIPS')),
+                        DataColumn2(label: Text('BILLABLE TRIPS')),
+                        DataColumn2(label: Text('AMOUNT')),
+                        DataColumn2(label: Text('STATUS')),
+                        DataColumn2(label: Text('DUE DATE')),
+                        DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
                       ],
-                      rows: invoices.map((invoice) {
-                        return DataRow2(cells: [
-                          DataCell(Text(invoice.companyId)),
-                          DataCell(Text(invoice.month)),
-                          DataCell(Text('${invoice.totalTrips}')),
-                          DataCell(Text('${invoice.billableTrips}')),
-                          DataCell(Text('\$${invoice.totalAmount.toStringAsFixed(2)}')),
-                          DataCell(_buildInvoiceStatusChip(invoice.status)),
-                          DataCell(Text(invoice.dueDate != null
-                              ? '${invoice.dueDate!.day}/${invoice.dueDate!.month}/${invoice.dueDate!.year}'
-                              : '-')),
-                          DataCell(
-                            invoice.status != 'paid'
-                                ? IconButton(
-                                    icon: const Icon(Icons.check_circle, size: 20, color: AppColors.success),
-                                    onPressed: () async {
-                                      final api = await ref.read(superAdminApiProvider.future);
-                                      await api.updateInvoice(invoice.id, {'status': 'paid'});
-                                      ref.invalidate(invoicesProvider);
-                                    },
-                                  )
-                                : const Icon(Icons.check, color: AppColors.success, size: 20),
-                          ),
-                        ]);
+                      rows: invoices.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final invoice = entry.value;
+                        return DataRow2(
+                          color: index % 2 == 0
+                              ? WidgetStateProperty.all(Colors.white)
+                              : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+                          cells: [
+                            DataCell(Text(invoice.companyId)),
+                            DataCell(Text(invoice.month)),
+                            DataCell(Text('${invoice.totalTrips}')),
+                            DataCell(Text('${invoice.billableTrips}')),
+                            DataCell(Text(
+                              '\$${invoice.totalAmount.toStringAsFixed(2)}',
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            )),
+                            DataCell(_buildInvoiceStatusChip(invoice.status)),
+                            DataCell(Text(invoice.dueDate != null
+                                ? '${invoice.dueDate!.day}/${invoice.dueDate!.month}/${invoice.dueDate!.year}'
+                                : '-')),
+                            DataCell(
+                              invoice.status != 'paid'
+                                  ? Tooltip(
+                                      message: 'Mark as Paid',
+                                      child: IconButton(
+                                        icon: Icon(Icons.check_circle_outline_rounded, size: 18, color: AppColors.success),
+                                        onPressed: () async {
+                                          final api = await ref.read(superAdminApiProvider.future);
+                                          await api.updateInvoice(invoice.id, {'status': 'paid'});
+                                          ref.invalidate(invoicesProvider);
+                                        },
+                                      ),
+                                    )
+                                  : Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18),
+                            ),
+                          ],
+                        );
                       }).toList(),
                     ),
                   );

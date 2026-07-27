@@ -43,10 +43,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final cs = Theme.of(context).colorScheme;
     final width = MediaQuery.of(context).size.width;
     final padding = width < 600 ? 16.0 : width < 900 ? 24.0 : 32.0;
-    final greeting = DateTime.now().hour < 12 ? 'Good Morning' : DateTime.now().hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard'), centerTitle: false),
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -55,68 +55,97 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: ListView(
                   padding: EdgeInsets.all(padding),
                 children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 28,
-                            backgroundColor: cs.primaryContainer,
-                            child: Text(
-                              _driverName.isNotEmpty ? _driverName[0].toUpperCase() : 'D',
-                              style: TextStyle(color: cs.onPrimaryContainer, fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [cs.primary, cs.primary.withOpacity(0.8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: cs.primary.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          child: Text(
+                            _driverName.isNotEmpty ? _driverName[0].toUpperCase() : 'D',
+                            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('$greeting,', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
+                              const SizedBox(height: 2),
+                              Text(_driverName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                        if (_dashboard?['assigned_vehicle'] != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('$greeting, $_driverName', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 2),
-                                if (_dashboard?['assigned_vehicle'] != null)
-                                  Text(_dashboard!['assigned_vehicle'], style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                                const Icon(Icons.directions_bus, color: Colors.white, size: 16),
+                                const SizedBox(width: 6),
+                                Text(_dashboard!['assigned_vehicle'], style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                               ],
                             ),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 20),
 
                   Text("Today's Summary", style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
-                      _StatCard(title: 'Total Trips', value: '${_dashboard?['today_trips'] ?? 0}', icon: Icons.route_outlined, color: cs.primary),
-                      const SizedBox(width: 10),
-                      _StatCard(title: 'Completed', value: '${_dashboard?['completed_trips'] ?? 0}', icon: Icons.check_circle_outlined, color: cs.tertiary),
+                      _StatCard(title: 'Total Trips', value: '${_dashboard?['today_trips'] ?? 0}', icon: Icons.route_outlined, color: cs.primary, bgColor: cs.primaryContainer),
+                      const SizedBox(width: 12),
+                      _StatCard(title: 'Completed', value: '${_dashboard?['completed_trips'] ?? 0}', icon: Icons.check_circle_outlined, color: Colors.green.shade700, bgColor: Colors.green.shade50),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
-                      _StatCard(title: 'Passengers', value: '${_dashboard?['total_passengers'] ?? 0}', icon: Icons.people_outlined, color: cs.secondary),
-                      const SizedBox(width: 10),
-                      _StatCard(title: 'Distance', value: '${(_dashboard?['total_distance'] ?? 0).toStringAsFixed(1)} km', icon: Icons.straighten, color: cs.tertiary),
+                      _StatCard(title: 'Passengers', value: '${_dashboard?['total_passengers'] ?? 0}', icon: Icons.people_outlined, color: Colors.orange.shade700, bgColor: Colors.orange.shade50),
+                      const SizedBox(width: 12),
+                      _StatCard(title: 'Distance', value: '${(_dashboard?['total_distance'] ?? 0).toStringAsFixed(1)} km', icon: Icons.straighten, color: Colors.purple.shade700, bgColor: Colors.purple.shade50),
                     ],
                   ),
                   const SizedBox(height: 20),
 
                   if (_error != null) ...[
-                    Card(
-                      color: cs.errorContainer,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Icon(Icons.error_outline, color: cs.onErrorContainer),
-                            const SizedBox(width: 12),
-                            Expanded(child: Text(_error!, style: TextStyle(color: cs.onErrorContainer))),
-                          ],
-                        ),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: cs.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: cs.onErrorContainer),
+                          const SizedBox(width: 12),
+                          Expanded(child: Text(_error!, style: TextStyle(color: cs.onErrorContainer, fontWeight: FontWeight.w500))),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -124,7 +153,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                   if (_dashboard?['current_trip_id'] != null) ...[
                     Text('Current Trip', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -133,9 +162,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(color: cs.primaryContainer, borderRadius: BorderRadius.circular(10)),
-                                  child: Icon(Icons.directions_bus, color: cs.onPrimaryContainer),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(color: cs.primaryContainer, borderRadius: BorderRadius.circular(12)),
+                                  child: Icon(Icons.directions_bus, color: cs.onPrimaryContainer, size: 24),
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(
@@ -143,6 +172,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text('Trip In Progress', style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                                      const SizedBox(height: 2),
                                       Text('Tap to view details', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                                     ],
                                   ),
@@ -150,12 +180,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
                               ],
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 14),
                             SizedBox(
                               width: double.infinity,
-                              child: FilledButton.tonal(
+                              child: FilledButton.icon(
                                 onPressed: () => context.push('/trip/${_dashboard!['current_trip_id']}'),
-                                child: const Text('View Trip'),
+                                icon: const Icon(Icons.open_in_new),
+                                label: const Text('View Trip'),
                               ),
                             ),
                           ],
@@ -166,16 +197,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ],
 
                   Text('Quick Actions', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
-                      Expanded(child: _ActionTile(icon: Icons.route_outlined, label: 'My Trips', color: cs.primary, onTap: () => context.go('/trips'))),
+                      Expanded(child: _ActionTile(icon: Icons.route_outlined, label: 'My Trips', color: cs.primary, bgColor: cs.primaryContainer, onTap: () => context.go('/trips'))),
                       const SizedBox(width: 10),
-                      Expanded(child: _ActionTile(icon: Icons.person_outline, label: 'Profile', color: cs.tertiary, onTap: () => context.go('/profile'))),
+                      Expanded(child: _ActionTile(icon: Icons.person_outline, label: 'Profile', color: Colors.teal.shade700, bgColor: Colors.teal.shade50, onTap: () => context.go('/profile'))),
                       const SizedBox(width: 10),
-                      Expanded(child: _ActionTile(icon: Icons.emergency_outlined, label: 'SOS', color: cs.error, onTap: () {})),
+                      Expanded(child: _ActionTile(icon: Icons.emergency_outlined, label: 'SOS', color: cs.error, bgColor: cs.errorContainer, onTap: () {})),
                     ],
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -189,24 +221,41 @@ class _StatCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
-  const _StatCard({required this.title, required this.value, required this.icon, required this.color});
+  final Color bgColor;
+  const _StatCard({required this.title, required this.value, required this.icon, required this.color, required this.bgColor});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(height: 10),
-              Text(value, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 2),
-              Text(title, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-            ],
-          ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 12),
+            Text(value, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: color)),
+            const SizedBox(height: 4),
+            Text(title, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color.withOpacity(0.8))),
+          ],
         ),
       ),
     );
@@ -217,22 +266,30 @@ class _ActionTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final Color bgColor;
   final VoidCallback onTap;
-  const _ActionTile({required this.icon, required this.label, required this.color, required this.onTap});
+  const _ActionTile({required this.icon, required this.label, required this.color, required this.bgColor, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 18),
+          padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             children: [
-              Icon(icon, color: color, size: 28),
-              const SizedBox(height: 8),
-              Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 26),
+              ),
+              const SizedBox(height: 10),
+              Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
             ],
           ),
         ),

@@ -56,15 +56,6 @@ class _RideScreenState extends ConsumerState<RideScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Ride'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadRideInfo,
-          ),
-        ],
-      ),
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -86,11 +77,22 @@ class _RideScreenState extends ConsumerState<RideScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: _loadRideInfo, child: const Text('Retry')),
+            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15)),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: _loadRideInfo,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
           ],
         ),
       ),
@@ -104,11 +106,28 @@ class _RideScreenState extends ConsumerState<RideScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.directions_bus_outlined, size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            Text('No Active Trip', style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey)),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.directions_bus_outlined, size: 56, color: Theme.of(context).colorScheme.outline),
+            ),
+            const SizedBox(height: 20),
+            Text('No Active Trip', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            const Text('You don\'t have an assigned cab right now.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+            Text(
+              'You don\'t have an assigned cab right now.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: _loadRideInfo,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Refresh'),
+            ),
           ],
         ),
       ),
@@ -129,12 +148,14 @@ class _RideScreenState extends ConsumerState<RideScreen> {
     final isExpired = expiry != null && DateTime.now().isAfter(expiry);
     final remaining = expiry != null ? expiry.difference(DateTime.now()) : Duration.zero;
     final remainingMin = remaining.inMinutes;
+    final cs = Theme.of(context).colorScheme;
 
     return RefreshIndicator(
       onRefresh: _loadRideInfo,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Trip Info Card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -145,8 +166,11 @@ class _RideScreenState extends ConsumerState<RideScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(10)),
-                        child: Icon(Icons.directions_bus, color: Theme.of(context).colorScheme.onPrimaryContainer),
+                        decoration: BoxDecoration(
+                          color: cs.primaryContainer,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.directions_bus, color: cs.onPrimaryContainer),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -164,6 +188,8 @@ class _RideScreenState extends ConsumerState<RideScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       const Icon(Icons.access_time, size: 16, color: Colors.grey),
@@ -177,78 +203,128 @@ class _RideScreenState extends ConsumerState<RideScreen> {
           ),
           const SizedBox(height: 16),
 
-          Card(
-            color: isExpired ? Colors.red.shade50 : Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Icon(
-                    isExpired ? Icons.timer_off : Icons.pin,
-                    size: 36,
-                    color: isExpired ? Colors.red : Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    isExpired ? 'OTP Expired' : 'Show this OTP to your driver',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isExpired ? Colors.red : Colors.grey.shade600,
+          // OTP Display Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              gradient: isExpired
+                  ? LinearGradient(colors: [Colors.red.shade50, Colors.red.shade100])
+                  : LinearGradient(
+                      colors: [cs.primaryContainer.withOpacity(0.5), cs.primaryContainer.withOpacity(0.2)],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    otp,
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 12,
-                      color: isExpired ? Colors.red : null,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  if (isExpired)
-                    FilledButton.icon(
-                      onPressed: _loadRideInfo,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Get New OTP'),
-                    )
-                  else
-                    Text(
-                      'Valid for $remainingMin min',
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
-                    ),
-                ],
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isExpired ? Colors.red.withOpacity(0.3) : cs.primary.withOpacity(0.15),
               ),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isExpired ? Colors.red.withOpacity(0.15) : cs.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isExpired ? Icons.timer_off : Icons.pin,
+                    size: 32,
+                    color: isExpired ? Colors.red : cs.primary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  isExpired ? 'OTP Expired' : 'Show this OTP to your driver',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isExpired ? Colors.red : cs.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  otp,
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 12,
+                    color: isExpired ? Colors.red : null,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (isExpired)
+                  FilledButton.icon(
+                    onPressed: _loadRideInfo,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Get New OTP'),
+                    style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Valid for $remainingMin min',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: cs.primary),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
 
           // SOS Button
-          SizedBox(
-            width: double.infinity,
-            child: Card(
-              color: Colors.red.shade50,
-              child: InkWell(
-                onTap: () => _showSOSDialog(),
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.emergency, color: Colors.red, size: 24),
-                      const SizedBox(width: 10),
-                      Text('SOS - Emergency', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.red.shade700)),
-                    ],
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _showSOSDialog(),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFDC2626), Color(0xFFB91C1C)],
                   ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFDC2626).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.emergency, color: Colors.white, size: 22),
+                    SizedBox(width: 10),
+                    Text(
+                      'SOS - Emergency',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
           const SizedBox(height: 16),
 
+          // Passengers
           if (_passengers.isNotEmpty) ...[
-            Text('Passengers (${_passengers.length})', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Row(
+              children: [
+                Icon(Icons.people, size: 20, color: cs.primary),
+                const SizedBox(width: 8),
+                Text(
+                  'Passengers (${_passengers.length})',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             Card(
               child: Column(
@@ -260,26 +336,28 @@ class _RideScreenState extends ConsumerState<RideScreen> {
                   final firstName = p['first_name'] ?? '';
                   final lastName = p['last_name'] ?? '';
                   final name = '$firstName $lastName'.trim();
-                  final cs = Theme.of(context).colorScheme;
+
+                  final statusColor = isDropped ? const Color(0xFF059669) : isBoarded ? const Color(0xFFD97706) : Colors.grey;
+                  final statusText = isDropped ? 'Dropped' : isBoarded ? 'Boarded' : 'Pending';
+                  final statusIcon = isDropped ? Icons.check_circle : isBoarded ? Icons.person : Icons.person_outline;
 
                   return Column(
                     children: [
                       ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: isDropped ? Colors.green.withOpacity(0.15) : isBoarded ? Colors.orange.withOpacity(0.15) : cs.surfaceContainerHighest,
-                          child: Icon(
-                            isDropped ? Icons.check_circle : isBoarded ? Icons.person : Icons.person_outline,
-                            color: isDropped ? Colors.green : isBoarded ? Colors.orange : cs.onSurfaceVariant,
-                            size: 20,
-                          ),
+                          backgroundColor: statusColor.withOpacity(0.12),
+                          child: Icon(statusIcon, color: statusColor, size: 20),
                         ),
                         title: Text(name.isNotEmpty ? name : 'Unknown', style: const TextStyle(fontWeight: FontWeight.w500)),
-                        trailing: Text(
-                          isDropped ? 'Dropped' : isBoarded ? 'Boarded' : 'Pending',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isDropped ? Colors.green : isBoarded ? Colors.orange : Colors.grey,
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            statusText,
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor),
                           ),
                         ),
                       ),
@@ -304,10 +382,11 @@ class _RideScreenState extends ConsumerState<RideScreen> {
         content: const Text('This will immediately alert your transport manager. Continue?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(
+          FilledButton.icon(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('SEND SOS'),
+            icon: const Icon(Icons.send),
+            label: const Text('SEND SOS'),
           ),
         ],
       ),
@@ -341,13 +420,27 @@ class _RideScreenState extends ConsumerState<RideScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.check_circle, size: 64, color: Colors.green),
-            const SizedBox(height: 16),
-            Text('Ride Verified!', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.green)),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF059669).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_circle, size: 56, color: Color(0xFF059669)),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Ride Verified!',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
+            ),
             const SizedBox(height: 8),
             const Text('Your OTP has been verified. Trip is in progress.'),
             const SizedBox(height: 24),
-            FilledButton(onPressed: _loadRideInfo, child: const Text('Refresh')),
+            FilledButton.icon(
+              onPressed: _loadRideInfo,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Refresh'),
+            ),
           ],
         ),
       ),
