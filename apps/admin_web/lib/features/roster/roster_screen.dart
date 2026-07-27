@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:etm_core/etm_core.dart';
+import 'package:dio/dio.dart';
 import '../../shared/providers/api_providers.dart';
 
 class RosterScreen extends ConsumerStatefulWidget {
@@ -14,6 +15,7 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
   late TabController _tabController;
   List<dynamic> _rosters = [];
   List<dynamic> _requests = [];
+  List<dynamic> _shifts = [];
   Map<String, dynamic>? _docAlerts;
   bool _isLoading = true;
   String _selectedWeekStart = '';
@@ -22,7 +24,7 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _calculateWeek();
     _loadData();
   }
@@ -43,6 +45,13 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
       _requests = await rosterApi.getRosterRequests();
     } catch (e) {
       debugPrint('Error: $e');
+    }
+    try {
+      final dio = ref.read(dioProvider);
+      final resp = await dio.get('/shifts');
+      _shifts = resp.data['data'] ?? [];
+    } catch (e) {
+      debugPrint('Shifts error: $e');
     }
     setState(() => _isLoading = false);
   }
@@ -106,6 +115,7 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
               Tab(text: 'Calendar View (${_rosters.length})'),
               Tab(text: 'Requests (${_requests.where((r) => r['status'] == 'pending').length} pending)'),
               const Tab(text: 'Bulk Operations'),
+              Tab(text: 'Manage Shifts (${_shifts.length})'),
             ],
           ),
           const SizedBox(height: 16),
@@ -118,6 +128,7 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
                       _buildCalendarView(),
                       _buildRequestsView(),
                       _buildBulkOperationsView(),
+                      _buildShiftsView(),
                     ],
                   ),
           ),
@@ -464,5 +475,335 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Widget _buildShiftsView() {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Shift Definitions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ElevatedButton.icon(
+                onPressed: () => _showCreateShiftDialog(),
+                icon: const Icon(Icons.add),
+                label: const Text('Add Shift'),
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Card(
+              child: _shifts.isEmpty
+                  ? const Center(child: Text('No shifts defined. Click "Add Shift" to create one.'))
+                  : SingleChildScrollView(
+                      child: DataTable(
+                        columns: const [
+                          DataColumn(label: Text('Name', style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('Code', style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('Start Time', style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('End Time', style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold))),
+                        ],
+                        rows: _shifts.map((shift) {
+                          final isActive = shift['is_active'] == true || shift['isActive'] == true;
+                          return DataRow(cells: [
+                            DataCell(Text(shift['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w500))),
+                            DataCell(Chip(
+                              label: Text(shift['code'] ?? '', style: const TextStyle(fontSize: 12)),
+                              backgroundColor: Colors.blue.shade50,
+                            )),
+                            DataCell(Row(
+                              children: [
+                                const Icon(Icons.access_time, size: 14, color: Colors.green),
+                                const SizedBox(width: 4),
+                                Text(shift['start_time'] ?? shift['startTime'] ?? '', style: const TextStyle(fontWeight: FontWeight.w500)),
+                              ],
+                            )),
+                            DataCell(Row(
+                              children: [
+                                const Icon(Icons.access_time, size: 14, color: Colors.red),
+                                const SizedBox(width: 4),
+                                Text(shift['end_time'] ?? shift['endTime'] ?? '', style: const TextStyle(fontWeight: FontWeight.w500)),
+                              ],
+                            )),
+                            DataCell(Chip(
+                              label: Text(isActive ? 'Active' : 'Inactive', style: const TextStyle(fontSize: 12, color: Colors.white)),
+                              backgroundColor: isActive ? Colors.green : Colors.grey,
+                            )),
+                            DataCell(Row(
+                              children: [
+                                Tooltip(
+                                  message: 'Edit',
+                                  child: IconButton(
+                                    icon: Icon(Icons.edit, color: AppColors.primary, size: 20),
+                                    onPressed: () => _showEditShiftDialog(shift),
+                                  ),
+                                ),
+                                Tooltip(
+                                  message: 'Delete',
+                                  child: IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                    onPressed: () => _deleteShift(shift['id']),
+                                  ),
+                                ),
+                              ],
+                            )),
+                          ]);
+                        }).toList(),
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCreateShiftDialog() {
+    final nameController = TextEditingController();
+    final codeController = TextEditingController();
+    TimeOfDay startTime = const TimeOfDay(hour: 9, minute: 0);
+    TimeOfDay endTime = const TimeOfDay(hour: 17, minute: 0);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.access_time, color: Color(0xFF2563EB)),
+              SizedBox(width: 8),
+              Text('Create Shift'),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Shift Name *',
+                    hintText: 'e.g. Morning Shift',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.badge),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: codeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Shift Code *',
+                    hintText: 'e.g. morning',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.code),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.access_time, color: Colors.green),
+                  title: const Text('Start Time'),
+                  trailing: ElevatedButton.icon(
+                    onPressed: () async {
+                      final picked = await showTimePicker(context: context, initialTime: startTime);
+                      if (picked != null) setDialogState(() => startTime = picked);
+                    },
+                    icon: const Icon(Icons.schedule, size: 16),
+                    label: Text(startTime.format(context)),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.access_time, color: Colors.red),
+                  title: const Text('End Time'),
+                  trailing: ElevatedButton.icon(
+                    onPressed: () async {
+                      final picked = await showTimePicker(context: context, initialTime: endTime);
+                      if (picked != null) setDialogState(() => endTime = picked);
+                    },
+                    icon: const Icon(Icons.schedule, size: 16),
+                    label: Text(endTime.format(context)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton.icon(
+              onPressed: () async {
+                if (nameController.text.isEmpty || codeController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Name and Code are required'), backgroundColor: Colors.orange),
+                  );
+                  return;
+                }
+                final startStr = '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}';
+                final endStr = '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
+                try {
+                  final dio = ref.read(dioProvider);
+                  await dio.post('/shifts', data: {
+                    'name': nameController.text.trim(),
+                    'code': codeController.text.trim().toLowerCase(),
+                    'startTime': startStr,
+                    'endTime': endStr,
+                  });
+                  Navigator.pop(ctx);
+                  _loadData();
+                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Shift created successfully'), backgroundColor: Colors.green),
+                  );
+                } catch (e) {
+                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Create'),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditShiftDialog(dynamic shift) {
+    final nameController = TextEditingController(text: shift['name'] ?? '');
+    final codeController = TextEditingController(text: shift['code'] ?? '');
+    final startParts = (shift['start_time'] ?? shift['startTime'] ?? '09:00').split(':');
+    final endParts = (shift['end_time'] ?? shift['endTime'] ?? '17:00').split(':');
+    TimeOfDay startTime = TimeOfDay(hour: int.tryParse(startParts[0]) ?? 9, minute: int.tryParse(startParts.length > 1 ? startParts[1] : '0') ?? 0);
+    TimeOfDay endTime = TimeOfDay(hour: int.tryParse(endParts[0]) ?? 17, minute: int.tryParse(endParts.length > 1 ? endParts[1] : '0') ?? 0);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.edit, color: Color(0xFF2563EB)),
+              SizedBox(width: 8),
+              Text('Edit Shift'),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Shift Name', border: OutlineInputBorder(), prefixIcon: Icon(Icons.badge)),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: codeController,
+                  decoration: const InputDecoration(labelText: 'Shift Code', border: OutlineInputBorder(), prefixIcon: Icon(Icons.code)),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.access_time, color: Colors.green),
+                  title: const Text('Start Time'),
+                  trailing: ElevatedButton.icon(
+                    onPressed: () async {
+                      final picked = await showTimePicker(context: context, initialTime: startTime);
+                      if (picked != null) setDialogState(() => startTime = picked);
+                    },
+                    icon: const Icon(Icons.schedule, size: 16),
+                    label: Text(startTime.format(context)),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.access_time, color: Colors.red),
+                  title: const Text('End Time'),
+                  trailing: ElevatedButton.icon(
+                    onPressed: () async {
+                      final picked = await showTimePicker(context: context, initialTime: endTime);
+                      if (picked != null) setDialogState(() => endTime = picked);
+                    },
+                    icon: const Icon(Icons.schedule, size: 16),
+                    label: Text(endTime.format(context)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final startStr = '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}';
+                final endStr = '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
+                try {
+                  final dio = ref.read(dioProvider);
+                  await dio.put('/shifts/${shift['id']}', data: {
+                    'name': nameController.text.trim(),
+                    'code': codeController.text.trim().toLowerCase(),
+                    'startTime': startStr,
+                    'endTime': endStr,
+                  });
+                  Navigator.pop(ctx);
+                  _loadData();
+                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Shift updated successfully'), backgroundColor: Colors.green),
+                  );
+                } catch (e) {
+                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              },
+              icon: const Icon(Icons.save),
+              label: const Text('Save'),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteShift(String id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.warning_amber_rounded, color: Colors.red),
+        title: const Text('Delete Shift?'),
+        content: const Text('This will deactivate the shift. It can be reactivated later.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      final dio = ref.read(dioProvider);
+      await dio.delete('/shifts/$id');
+      _loadData();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Shift deleted'), backgroundColor: Colors.green),
+      );
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 }

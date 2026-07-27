@@ -35,6 +35,7 @@ class SeedData {
     db.createTable('vehicle_documents');
     db.createTable('ncns_log');
     db.createTable('hcm_configs');
+    db.createTable('shifts');
 
     // Seed company
     db.insert('companies', {
@@ -138,6 +139,8 @@ class SeedData {
       {'id': 'usr_drv_01', 'email': 'john.driver@techcorp.com', 'first_name': 'John', 'last_name': 'Doe', 'phone': '+91 98765 11111'},
       {'id': 'usr_drv_02', 'email': 'mike.driver@techcorp.com', 'first_name': 'Mike', 'last_name': 'Smith', 'phone': '+91 98765 22222'},
       {'id': 'usr_drv_03', 'email': 'sarah.driver@techcorp.com', 'first_name': 'Sarah', 'last_name': 'Wilson', 'phone': '+91 98765 33333'},
+      {'id': 'usr_drv_04', 'email': 'david.driver@techcorp.com', 'first_name': 'David', 'last_name': 'Lee', 'phone': '+91 98765 44444'},
+      {'id': 'usr_drv_06', 'email': 'emma.driver@techcorp.com', 'first_name': 'Emma', 'last_name': 'Taylor', 'phone': '+91 98765 55555'},
     ];
 
     for (var drv in drivers) {
@@ -172,6 +175,11 @@ class SeedData {
       {'id': 'usr_emp_03', 'email': 'charlie@techcorp.com', 'first_name': 'Charlie', 'last_name': 'Brown', 'code': 'EMP003', 'dept': 'Engineering', 'desig': 'Software Engineer'},
       {'id': 'usr_emp_04', 'email': 'diana@techcorp.com', 'first_name': 'Diana', 'last_name': 'Ross', 'code': 'EMP004', 'dept': 'HR', 'desig': 'HR Manager'},
       {'id': 'usr_emp_05', 'email': 'edward@techcorp.com', 'first_name': 'Edward', 'last_name': 'Norton', 'code': 'EMP005', 'dept': 'Finance', 'desig': 'Accountant'},
+      {'id': 'usr_emp_06', 'email': 'fiona@techcorp.com', 'first_name': 'Fiona', 'last_name': 'Green', 'code': 'EMP006', 'dept': 'Engineering', 'desig': 'QA Engineer'},
+      {'id': 'usr_emp_07', 'email': 'george@techcorp.com', 'first_name': 'George', 'last_name': 'Clark', 'code': 'EMP007', 'dept': 'Operations', 'desig': 'Operations Lead'},
+      {'id': 'usr_emp_08', 'email': 'helen@techcorp.com', 'first_name': 'Helen', 'last_name': 'Davis', 'code': 'EMP008', 'dept': 'Marketing', 'desig': 'Content Writer'},
+      {'id': 'usr_emp_09', 'email': 'ivan@techcorp.com', 'first_name': 'Ivan', 'last_name': 'Evans', 'code': 'EMP009', 'dept': 'Engineering', 'desig': 'DevOps Engineer'},
+      {'id': 'usr_emp_10', 'email': 'julia@techcorp.com', 'first_name': 'Julia', 'last_name': 'Hall', 'code': 'EMP010', 'dept': 'Finance', 'desig': 'Financial Analyst'},
     ];
 
     for (var emp in employees) {
@@ -206,6 +214,8 @@ class SeedData {
       {'id': 'veh_001', 'plate_number': 'MH-12-AB-1234', 'model': 'Tata Ace', 'brand': 'Tata', 'year': 2022, 'seating_capacity': 20, 'color': 'White', 'status': 'active', 'driver_id': 'usr_drv_01_drv'},
       {'id': 'veh_002', 'plate_number': 'MH-12-CD-5678', 'model': 'Eeco', 'brand': 'Maruti', 'year': 2021, 'seating_capacity': 15, 'color': 'Silver', 'status': 'active', 'driver_id': 'usr_drv_02_drv'},
       {'id': 'veh_003', 'plate_number': 'MH-12-EF-9012', 'model': 'Traveller', 'brand': 'Force', 'year': 2023, 'seating_capacity': 26, 'color': 'White', 'status': 'active', 'driver_id': 'usr_drv_03_drv'},
+      {'id': 'veh_004', 'plate_number': 'MH-12-GH-3456', 'model': 'Innova', 'brand': 'Toyota', 'year': 2023, 'seating_capacity': 7, 'color': 'Silver', 'status': 'active', 'driver_id': 'usr_drv_04_drv'},
+      {'id': 'veh_005', 'plate_number': 'MH-12-IJ-7890', 'model': 'Ertiga', 'brand': 'Maruti', 'year': 2024, 'seating_capacity': 7, 'color': 'White', 'status': 'active', 'driver_id': 'usr_drv_06_drv'},
     ];
 
     for (var veh in vehicles) {
@@ -310,9 +320,9 @@ class SeedData {
     }
 
     // Assign employees to routes/stops
-    final employeeIds = ['usr_emp_01_emp', 'usr_emp_02_emp', 'usr_emp_03_emp', 'usr_emp_04_emp', 'usr_emp_05_emp'];
-    final assignedRoutes = [route1Id, route1Id, route2Id, route1Id, route2Id];
-    final assignedStops = ['stop_001', 'stop_002', 'stop_006', 'stop_003', 'stop_004'];
+    final employeeIds = ['usr_emp_01_emp', 'usr_emp_02_emp', 'usr_emp_03_emp', 'usr_emp_04_emp', 'usr_emp_05_emp', 'usr_emp_06_emp', 'usr_emp_07_emp', 'usr_emp_08_emp', 'usr_emp_09_emp', 'usr_emp_10_emp'];
+    final assignedRoutes = [route1Id, route1Id, route2Id, route1Id, route2Id, route1Id, route1Id, route2Id, route2Id, route1Id];
+    final assignedStops = ['stop_001', 'stop_002', 'stop_006', 'stop_003', 'stop_004', 'stop_001', 'stop_002', 'stop_006', 'stop_007', 'stop_003'];
 
     for (var i = 0; i < employeeIds.length; i++) {
       db.update('employees', {
@@ -425,6 +435,96 @@ class SeedData {
       'is_verified': true,
       'created_at': now.toIso8601String(),
       'expires_at': now.add(const Duration(minutes: 30)).toIso8601String(),
+    });
+
+    // More trips
+    final tomorrowTime = DateTime(now.year, now.month, now.day + 1, 8, 0);
+    final eveningHalfTime = DateTime(now.year, now.month, now.day, 17, 30);
+    final tomorrowEarlyTime = DateTime(now.year, now.month, now.day + 1, 7, 30);
+
+    db.insert('trips', {
+      'id': 'trip_005',
+      'route_id': route1Id,
+      'vehicle_id': 'veh_002',
+      'driver_id': 'usr_drv_02',
+      'type': 'pickup',
+      'status': 'scheduled',
+      'scheduled_time': tomorrowTime.toIso8601String(),
+      'company_id': 'comp_001',
+      'total_passengers': 4,
+      'boarded_passengers': 0,
+      'total_distance': 15.0,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    db.insert('trips', {
+      'id': 'trip_006',
+      'route_id': route2Id,
+      'vehicle_id': 'veh_003',
+      'driver_id': 'usr_drv_03',
+      'type': 'dropoff',
+      'status': 'scheduled',
+      'scheduled_time': eveningHalfTime.toIso8601String(),
+      'company_id': 'comp_001',
+      'total_passengers': 3,
+      'boarded_passengers': 0,
+      'total_distance': 22.0,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    db.insert('trips', {
+      'id': 'trip_007',
+      'route_id': route1Id,
+      'vehicle_id': 'veh_004',
+      'driver_id': 'usr_drv_04',
+      'type': 'pickup',
+      'status': 'scheduled',
+      'scheduled_time': tomorrowEarlyTime.toIso8601String(),
+      'company_id': 'comp_001',
+      'total_passengers': 2,
+      'boarded_passengers': 0,
+      'total_distance': 12.0,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    // Trip passengers for new trips
+    db.insert('trip_passengers', {
+      'id': 'tp_006', 'trip_id': 'trip_005', 'employee_id': 'usr_emp_06_emp', 'stop_id': 'stop_001',
+      'is_boarded': false, 'is_dropped': false,
+    });
+    db.insert('trip_passengers', {
+      'id': 'tp_007', 'trip_id': 'trip_005', 'employee_id': 'usr_emp_07_emp', 'stop_id': 'stop_002',
+      'is_boarded': false, 'is_dropped': false,
+    });
+    db.insert('trip_passengers', {
+      'id': 'tp_008', 'trip_id': 'trip_005', 'employee_id': 'usr_emp_08_emp', 'stop_id': 'stop_003',
+      'is_boarded': false, 'is_dropped': false,
+    });
+    db.insert('trip_passengers', {
+      'id': 'tp_009', 'trip_id': 'trip_005', 'employee_id': 'usr_emp_09_emp', 'stop_id': 'stop_003',
+      'is_boarded': false, 'is_dropped': false,
+    });
+
+    db.insert('trip_passengers', {
+      'id': 'tp_010', 'trip_id': 'trip_006', 'employee_id': 'usr_emp_01_emp', 'stop_id': 'stop_004',
+      'is_boarded': false, 'is_dropped': false,
+    });
+    db.insert('trip_passengers', {
+      'id': 'tp_011', 'trip_id': 'trip_006', 'employee_id': 'usr_emp_02_emp', 'stop_id': 'stop_005',
+      'is_boarded': false, 'is_dropped': false,
+    });
+    db.insert('trip_passengers', {
+      'id': 'tp_012', 'trip_id': 'trip_006', 'employee_id': 'usr_emp_04_emp', 'stop_id': 'stop_006',
+      'is_boarded': false, 'is_dropped': false,
+    });
+
+    db.insert('trip_passengers', {
+      'id': 'tp_013', 'trip_id': 'trip_007', 'employee_id': 'usr_emp_10_emp', 'stop_id': 'stop_001',
+      'is_boarded': false, 'is_dropped': false,
+    });
+    db.insert('trip_passengers', {
+      'id': 'tp_014', 'trip_id': 'trip_007', 'employee_id': 'usr_emp_05_emp', 'stop_id': 'stop_002',
+      'is_boarded': false, 'is_dropped': false,
     });
 
     // Trip passengers
@@ -552,6 +652,38 @@ class SeedData {
       'created_at': DateTime.now().toIso8601String(),
     });
 
+    // Shift definitions
+    db.insert('shifts', {
+      'id': 'shift_001',
+      'name': 'Morning Shift',
+      'code': 'morning',
+      'start_time': '06:00',
+      'end_time': '14:00',
+      'company_id': 'comp_001',
+      'is_active': true,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    db.insert('shifts', {
+      'id': 'shift_002',
+      'name': 'Evening Shift',
+      'code': 'evening',
+      'start_time': '14:00',
+      'end_time': '22:00',
+      'company_id': 'comp_001',
+      'is_active': true,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    db.insert('shifts', {
+      'id': 'shift_003',
+      'name': 'Night Shift',
+      'code': 'night',
+      'start_time': '22:00',
+      'end_time': '06:00',
+      'company_id': 'comp_001',
+      'is_active': true,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
     print('Database seeded successfully!');
     print('  - 3 Companies');
     print('  - ${2 + drivers.length + employees.length} Users');
@@ -560,12 +692,13 @@ class SeedData {
     print('  - ${vehicles.length} Vehicles');
     print('  - ${stops.length} Stops');
     print('  - 2 Routes');
-    print('  - 4 Trips (1 inProgress)');
+    print('  - 7 Trips (1 inProgress)');
     print('  - 5 Attendance records');
     print('  - 2 Notifications');
     print('  - 2 Billing records');
     print('  - ${employeeIds.length * 5} Roster entries');
     print('  - 4 Vehicle documents');
     print('  - 2 Trip OTPs');
+    print('  - 3 Shift definitions');
   }
 }
