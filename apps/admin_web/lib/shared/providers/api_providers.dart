@@ -7,9 +7,8 @@ import 'package:etm_networking/etm_networking.dart';
 
 String get _baseUrl {
   if (kIsWeb) {
-    // Production backend URL - update this after deploying backend
-    // For now use localhost; change to your Render URL after deployment
-    return 'http://localhost:8080/api/v1';
+    // Production backend URL
+    return 'https://etm-gp12.onrender.com/api/v1';
   }
   return 'http://localhost:8080/api/v1';
 }
