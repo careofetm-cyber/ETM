@@ -1,7 +1,18 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:etm_networking/etm_networking.dart';
+
+String get _baseUrl {
+  if (kIsWeb) {
+    // Production backend URL - update this after deploying backend
+    // For now use localhost; change to your Render URL after deployment
+    return 'http://localhost:8080/api/v1';
+  }
+  return 'http://localhost:8080/api/v1';
+}
 
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async {
   return await SharedPreferences.getInstance();
@@ -9,7 +20,7 @@ final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async 
 
 final dioProvider = Provider<Dio>((ref) {
   return Dio(BaseOptions(
-    baseUrl: 'http://localhost:8080/api/v1',
+    baseUrl: _baseUrl,
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
     headers: {

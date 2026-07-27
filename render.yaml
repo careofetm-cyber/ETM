@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: etm-backend
+    runtime: dart
+    buildCommand: cd backend && dart pub get
+    startCommand: cd backend && dart run bin/server.dart
+    envVars:
+      - key: PORT
+        value: 8080
+    healthCheckPath: /health
+    autoDeploy: true
