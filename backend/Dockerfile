@@ -1,45 +1,29 @@
-# Dockerfile for ETM Backend (Dart Shelf API)
-# Multi-stage build for smaller final image
+# Dockerfile for ETM Backend
+# Uses Flutter SDK (needed because etm_core depends on Flutter)
 
 # Stage 1: Build
-FROM dart:3.5-sdk AS build
+FROM ghcr.io/cirruslabs/flutter:stable AS build
 
 WORKDIR /app
 
-# Copy dependency files first for better caching
-COPY pubspec.yaml pubspec.lock* ./
-COPY packages/core/pubspec.yaml packages/core/
-COPY packages/networking/pubspec.yaml packages/networking/
-COPY packages/maps/pubspec.yaml packages/maps/
+# Copy all source
+COPY . .
 
-# Copy backend pubspec
-COPY backend/pubspec.yaml backend/
+# Get backend dependencies (Flutter SDK provides Dart + Flutter)
+RUN cd backend && flutter pub get --no-example
 
-# Get dependencies
-RUN cd backend && dart pub get
-
-# Copy source code
-COPY packages/ packages/
-COPY backend/ backend/
-
-# Build
+# Build the server binary
 RUN cd backend && dart compile exe bin/server.dart -o bin/server
 
-# Stage 2: Runtime
+# Stage 2: Runtime (minimal image)
 FROM debian:bookworm-slim
 
-# Install dart runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
-# Copy built binary
 COPY --from=build /app/backend/bin/server/bin/server /app/server
 
-# Expose port
 EXPOSE 8080
-
-# Run
 CMD ["/app/server"]
