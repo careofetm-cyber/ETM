@@ -10,7 +10,7 @@ String get _baseUrl {
     // Production backend URL
     return 'https://etm-gp12.onrender.com/api/v1';
   }
-  return 'http://localhost:8080/api/v1';
+  return 'https://etm-gp12.onrender.com/api/v1';
 }
 
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async {

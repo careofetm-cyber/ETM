@@ -48,7 +48,7 @@ class BrandingNotifier extends StateNotifier<CompanyBranding> {
   Future<void> loadBranding(String slug) async {
     try {
       final dio = Dio(BaseOptions(
-        baseUrl: 'http://localhost:8080/api/v1',
+        baseUrl: 'https://etm-gp12.onrender.com/api/v1',
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
       ));
