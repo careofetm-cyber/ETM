@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  FIREBASE_PROJECT: etm-transport
+  FIREBASE_PROJECT: etm-transport-823e6
 
 jobs:
   deploy-admin-web:
