@@ -1,13 +1,10 @@
-name: Deploy ETM to Firebase
+name: Deploy ETM
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
-env:
-  FIREBASE_PROJECT: etm-transport-823e6
 
 jobs:
   deploy-admin-web:
@@ -37,38 +34,15 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           channelId: live
-          projectId: ${{ env.FIREBASE_PROJECT }}
+          projectId: etm-transport-823e6
 
-  deploy-backend:
-    name: Deploy Backend to Cloud Run
+  trigger-render-deploy:
+    name: Trigger Render Backend Deploy
     runs-on: ubuntu-latest
+    needs: deploy-admin-web
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ env.FIREBASE_PROJECT }}
-          service_account_key: '${{ secrets.GCP_SA_KEY }}'
-
-      - name: Configure Docker for GCR
-        run: gcloud auth configure-docker
-
-      - name: Build Docker image
-        run: docker build -t gcr.io/${{ env.FIREBASE_PROJECT }}/etm-backend ./backend
-
-      - name: Push to Container Registry
-        run: docker push gcr.io/${{ env.FIREBASE_PROJECT }}/etm-backend
-
-      - name: Deploy to Cloud Run
+      - name: Deploy to Render
         run: |
-          gcloud run deploy etm-backend \
-            --image gcr.io/${{ env.FIREBASE_PROJECT }}/etm-backend \
-            --platform managed \
-            --region asia-south1 \
-            --allow-unauthenticated \
-            --port 8080 \
-            --memory 512Mi \
-            --min-instances 0 \
-            --max-instances 3
+          curl -X POST "https://api.render.com/services/srv-$(echo ${{ secrets.RENDER_SERVICE_ID }})/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json"
