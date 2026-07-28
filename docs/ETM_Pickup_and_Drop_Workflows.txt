@@ -1,0 +1,636 @@
+================================================================================
+        ENTERPRISE EMPLOYEE TRANSPORT MANAGEMENT SYSTEM (ETM)
+              COMPLETE PICKUP & DROP WORKFLOW DOCUMENTATION
+================================================================================
+
+This document defines the complete operational workflow for the ETM system,
+covering both Pickup (home-to-office) and Drop (office-to-home) transport
+operations. It is aligned with enterprise-grade ETM platforms and supports
+the full lifecycle from shift planning through transport execution, auditing,
+compliance, and vendor billing.
+
+================================================================================
+                        PART 1: PICKUP WORKFLOW
+               (Employee Home → Office / Destination)
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION A: PLANNING PHASE
+────────────────────────────────────────────────────────────────────────────────
+
+  Step 1: SHIFT CREATED
+    - Company Admin creates shifts (Morning, Evening, Night) with start/end times
+    - Each shift defines eligible time windows for transport
+    - Shifts are linked to employee rosters
+
+  Step 2: TRANSPORT DEMAND GENERATED
+    - System identifies employees requiring transport based on:
+      * Roster assignments for the shift
+      * Employee home location vs office location
+      * Transport eligibility (is_transport_required flag)
+    - Demand is aggregated by route/zone
+
+  Step 3: EMPLOYEE ELIGIBILITY VALIDATED
+    - System validates each employee:
+      * Active employment status
+      * Valid home address on file
+      * Transport requirement flag enabled
+      * Not on leave or NCNS (No Cab No Show) probation
+    - Ineligible employees are flagged for admin review
+
+  Step 4: ROUTE OPTIMIZATION COMPLETED
+    - System groups employees by geographic proximity
+    - Optimal pickup routes are generated:
+      * Minimize total travel distance
+      * Maximize vehicle utilization
+      * Respect vehicle seating capacity
+    - Pickup sequence is determined (nearest-first or time-based)
+
+  Step 5: ROUTE APPROVED
+    - Transport Manager reviews optimized routes
+    - Routes can be manually adjusted
+    - Approval triggers trip creation
+
+  Step 6: TRIP CREATED
+    - System creates trip records for each approved route
+    - Trip status: TRIP_CREATED
+    - Default fields set:
+      * type: pickup
+      * status: scheduled
+      * scheduled_time: shift start time minus buffer
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION B: RESOURCE ALLOCATION PHASE
+────────────────────────────────────────────────────────────────────────────────
+
+  Step 7: VEHICLE ASSIGNED
+    - Admin/Transport Manager assigns vehicle to trip
+    - Vehicle validated for:
+      * Active status
+      * Seating capacity >= assigned employees
+      * Valid documents (insurance, PUC, etc.)
+    - Trip status: VEHICLE_ASSIGNED
+
+  Step 8: DRIVER ASSIGNED
+    - Admin assigns driver to trip
+    - Driver validated for:
+      * Available status
+      * Valid license
+      * Not already assigned to another trip in same time window
+    - Trip status: DRIVER_ASSIGNED
+
+  Step 9: ESCORT ASSIGNED (If Required)
+    - For large vehicles or policy compliance
+    - Optional escort personnel assignment
+    - Trip status: ESCORT_ASSIGNED
+
+  Step 10: EMPLOYEES ASSIGNED TO TRIP
+    - Employees assigned based on:
+      * Route proximity to home location
+      * Shift match (morning roster → morning trip)
+      * Vehicle capacity
+    - Employee roster entries linked to trip
+    - Trip status: EMPLOYEES_ASSIGNED
+
+  Step 11: PICKUP SEQUENCE GENERATED
+    - Optimal pickup order determined
+    - Each employee assigned a pickup stop/sequence number
+    - Stop locations verified against route
+
+  Step 12: ETA CALCULATED
+    - Estimated time of arrival at each pickup point calculated
+    - Based on:
+      * Distance between stops
+      * Traffic patterns (if available)
+      * Vehicle speed assumptions
+
+  Step 13: TRIP PUBLISHED
+    - Trip details published to:
+      * Driver app (route, passengers, schedule)
+      * Employee app (pickup time, vehicle, driver details)
+    - Trip status: TRIP_PUBLISHED
+
+  Step 14: NOTIFICATIONS SENT
+    - Notifications dispatched:
+      * Driver: Trip assignment with route details
+      * Employees: Pickup time, vehicle info, driver contact
+      * Admin: Trip publication confirmation
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION C: TRIP EXECUTION PHASE
+────────────────────────────────────────────────────────────────────────────────
+
+  Step 15: DRIVER ACCEPTED TRIP
+    - Driver acknowledges trip assignment
+    - Trip status: DRIVER_ACCEPTED
+
+  Step 16: PRE-TRIP CHECKLIST COMPLETED
+    - Driver completes vehicle inspection:
+      * Fuel level OK
+      * Cleanliness verified
+      * Safety equipment present
+      * Documents available
+    - Checklist submitted via driver app
+
+  Step 17: DRIVER STARTED TRIP
+    - Driver initiates trip from app
+    - GPS tracking activated
+    - Trip status: TRIP_STARTED
+    - Status: GPS_TRACKING_STARTED
+
+  Step 18: GPS TRACKING ACTIVE
+    - Real-time location updates sent every 10-30 seconds
+    - Admin dashboard shows live trip progress
+    - ETA updates pushed to employees
+
+  Step 19: REACHED PICKUP STOP
+    - Driver arrives at pickup location
+    - Status: AT_PICKUP
+    - Employees at that stop notified: "Driver arrived"
+
+  Step 20: EMPLOYEE ARRIVAL CONFIRMED (Optional)
+    - Employee confirms physical presence
+    - Or driver confirms visually
+
+  Step 21: OTP GENERATED
+    - System generates 6-digit OTP for employee verification
+    - OTP displayed in employee app
+    - Status: OTP_GENERATED
+    - Notification sent to employee
+
+  Step 22: OTP VERIFIED
+    - Employee shares OTP with driver
+    - Driver enters OTP in driver app
+    - System validates OTP
+    - Status: OTP_VERIFIED
+
+  Step 23: EMPLOYEE BOARDED
+    - Driver confirms employee boarding
+    - Seat assignment recorded
+    - Employee app shows "Boarded" status
+    - Status: EMPLOYEE_BOARDED
+
+  Step 24: BOARDING CONFIRMED
+    - System updates passenger manifest
+    - Seat occupancy updated
+    - Admin notified of boarding
+
+  Step 25: PROCEED TO NEXT PICKUP
+    - Driver navigates to next pickup stop
+    - Status: NEXT_PICKUP
+    - Remaining employees receive updated ETA
+
+  Step 26: REPEAT PICKUP PROCESS
+    - Steps 19-25 repeat for each pickup stop
+    - Each employee individually verified via OTP
+
+  Step 27: ALL PICKUPS COMPLETED
+    - All assigned employees boarded
+    - Status: PICKUPS_COMPLETED
+
+  Step 28: EN ROUTE TO DESTINATION
+    - Driver proceeds to office/destination
+    - Status: EN_ROUTE
+
+  Step 29: REACHED OFFICE/DESTINATION
+    - Driver arrives at destination
+    - Status: REACHED_DESTINATION
+
+  Step 30: EMPLOYEE DROP CONFIRMED
+    - Employees disembark at destination
+    - Each employee confirmed dropped
+    - Status: EMPLOYEE_DROPPED
+
+  Step 31: ALL EMPLOYEES DROPPED
+    - All passengers confirmed at destination
+    - Status: ALL_DROPS_COMPLETED
+
+  Step 32: DRIVER ENDED TRIP
+    - Driver ends trip in app
+    - GPS tracking deactivated
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION D: TRIP CLOSURE PHASE
+────────────────────────────────────────────────────────────────────────────────
+
+  Step 33: TRIP COMPLETED
+    - Trip marked as completed
+    - Status: TRIP_COMPLETED
+
+  Step 34: GPS ROUTE VALIDATED
+    - System validates actual route vs planned route
+    - Deviations flagged for review
+    - Status: GPS_VALIDATED
+
+  Step 35: TRIP AUDIT COMPLETED
+    - Automated audit checks:
+      * All passengers boarded and dropped
+      * OTP verification logs reviewed
+      * GPS route compliance verified
+      * Time adherence checked
+    - Status: TRIP_AUDITED
+
+  Step 36: VENDOR BILLING GENERATED
+    - Billing calculated based on:
+      * Per-trip cost (from company settings)
+      * Distance traveled
+      * Minimum KM threshold
+    - Billing record created
+    - Status: BILLING_GENERATED
+
+  Step 37: MIS & ANALYTICS UPDATED
+    - Dashboard metrics updated:
+      * Trip completion rate
+      * On-time performance
+      * Vehicle utilization
+      * Employee satisfaction scores
+    - Status: MIS_UPDATED
+
+  Step 38: TRIP CLOSED
+    - Trip fully closed in system
+    - All status codes finalized
+    - Status: TRIP_CLOSED
+
+
+================================================================================
+                        PART 2: DROP WORKFLOW
+               (Office / Origin → Employee Home)
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION A: PLANNING PHASE
+────────────────────────────────────────────────────────────────────────────────
+
+  Step 1: SHIFT CREATED
+    - Company Admin creates/verifies shifts
+    - Drop shift timing aligned with work shift end
+
+  Step 2: TRANSPORT DEMAND GENERATED
+    - System identifies employees requiring drop transport:
+      * Roster assignments for the shift
+      * Employees who boarded pickup trip (if same-day)
+      * Employee drop confirmation requests
+
+  Step 3: EMPLOYEE DROP CONFIRMATION
+    - Employees confirm they need drop transport via app
+    - Or admin bulk-confirms based on roster
+    - Only confirmed employees included in trip
+    - Status: DROP_CONFIRMED
+
+  Step 4: ROUTE OPTIMIZATION COMPLETED
+    - Drop routes optimized:
+      * Office as starting point
+      * Employees grouped by destination proximity
+      * Reverse-route optimization (office → homes)
+    - Drop sequence determined (farthest-first or time-based)
+
+  Step 5: ROUTE APPROVED
+    - Transport Manager reviews and approves drop routes
+
+  Step 6: TRIP CREATED
+    - Trip records created with type: dropoff
+    - Status: TRIP_CREATED
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION B: RESOURCE ALLOCATION PHASE
+────────────────────────────────────────────────────────────────────────────────
+
+  Step 7: VEHICLE ASSIGNED
+    - Vehicle assigned to drop trip
+    - Validated for capacity and availability
+    - Status: VEHICLE_ASSIGNED
+
+  Step 8: DRIVER ASSIGNED
+    - Driver assigned to drop trip
+    - Validated for availability and license
+    - Status: DRIVER_ASSIGNED
+
+  Step 9: ESCORT ASSIGNED (If Required)
+    - Especially for late-night drops
+    - Female employee safety considerations
+    - Status: ESCORT_ASSIGNED
+
+  Step 10: EMPLOYEES ASSIGNED TO TRIP
+    - Employees assigned based on:
+      * Drop confirmation
+      * Route proximity to home
+      * Shift match
+    - Status: EMPLOYEES_ASSIGNED
+
+  Step 11: DROP SEQUENCE GENERATED
+    - Optimal drop order determined
+    - Usually farthest employee dropped first
+    - Each employee assigned a drop sequence number
+
+  Step 12: ETA CALCULATED
+    - Estimated drop times calculated for each employee
+    - Based on distance and traffic
+
+  Step 13: TRIP PUBLISHED
+    - Trip details published to driver and employees
+    - Status: TRIP_PUBLISHED
+
+  Step 14: NOTIFICATIONS SENT
+    - Driver: Route, passenger list, schedule
+    - Employees: Pickup point, ETA, vehicle info
+    - Admin: Publication confirmation
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION C: PRE-DEPARTURE PHASE
+────────────────────────────────────────────────────────────────────────────────
+
+  Step 15: DRIVER ACCEPTED TRIP
+    - Driver acknowledges assignment
+    - Status: DRIVER_ACCEPTED
+
+  Step 16: DRIVER REACHED OFFICE
+    - Driver arrives at office pickup point
+    - Status: DRIVER_REACHED_OFFICE
+    - Employees notified: "Driver is ready for boarding"
+
+  Step 17: VEHICLE CHECK-IN COMPLETED
+    - Driver completes pre-departure inspection:
+      * Fuel level
+      * Vehicle cleanliness
+      * Safety equipment
+    - Status: VEHICLE_CHECKIN_COMPLETED
+
+  Step 18: EMPLOYEE CHECK-IN OPENED
+    - Boarding point activated
+    - Employees can check in via app
+    - Status: BOARDING_OPEN
+
+  Step 19: EMPLOYEES REPORT AT BOARDING POINT
+    - Employees arrive and check in
+    - Driver sees boarding status on app
+    - Status: EMPLOYEE_REPORTED
+
+  Step 20: OTP GENERATED
+    - OTP generated for each employee
+    - Displayed in employee app
+    - Status: OTP_GENERATED
+
+  Step 21: OTP VERIFIED
+    - Employee shows OTP to driver
+    - Driver verifies in app
+    - Status: OTP_VERIFIED
+
+  Step 22: EMPLOYEE BOARDED
+    - Employee boards vehicle
+    - Seat assignment recorded
+    - Status: EMPLOYEE_BOARDED
+
+  Step 23: SEAT OCCUPANCY CONFIRMED
+    - Real-time seat map updated
+    - Admin dashboard shows occupancy
+    - Status: BOARDING_CLOSED (when all boarded)
+
+  Step 24: ALL EMPLOYEES BOARDED
+    - All confirmed employees onboard
+    - Driver can proceed
+    - Status: BOARDING_CLOSED
+
+  Step 25: DRIVER STARTED TRIP
+    - Driver initiates drop trip
+    - GPS tracking activated
+    - Status: TRIP_STARTED
+    - Status: GPS_TRACKING_STARTED
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION D: DROP EXECUTION PHASE
+────────────────────────────────────────────────────────────────────────────────
+
+  Step 26: REACHED EMPLOYEE DROP LOCATION
+    - Driver arrives at first drop point
+    - Status: AT_DROP_LOCATION
+    - Employee notified
+
+  Step 27: EMPLOYEE DROP CONFIRMED
+    - Employee disembarks
+    - Driver confirms drop
+    - Status: EMPLOYEE_DROPPED
+
+  Step 28: SAFE DROP CONFIRMATION (Optional)
+    - Employee confirms safe arrival home
+    - Especially important for late-night drops
+    - Status: SAFE_DROP_CONFIRMED
+    - Security team notified
+
+  Step 29: PROCEED TO NEXT DROP
+    - Driver navigates to next drop point
+    - Status: NEXT_DROP
+    - Next employee receives updated ETA
+
+  Step 30: REPEAT UNTIL LAST EMPLOYEE
+    - Steps 26-29 repeat for each drop
+    - Status: LAST_DROP_COMPLETED (final employee)
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION E: TRIP CLOSURE PHASE
+────────────────────────────────────────────────────────────────────────────────
+
+  Step 31: LAST EMPLOYEE DROPPED
+    - Final employee confirmed dropped
+    - Status: ALL_DROPS_COMPLETED
+
+  Step 32: TRIP COMPLETED
+    - Trip marked completed
+    - Status: TRIP_COMPLETED
+
+  Step 33: GPS ROUTE VALIDATED
+    - Actual route vs planned route validated
+    - Status: GPS_VALIDATED
+
+  Step 34: VENDOR BILLING GENERATED
+    - Billing calculated and recorded
+    - Status: BILLING_GENERATED
+
+  Step 35: MIS & ANALYTICS UPDATED
+    - Metrics updated
+    - Status: MIS_UPDATED
+
+  Step 36: TRIP CLOSED
+    - Trip fully closed
+    - Status: TRIP_CLOSED
+
+
+================================================================================
+           PART 3: LATE NIGHT SAFETY WORKFLOW
+         (Especially for Female Employees)
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+When a drop trip is scheduled during late-night hours (e.g., after 9 PM):
+
+  1. Female Employee Last Drop Check
+     - System checks if any female employee is the last drop
+     - If YES → Safety protocol activated
+
+  2. Escort Assigned
+     - Mandatory escort for late-night female employee drops
+     - Escort verified and tracked
+
+  3. Driver Cannot End Trip Until Safe Drop Confirmed
+     - Trip remains in active state
+     - Driver must wait for employee confirmation
+
+  4. Employee Confirms Safe Arrival
+     - Employee sends "Safe Drop Confirmed" from app
+     - Or admin/control room confirms
+
+  5. Trip Closed
+     - Only after all safety confirmations
+     - Audit trail maintained
+
+
+================================================================================
+           PART 4: ENTERPRISE EXCEPTION FLOW
+================================================================================
+
+At any stage, the system must support these exception scenarios:
+
+  EXCEPTION                        HANDLING
+  ──────────────────────────────── ──────────────────────────────────────
+  Employee Cancelled Ride          Trip updated, seat freed, billing adjusted
+  Employee No-Show (NCNS)          Marked as NCNS, NCNS counter incremented
+  OTP Verification Failed          Max 3 attempts, then flag for admin review
+  Manual Boarding Approval         Admin override for OTP failure
+  Driver Reassigned                Old driver released, new driver assigned
+  Vehicle Changed                  Trip updated with new vehicle
+  Route Modified                   Route recalculated, employees re-notified
+  Driver Delayed                   ETA updated, employees notified
+  Vehicle Breakdown                Trip reassigned to backup vehicle/driver
+  Emergency SOS                    Trip halted, admin alerted, emergency contacts notified
+  Employee Skipped                 Missed pickup logged, return trip scheduled
+  Trip Cancelled                   All resources freed, billing voided
+  Trip Rescheduled                 New time assigned, notifications sent
+
+
+================================================================================
+           PART 5: NOTIFICATION MATRIX
+================================================================================
+
+  EVENT                          RECIPIENT
+  ────────────────────────────── ──────────────────────────────────────
+  PICKUP NOTIFICATIONS:
+  Trip Published                 Employee & Driver
+  Driver Accepted Trip           Admin
+  Driver Started Trip            Employees
+  Driver 1 km Away               Employee
+  Driver Reached Pickup          Employee
+  OTP Generated                  Employee
+  Employee Boarded               Admin & Control Room
+  Trip Completed                 Admin
+
+  DROP NOTIFICATIONS:
+  Trip Published                 Employee & Driver
+  Driver Reached Office          Employees
+  Boarding Started               Employees
+  OTP Generated                  Employee
+  Employee Boarded               Control Room
+  Trip Started                   Employees' Emergency Contact (Optional)
+  Next Drop ETA                  Employee
+  Employee Dropped               Admin
+  Safe Drop Confirmed            Security Team
+  Trip Completed                 Admin & Billing
+
+
+================================================================================
+           PART 6: STATUS CODES REFERENCE
+================================================================================
+
+  PLANNING:
+    SHIFT_CREATED
+    TRANSPORT_DEMAND_GENERATED
+    EMPLOYEE_VALIDATED
+    DROP_CONFIRMED
+    ROUTE_OPTIMIZED
+    ROUTE_APPROVED
+
+  CREATION:
+    TRIP_CREATED
+
+  RESOURCE ALLOCATION:
+    VEHICLE_ASSIGNED
+    DRIVER_ASSIGNED
+    ESCORT_ASSIGNED
+    EMPLOYEES_ASSIGNED
+
+  SEQUENCING:
+    PICKUP_SEQUENCE_GENERATED
+    DROP_SEQUENCE_GENERATED
+    ETA_CALCULATED
+
+  PUBLICATION:
+    TRIP_PUBLISHED
+
+  EXECUTION - PICKUP:
+    DRIVER_ACCEPTED
+    PRE_TRIP_CHECK_COMPLETED
+    TRIP_STARTED
+    GPS_TRACKING_STARTED
+    AT_PICKUP
+    EMPLOYEE_NOTIFIED
+    OTP_GENERATED
+    OTP_VERIFIED
+    EMPLOYEE_BOARDED
+    NEXT_PICKUP
+    PICKUPS_COMPLETED
+    EN_ROUTE
+    REACHED_DESTINATION
+    EMPLOYEE_DROPPED
+    ALL_DROPS_COMPLETED
+
+  EXECUTION - DROP:
+    DRIVER_ACCEPTED
+    DRIVER_REACHED_OFFICE
+    VEHICLE_CHECKIN_COMPLETED
+    BOARDING_OPEN
+    EMPLOYEE_REPORTED
+    OTP_GENERATED
+    OTP_VERIFIED
+    EMPLOYEE_BOARDED
+    BOARDING_CLOSED
+    TRIP_STARTED
+    GPS_TRACKING_STARTED
+    AT_DROP_LOCATION
+    EMPLOYEE_DROPPED
+    SAFE_DROP_CONFIRMED
+    NEXT_DROP
+    LAST_DROP_COMPLETED
+
+  CLOSURE:
+    TRIP_COMPLETED
+    GPS_VALIDATED
+    TRIP_AUDITED
+    BILLING_GENERATED
+    MIS_UPDATED
+    TRIP_CLOSED
+
+
+================================================================================
+           PART 7: KEY DIFFERENCES - PICKUP vs DROP
+================================================================================
+
+  FEATURE                  PICKUP                    DROP
+  ──────────────────────── ──────────────────────── ────────────────────────
+  Start Point              Employee Home             Office
+  End Point                Office                    Employee Home
+  Pre-Departure            Not Required              Employee Check-In Required
+  Boarding Point           Multiple (per stop)       Single (office)
+  Sequence                 Pickup (near-first)       Drop (far-first)
+  Safety Protocol          Standard                  Enhanced (late-night)
+  Escort                   Optional                  Mandatory (female/late)
+  Safe Drop Confirmation   Not Required              Required (late-night)
+  Boarding Close           Not Applicable            Prevents late boarding
+  Employee Confirmation    OTP at pickup             OTP + Safe arrival at drop
+
+
+================================================================================
+           END OF DOCUMENT
+================================================================================
+  Version: 1.0
+  Date: July 2026
+  System: Enterprise Employee Transport Management System (ETM)
+  Classification: Internal / Operations
+================================================================================

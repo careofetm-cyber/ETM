@@ -36,7 +36,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await prefs.setString('auth_token', data['token']);
       await prefs.setString('refresh_token', data['refreshToken']);
       await prefs.setString('user_id', data['user']['id']);
-      await prefs.setString('user_name', '${data['user']['first_name']} ${data['user']['last_name']}');
+      await prefs.setString('user_name', '${data['user']['firstName'] ?? ''} ${data['user']['lastName'] ?? ''}'.trim());
       await prefs.setString('user_email', data['user']['email']);
       await prefs.setString('user_role', data['user']['role']);
       if (mounted) context.go('/home');
