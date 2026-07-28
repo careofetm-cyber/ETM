@@ -11,11 +11,11 @@ _$RouteImpl _$$RouteImplFromJson(Map<String, dynamic> json) => _$RouteImpl(
       name: json['name'] as String,
       companyId: json['companyId'] as String,
       description: json['description'] as String?,
-      stops: (json['stops'] as List<dynamic>)
-          .map((e) => RouteStop.fromJson(e as Map<String, dynamic>))
+      stops: (json['stops'] as List<dynamic>?)
+          ?.map((e) => RouteStop.fromJson(e as Map<String, dynamic>))
           .toList(),
-      totalDistance: (json['totalDistance'] as num).toDouble(),
-      estimatedDuration: (json['estimatedDuration'] as num).toInt(),
+      totalDistance: (json['totalDistance'] as num?)?.toDouble(),
+      estimatedDuration: (json['estimatedDuration'] as num?)?.toInt(),
       isActive: json['isActive'] as bool?,
       createdAt: json['createdAt'] == null
           ? null

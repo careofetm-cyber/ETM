@@ -359,7 +359,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                           decoration: const InputDecoration(labelText: 'Route *'),
                           items: routes.map<DropdownMenuItem<String>>((Route r) => DropdownMenuItem<String>(
                             value: r.id,
-                            child: Text('${r.name} (${r.totalDistance.toStringAsFixed(1)} km)'),
+                            child: Text('${r.name} (${r.totalDistance?.toStringAsFixed(1) ?? '0.0'} km)'),
                           )).toList(),
                           onChanged: (v) => setDialogState(() => selectedRouteId = v),
                           validator: (v) => v == null ? 'Route is required' : null,

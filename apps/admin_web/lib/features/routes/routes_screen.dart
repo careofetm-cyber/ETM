@@ -87,7 +87,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
       itemBuilder: (context, index) {
         final route = routes[index];
         final isActive = route.isActive ?? true;
-        final durationMin = (route.estimatedDuration / 60).round();
+        final durationMin = route.estimatedDuration != null ? (route.estimatedDuration! / 60).round() : 0;
         return Card(
           child: ListTile(
             leading: Container(
@@ -100,7 +100,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
             ),
             title: Text(route.name),
             subtitle: Text(
-              '${route.stops.length} stops • ${route.totalDistance.toStringAsFixed(1)} km • $durationMin min',
+              '${route.stops?.length ?? 0} stops • ${route.totalDistance?.toStringAsFixed(1) ?? '0.0'} km • $durationMin min',
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -234,8 +234,8 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
   void _showEditRouteDialog(BuildContext context, Route route) {
     _nameController.text = route.name;
     _descriptionController.text = route.description ?? '';
-    _distanceController.text = route.totalDistance.toStringAsFixed(1);
-    _durationController.text = (route.estimatedDuration / 60).round().toString();
+    _distanceController.text = (route.totalDistance ?? 0).toStringAsFixed(1);
+    _durationController.text = route.estimatedDuration != null ? (route.estimatedDuration! / 60).round().toString() : '0';
 
     final formKey = GlobalKey<FormState>();
 
@@ -307,7 +307,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
                 await api.updateRoute(route.id, {
                   'name': _nameController.text,
                   'description': _descriptionController.text,
-                  'totalDistance': double.tryParse(_distanceController.text) ?? route.totalDistance,
+                  'totalDistance': double.tryParse(_distanceController.text) ?? route.totalDistance ?? 0,
                   'estimatedDuration': (double.tryParse(_durationController.text) ?? 0) * 60,
                 });
                 if (context.mounted) Navigator.pop(context);

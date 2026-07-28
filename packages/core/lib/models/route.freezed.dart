@@ -24,9 +24,9 @@ mixin _$Route {
   String get name => throw _privateConstructorUsedError;
   String get companyId => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
-  List<RouteStop> get stops => throw _privateConstructorUsedError;
-  double get totalDistance => throw _privateConstructorUsedError;
-  int get estimatedDuration => throw _privateConstructorUsedError;
+  List<RouteStop>? get stops => throw _privateConstructorUsedError;
+  double? get totalDistance => throw _privateConstructorUsedError;
+  int? get estimatedDuration => throw _privateConstructorUsedError;
   bool? get isActive => throw _privateConstructorUsedError;
   DateTime? get createdAt => throw _privateConstructorUsedError;
   DateTime? get updatedAt => throw _privateConstructorUsedError;
@@ -50,9 +50,9 @@ abstract class $RouteCopyWith<$Res> {
       String name,
       String companyId,
       String? description,
-      List<RouteStop> stops,
-      double totalDistance,
-      int estimatedDuration,
+      List<RouteStop>? stops,
+      double? totalDistance,
+      int? estimatedDuration,
       bool? isActive,
       DateTime? createdAt,
       DateTime? updatedAt});
@@ -77,9 +77,9 @@ class _$RouteCopyWithImpl<$Res, $Val extends Route>
     Object? name = null,
     Object? companyId = null,
     Object? description = freezed,
-    Object? stops = null,
-    Object? totalDistance = null,
-    Object? estimatedDuration = null,
+    Object? stops = freezed,
+    Object? totalDistance = freezed,
+    Object? estimatedDuration = freezed,
     Object? isActive = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
@@ -101,18 +101,18 @@ class _$RouteCopyWithImpl<$Res, $Val extends Route>
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
               as String?,
-      stops: null == stops
+      stops: freezed == stops
           ? _value.stops
           : stops // ignore: cast_nullable_to_non_nullable
-              as List<RouteStop>,
-      totalDistance: null == totalDistance
+              as List<RouteStop>?,
+      totalDistance: freezed == totalDistance
           ? _value.totalDistance
           : totalDistance // ignore: cast_nullable_to_non_nullable
-              as double,
-      estimatedDuration: null == estimatedDuration
+              as double?,
+      estimatedDuration: freezed == estimatedDuration
           ? _value.estimatedDuration
           : estimatedDuration // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       isActive: freezed == isActive
           ? _value.isActive
           : isActive // ignore: cast_nullable_to_non_nullable
@@ -141,9 +141,9 @@ abstract class _$$RouteImplCopyWith<$Res> implements $RouteCopyWith<$Res> {
       String name,
       String companyId,
       String? description,
-      List<RouteStop> stops,
-      double totalDistance,
-      int estimatedDuration,
+      List<RouteStop>? stops,
+      double? totalDistance,
+      int? estimatedDuration,
       bool? isActive,
       DateTime? createdAt,
       DateTime? updatedAt});
@@ -166,9 +166,9 @@ class __$$RouteImplCopyWithImpl<$Res>
     Object? name = null,
     Object? companyId = null,
     Object? description = freezed,
-    Object? stops = null,
-    Object? totalDistance = null,
-    Object? estimatedDuration = null,
+    Object? stops = freezed,
+    Object? totalDistance = freezed,
+    Object? estimatedDuration = freezed,
     Object? isActive = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
@@ -190,18 +190,18 @@ class __$$RouteImplCopyWithImpl<$Res>
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
               as String?,
-      stops: null == stops
+      stops: freezed == stops
           ? _value._stops
           : stops // ignore: cast_nullable_to_non_nullable
-              as List<RouteStop>,
-      totalDistance: null == totalDistance
+              as List<RouteStop>?,
+      totalDistance: freezed == totalDistance
           ? _value.totalDistance
           : totalDistance // ignore: cast_nullable_to_non_nullable
-              as double,
-      estimatedDuration: null == estimatedDuration
+              as double?,
+      estimatedDuration: freezed == estimatedDuration
           ? _value.estimatedDuration
           : estimatedDuration // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       isActive: freezed == isActive
           ? _value.isActive
           : isActive // ignore: cast_nullable_to_non_nullable
@@ -226,9 +226,9 @@ class _$RouteImpl implements _Route {
       required this.name,
       required this.companyId,
       this.description,
-      required final List<RouteStop> stops,
-      required this.totalDistance,
-      required this.estimatedDuration,
+      final List<RouteStop>? stops,
+      this.totalDistance,
+      this.estimatedDuration,
       this.isActive,
       this.createdAt,
       this.updatedAt})
@@ -245,18 +245,20 @@ class _$RouteImpl implements _Route {
   final String companyId;
   @override
   final String? description;
-  final List<RouteStop> _stops;
+  final List<RouteStop>? _stops;
   @override
-  List<RouteStop> get stops {
+  List<RouteStop>? get stops {
+    final value = _stops;
+    if (value == null) return null;
     if (_stops is EqualUnmodifiableListView) return _stops;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_stops);
+    return EqualUnmodifiableListView(value);
   }
 
   @override
-  final double totalDistance;
+  final double? totalDistance;
   @override
-  final int estimatedDuration;
+  final int? estimatedDuration;
   @override
   final bool? isActive;
   @override
@@ -330,9 +332,9 @@ abstract class _Route implements Route {
       required final String name,
       required final String companyId,
       final String? description,
-      required final List<RouteStop> stops,
-      required final double totalDistance,
-      required final int estimatedDuration,
+      final List<RouteStop>? stops,
+      final double? totalDistance,
+      final int? estimatedDuration,
       final bool? isActive,
       final DateTime? createdAt,
       final DateTime? updatedAt}) = _$RouteImpl;
@@ -348,11 +350,11 @@ abstract class _Route implements Route {
   @override
   String? get description;
   @override
-  List<RouteStop> get stops;
+  List<RouteStop>? get stops;
   @override
-  double get totalDistance;
+  double? get totalDistance;
   @override
-  int get estimatedDuration;
+  int? get estimatedDuration;
   @override
   bool? get isActive;
   @override
