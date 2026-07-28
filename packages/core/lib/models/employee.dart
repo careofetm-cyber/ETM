@@ -12,6 +12,8 @@ class Employee with _$Employee {
     String? employeeCode,
     String? department,
     String? designation,
+    String? firstName,
+    String? lastName,
     String? phone,
     String? alternatePhone,
     String? email,
@@ -27,6 +29,15 @@ class Employee with _$Employee {
     DateTime? updatedAt,
   }) = _Employee;
 
+  const Employee._();
+
+  String get displayName {
+    if (firstName != null && lastName != null) return '$firstName $lastName';
+    if (firstName != null) return firstName!;
+    if (email != null) return email!;
+    return userId;
+  }
+
   factory Employee.fromJson(Map<String, dynamic> json) => _$EmployeeFromJson(json);
 }
 
@@ -36,6 +47,9 @@ class Driver with _$Driver {
     required String id,
     required String userId,
     required String companyId,
+    String? firstName,
+    String? lastName,
+    String? email,
     String? licenseNumber,
     DateTime? licenseExpiry,
     String? phone,
@@ -47,6 +61,15 @@ class Driver with _$Driver {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) = _Driver;
+
+  const Driver._();
+
+  String get displayName {
+    if (firstName != null && lastName != null) return '$firstName $lastName';
+    if (firstName != null) return firstName!;
+    if (email != null) return email!;
+    return userId;
+  }
 
   factory Driver.fromJson(Map<String, dynamic> json) => _$DriverFromJson(json);
 }

@@ -26,6 +26,8 @@ mixin _$Employee {
   String? get employeeCode => throw _privateConstructorUsedError;
   String? get department => throw _privateConstructorUsedError;
   String? get designation => throw _privateConstructorUsedError;
+  String? get firstName => throw _privateConstructorUsedError;
+  String? get lastName => throw _privateConstructorUsedError;
   String? get phone => throw _privateConstructorUsedError;
   String? get alternatePhone => throw _privateConstructorUsedError;
   String? get email => throw _privateConstructorUsedError;
@@ -62,6 +64,8 @@ abstract class $EmployeeCopyWith<$Res> {
       String? employeeCode,
       String? department,
       String? designation,
+      String? firstName,
+      String? lastName,
       String? phone,
       String? alternatePhone,
       String? email,
@@ -98,6 +102,8 @@ class _$EmployeeCopyWithImpl<$Res, $Val extends Employee>
     Object? employeeCode = freezed,
     Object? department = freezed,
     Object? designation = freezed,
+    Object? firstName = freezed,
+    Object? lastName = freezed,
     Object? phone = freezed,
     Object? alternatePhone = freezed,
     Object? email = freezed,
@@ -136,6 +142,14 @@ class _$EmployeeCopyWithImpl<$Res, $Val extends Employee>
       designation: freezed == designation
           ? _value.designation
           : designation // ignore: cast_nullable_to_non_nullable
+              as String?,
+      firstName: freezed == firstName
+          ? _value.firstName
+          : firstName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      lastName: freezed == lastName
+          ? _value.lastName
+          : lastName // ignore: cast_nullable_to_non_nullable
               as String?,
       phone: freezed == phone
           ? _value.phone
@@ -208,6 +222,8 @@ abstract class _$$EmployeeImplCopyWith<$Res>
       String? employeeCode,
       String? department,
       String? designation,
+      String? firstName,
+      String? lastName,
       String? phone,
       String? alternatePhone,
       String? email,
@@ -242,6 +258,8 @@ class __$$EmployeeImplCopyWithImpl<$Res>
     Object? employeeCode = freezed,
     Object? department = freezed,
     Object? designation = freezed,
+    Object? firstName = freezed,
+    Object? lastName = freezed,
     Object? phone = freezed,
     Object? alternatePhone = freezed,
     Object? email = freezed,
@@ -280,6 +298,14 @@ class __$$EmployeeImplCopyWithImpl<$Res>
       designation: freezed == designation
           ? _value.designation
           : designation // ignore: cast_nullable_to_non_nullable
+              as String?,
+      firstName: freezed == firstName
+          ? _value.firstName
+          : firstName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      lastName: freezed == lastName
+          ? _value.lastName
+          : lastName // ignore: cast_nullable_to_non_nullable
               as String?,
       phone: freezed == phone
           ? _value.phone
@@ -339,7 +365,7 @@ class __$$EmployeeImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$EmployeeImpl implements _Employee {
+class _$EmployeeImpl extends _Employee {
   const _$EmployeeImpl(
       {required this.id,
       required this.userId,
@@ -347,6 +373,8 @@ class _$EmployeeImpl implements _Employee {
       this.employeeCode,
       this.department,
       this.designation,
+      this.firstName,
+      this.lastName,
       this.phone,
       this.alternatePhone,
       this.email,
@@ -359,7 +387,8 @@ class _$EmployeeImpl implements _Employee {
       this.isTransportRequired,
       this.isActive,
       this.createdAt,
-      this.updatedAt});
+      this.updatedAt})
+      : super._();
 
   factory _$EmployeeImpl.fromJson(Map<String, dynamic> json) =>
       _$$EmployeeImplFromJson(json);
@@ -376,6 +405,10 @@ class _$EmployeeImpl implements _Employee {
   final String? department;
   @override
   final String? designation;
+  @override
+  final String? firstName;
+  @override
+  final String? lastName;
   @override
   final String? phone;
   @override
@@ -405,7 +438,7 @@ class _$EmployeeImpl implements _Employee {
 
   @override
   String toString() {
-    return 'Employee(id: $id, userId: $userId, companyId: $companyId, employeeCode: $employeeCode, department: $department, designation: $designation, phone: $phone, alternatePhone: $alternatePhone, email: $email, address: $address, homeLatitude: $homeLatitude, homeLongitude: $homeLongitude, homeAddress: $homeAddress, assignedRouteId: $assignedRouteId, assignedStopId: $assignedStopId, isTransportRequired: $isTransportRequired, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Employee(id: $id, userId: $userId, companyId: $companyId, employeeCode: $employeeCode, department: $department, designation: $designation, firstName: $firstName, lastName: $lastName, phone: $phone, alternatePhone: $alternatePhone, email: $email, address: $address, homeLatitude: $homeLatitude, homeLongitude: $homeLongitude, homeAddress: $homeAddress, assignedRouteId: $assignedRouteId, assignedStopId: $assignedStopId, isTransportRequired: $isTransportRequired, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -423,6 +456,10 @@ class _$EmployeeImpl implements _Employee {
                 other.department == department) &&
             (identical(other.designation, designation) ||
                 other.designation == designation) &&
+            (identical(other.firstName, firstName) ||
+                other.firstName == firstName) &&
+            (identical(other.lastName, lastName) ||
+                other.lastName == lastName) &&
             (identical(other.phone, phone) || other.phone == phone) &&
             (identical(other.alternatePhone, alternatePhone) ||
                 other.alternatePhone == alternatePhone) &&
@@ -458,6 +495,8 @@ class _$EmployeeImpl implements _Employee {
         employeeCode,
         department,
         designation,
+        firstName,
+        lastName,
         phone,
         alternatePhone,
         email,
@@ -489,7 +528,7 @@ class _$EmployeeImpl implements _Employee {
   }
 }
 
-abstract class _Employee implements Employee {
+abstract class _Employee extends Employee {
   const factory _Employee(
       {required final String id,
       required final String userId,
@@ -497,6 +536,8 @@ abstract class _Employee implements Employee {
       final String? employeeCode,
       final String? department,
       final String? designation,
+      final String? firstName,
+      final String? lastName,
       final String? phone,
       final String? alternatePhone,
       final String? email,
@@ -510,6 +551,7 @@ abstract class _Employee implements Employee {
       final bool? isActive,
       final DateTime? createdAt,
       final DateTime? updatedAt}) = _$EmployeeImpl;
+  const _Employee._() : super._();
 
   factory _Employee.fromJson(Map<String, dynamic> json) =
       _$EmployeeImpl.fromJson;
@@ -526,6 +568,10 @@ abstract class _Employee implements Employee {
   String? get department;
   @override
   String? get designation;
+  @override
+  String? get firstName;
+  @override
+  String? get lastName;
   @override
   String? get phone;
   @override
@@ -570,6 +616,9 @@ mixin _$Driver {
   String get id => throw _privateConstructorUsedError;
   String get userId => throw _privateConstructorUsedError;
   String get companyId => throw _privateConstructorUsedError;
+  String? get firstName => throw _privateConstructorUsedError;
+  String? get lastName => throw _privateConstructorUsedError;
+  String? get email => throw _privateConstructorUsedError;
   String? get licenseNumber => throw _privateConstructorUsedError;
   DateTime? get licenseExpiry => throw _privateConstructorUsedError;
   String? get phone => throw _privateConstructorUsedError;
@@ -599,6 +648,9 @@ abstract class $DriverCopyWith<$Res> {
       {String id,
       String userId,
       String companyId,
+      String? firstName,
+      String? lastName,
+      String? email,
       String? licenseNumber,
       DateTime? licenseExpiry,
       String? phone,
@@ -629,6 +681,9 @@ class _$DriverCopyWithImpl<$Res, $Val extends Driver>
     Object? id = null,
     Object? userId = null,
     Object? companyId = null,
+    Object? firstName = freezed,
+    Object? lastName = freezed,
+    Object? email = freezed,
     Object? licenseNumber = freezed,
     Object? licenseExpiry = freezed,
     Object? phone = freezed,
@@ -653,6 +708,18 @@ class _$DriverCopyWithImpl<$Res, $Val extends Driver>
           ? _value.companyId
           : companyId // ignore: cast_nullable_to_non_nullable
               as String,
+      firstName: freezed == firstName
+          ? _value.firstName
+          : firstName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      lastName: freezed == lastName
+          ? _value.lastName
+          : lastName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      email: freezed == email
+          ? _value.email
+          : email // ignore: cast_nullable_to_non_nullable
+              as String?,
       licenseNumber: freezed == licenseNumber
           ? _value.licenseNumber
           : licenseNumber // ignore: cast_nullable_to_non_nullable
@@ -708,6 +775,9 @@ abstract class _$$DriverImplCopyWith<$Res> implements $DriverCopyWith<$Res> {
       {String id,
       String userId,
       String companyId,
+      String? firstName,
+      String? lastName,
+      String? email,
       String? licenseNumber,
       DateTime? licenseExpiry,
       String? phone,
@@ -736,6 +806,9 @@ class __$$DriverImplCopyWithImpl<$Res>
     Object? id = null,
     Object? userId = null,
     Object? companyId = null,
+    Object? firstName = freezed,
+    Object? lastName = freezed,
+    Object? email = freezed,
     Object? licenseNumber = freezed,
     Object? licenseExpiry = freezed,
     Object? phone = freezed,
@@ -760,6 +833,18 @@ class __$$DriverImplCopyWithImpl<$Res>
           ? _value.companyId
           : companyId // ignore: cast_nullable_to_non_nullable
               as String,
+      firstName: freezed == firstName
+          ? _value.firstName
+          : firstName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      lastName: freezed == lastName
+          ? _value.lastName
+          : lastName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      email: freezed == email
+          ? _value.email
+          : email // ignore: cast_nullable_to_non_nullable
+              as String?,
       licenseNumber: freezed == licenseNumber
           ? _value.licenseNumber
           : licenseNumber // ignore: cast_nullable_to_non_nullable
@@ -806,11 +891,14 @@ class __$$DriverImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$DriverImpl implements _Driver {
+class _$DriverImpl extends _Driver {
   const _$DriverImpl(
       {required this.id,
       required this.userId,
       required this.companyId,
+      this.firstName,
+      this.lastName,
+      this.email,
       this.licenseNumber,
       this.licenseExpiry,
       this.phone,
@@ -820,7 +908,8 @@ class _$DriverImpl implements _Driver {
       this.isActive,
       this.assignedVehicleId,
       this.createdAt,
-      this.updatedAt});
+      this.updatedAt})
+      : super._();
 
   factory _$DriverImpl.fromJson(Map<String, dynamic> json) =>
       _$$DriverImplFromJson(json);
@@ -831,6 +920,12 @@ class _$DriverImpl implements _Driver {
   final String userId;
   @override
   final String companyId;
+  @override
+  final String? firstName;
+  @override
+  final String? lastName;
+  @override
+  final String? email;
   @override
   final String? licenseNumber;
   @override
@@ -854,7 +949,7 @@ class _$DriverImpl implements _Driver {
 
   @override
   String toString() {
-    return 'Driver(id: $id, userId: $userId, companyId: $companyId, licenseNumber: $licenseNumber, licenseExpiry: $licenseExpiry, phone: $phone, rating: $rating, totalTrips: $totalTrips, isAvailable: $isAvailable, isActive: $isActive, assignedVehicleId: $assignedVehicleId, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Driver(id: $id, userId: $userId, companyId: $companyId, firstName: $firstName, lastName: $lastName, email: $email, licenseNumber: $licenseNumber, licenseExpiry: $licenseExpiry, phone: $phone, rating: $rating, totalTrips: $totalTrips, isAvailable: $isAvailable, isActive: $isActive, assignedVehicleId: $assignedVehicleId, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -866,6 +961,11 @@ class _$DriverImpl implements _Driver {
             (identical(other.userId, userId) || other.userId == userId) &&
             (identical(other.companyId, companyId) ||
                 other.companyId == companyId) &&
+            (identical(other.firstName, firstName) ||
+                other.firstName == firstName) &&
+            (identical(other.lastName, lastName) ||
+                other.lastName == lastName) &&
+            (identical(other.email, email) || other.email == email) &&
             (identical(other.licenseNumber, licenseNumber) ||
                 other.licenseNumber == licenseNumber) &&
             (identical(other.licenseExpiry, licenseExpiry) ||
@@ -893,6 +993,9 @@ class _$DriverImpl implements _Driver {
       id,
       userId,
       companyId,
+      firstName,
+      lastName,
+      email,
       licenseNumber,
       licenseExpiry,
       phone,
@@ -920,11 +1023,14 @@ class _$DriverImpl implements _Driver {
   }
 }
 
-abstract class _Driver implements Driver {
+abstract class _Driver extends Driver {
   const factory _Driver(
       {required final String id,
       required final String userId,
       required final String companyId,
+      final String? firstName,
+      final String? lastName,
+      final String? email,
       final String? licenseNumber,
       final DateTime? licenseExpiry,
       final String? phone,
@@ -935,6 +1041,7 @@ abstract class _Driver implements Driver {
       final String? assignedVehicleId,
       final DateTime? createdAt,
       final DateTime? updatedAt}) = _$DriverImpl;
+  const _Driver._() : super._();
 
   factory _Driver.fromJson(Map<String, dynamic> json) = _$DriverImpl.fromJson;
 
@@ -944,6 +1051,12 @@ abstract class _Driver implements Driver {
   String get userId;
   @override
   String get companyId;
+  @override
+  String? get firstName;
+  @override
+  String? get lastName;
+  @override
+  String? get email;
   @override
   String? get licenseNumber;
   @override

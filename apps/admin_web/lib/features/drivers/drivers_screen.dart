@@ -32,6 +32,7 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _licenseController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -41,6 +42,7 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _licenseController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -120,7 +122,7 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
       ],
       rows: drivers.map((driver) {
         return DataRow2(cells: [
-          DataCell(Text(driver.userId)),
+          DataCell(Text(driver.displayName)),
           DataCell(Text(driver.licenseNumber ?? '-')),
           DataCell(Text(driver.licenseExpiry != null
               ? '${driver.licenseExpiry!.day}/${driver.licenseExpiry!.month}/${driver.licenseExpiry!.year}'
@@ -164,6 +166,7 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
     _emailController.clear();
     _phoneController.clear();
     _licenseController.clear();
+    _passwordController.clear();
 
     final formKey = GlobalKey<FormState>();
 
@@ -213,6 +216,12 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
                     decoration: const InputDecoration(labelText: 'Phone'),
                     keyboardType: TextInputType.phone,
                   ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(labelText: 'Password (default: default123)'),
+                    obscureText: true,
+                  ),
                 ],
               ),
             ),
@@ -234,6 +243,8 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
                   'email': _emailController.text,
                   'licenseNumber': _licenseController.text,
                   'phone': _phoneController.text,
+                  if (_passwordController.text.isNotEmpty)
+                    'password': _passwordController.text,
                 });
                 if (context.mounted) Navigator.pop(context);
                 ref.invalidate(driversProvider);
@@ -330,7 +341,7 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Driver'),
-        content: Text('Are you sure you want to delete driver ${driver.userId}?'),
+        content: Text('Are you sure you want to delete driver ${driver.displayName}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

@@ -496,7 +496,7 @@ class _TransportManagerScreenState extends ConsumerState<TransportManagerScreen>
                           decoration: const InputDecoration(labelText: 'Driver *'),
                           items: drivers.map<DropdownMenuItem<String>>((Driver d) => DropdownMenuItem<String>(
                             value: d.id,
-                            child: Text('${d.userId} ${d.licenseNumber != null ? '(${d.licenseNumber})' : ''}'),
+                            child: Text('${d.displayName} ${d.licenseNumber != null ? '(${d.licenseNumber})' : ''}'),
                           )).toList(),
                           onChanged: (v) => setDialogState(() => selectedDriverId = v),
                           validator: (v) => v == null ? 'Driver is required' : null,
@@ -694,7 +694,7 @@ class _TransportManagerScreenState extends ConsumerState<TransportManagerScreen>
                               final emp = employees[index];
                               return CheckboxListTile(
                                 value: selectedEmployees.contains(emp.id),
-                                title: Text(emp.email ?? emp.id),
+                                title: Text(emp.displayName),
                                 subtitle: Text(emp.department ?? ''),
                                 onChanged: (checked) {
                                   setDialogState(() {

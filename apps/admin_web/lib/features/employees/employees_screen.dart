@@ -40,6 +40,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
   final _departmentController = TextEditingController();
   final _designationController = TextEditingController();
   final _codeController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -51,6 +52,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
     _departmentController.dispose();
     _designationController.dispose();
     _codeController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -200,7 +202,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                     radius: 16,
                     backgroundColor: AppColors.primary.withOpacity(0.1),
                     child: Text(
-                      (employee.userId.isNotEmpty ? employee.userId.substring(0, 1).toUpperCase() : 'U'),
+                      (employee.displayName.isNotEmpty ? employee.displayName.substring(0, 1).toUpperCase() : 'U'),
                       style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12),
                     ),
                   ),
@@ -211,7 +213,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          employee.userId,
+                          employee.displayName,
                           style: const TextStyle(fontWeight: FontWeight.w500),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -281,6 +283,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
     _departmentController.clear();
     _designationController.clear();
     _codeController.clear();
+    _passwordController.clear();
 
     final formKey = GlobalKey<FormState>();
 
@@ -340,6 +343,12 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                     controller: _designationController,
                     decoration: const InputDecoration(labelText: 'Designation'),
                   ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(labelText: 'Password (default: default123)'),
+                    obscureText: true,
+                  ),
                 ],
               ),
             ),
@@ -363,6 +372,8 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                   'phone': _phoneController.text,
                   'department': _departmentController.text,
                   'designation': _designationController.text,
+                  if (_passwordController.text.isNotEmpty)
+                    'password': _passwordController.text,
                 });
                 if (context.mounted) Navigator.pop(context);
                 ref.invalidate(employeesProvider);
@@ -486,7 +497,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Employee'),
-        content: Text('Are you sure you want to delete ${employee.employeeCode ?? employee.userId}?'),
+        content: Text('Are you sure you want to delete ${employee.employeeCode ?? employee.displayName}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -547,7 +558,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
       for (final emp in employees) {
         sheet.appendRow([
           TextCellValue(emp.employeeCode ?? ''),
-          TextCellValue(emp.userId),
+          TextCellValue(emp.displayName),
           TextCellValue(''),
           TextCellValue(emp.email ?? ''),
           TextCellValue(emp.phone ?? ''),
@@ -577,7 +588,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
       ];
       final tableData = employees.map((emp) => [
         emp.employeeCode ?? '',
-        emp.userId,
+        emp.displayName,
         emp.email ?? '',
         emp.phone ?? '',
         emp.department ?? '',
