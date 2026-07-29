@@ -33,8 +33,7 @@ class _RideScreenState extends ConsumerState<RideScreen> {
         return;
       }
 
-      final empResp = await dio.get('/employees/$userId');
-      final employeeId = empResp.data['id'] ?? '${userId}_emp';
+      final employeeId = '${userId}_emp';
 
       final otpResp = await dio.get('/otp/employee/$employeeId');
       _otpData = otpResp.data;
@@ -137,10 +136,10 @@ class _RideScreenState extends ConsumerState<RideScreen> {
   Widget _buildOtpView() {
     final otp = _otpData!['otp'] ?? '';
     final expiresAt = _otpData!['expiresAt'] ?? '';
-    final routeName = _trip!['routeName'] ?? _trip!['route_id'] ?? 'Unknown Route';
-    final vehiclePlate = _trip!['vehiclePlate'] ?? _trip!['plate_number'] ?? '';
+    final routeName = _trip!['routeName'] ?? _trip!['routeId'] ?? 'Unknown Route';
+    final vehiclePlate = _trip!['vehiclePlate'] ?? _trip!['plateNumber'] ?? '';
     final driverName = _trip!['driverName'] ?? '';
-    final scheduledTime = (_trip!['scheduledTime'] ?? _trip!['scheduled_time'] ?? '').toString();
+    final scheduledTime = (_trip!['scheduledTime'] ?? '').toString();
     final timePart = scheduledTime.length >= 16 ? scheduledTime.substring(11, 16) : scheduledTime;
 
     DateTime? expiry;
@@ -331,10 +330,10 @@ class _RideScreenState extends ConsumerState<RideScreen> {
                 children: _passengers.asMap().entries.map((entry) {
                   final idx = entry.key;
                   final p = entry.value;
-                  final isBoarded = p['is_boarded'] == true;
-                  final isDropped = p['is_dropped'] == true;
-                  final firstName = p['first_name'] ?? '';
-                  final lastName = p['last_name'] ?? '';
+                  final isBoarded = p['isBoarded'] == true;
+                  final isDropped = p['isDropped'] == true;
+                  final firstName = p['firstName'] ?? '';
+                  final lastName = p['lastName'] ?? '';
                   final name = '$firstName $lastName'.trim();
 
                   final statusColor = isDropped ? const Color(0xFF059669) : isBoarded ? const Color(0xFFD97706) : Colors.grey;

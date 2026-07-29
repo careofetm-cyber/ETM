@@ -28,7 +28,7 @@ class _MyTripsScreenState extends ConsumerState<MyTripsScreen> with SingleTicker
       final userId = prefs.getString('user_id');
       if (userId != null) {
         final dio = ref.read(dioProvider);
-        final resp = await dio.get('/trips/employee/$userId');
+        final resp = await dio.get('/trips/employee/${userId}_emp');
         final trips = resp.data['data'] ?? [];
         _upcomingTrips = trips.where((t) => t['status'] == 'scheduled' || t['status'] == 'inProgress').toList();
         _completedTrips = trips.where((t) => t['status'] == 'completed').toList();
@@ -133,7 +133,7 @@ class _MyTripsScreenState extends ConsumerState<MyTripsScreen> with SingleTicker
           final trip = trips[index];
           final status = trip['status'] ?? 'scheduled';
           final statusColor = _statusColor(status);
-          final routeName = trip['routeName'] ?? trip['route_id'] ?? 'Unknown Route';
+          final routeName = trip['routeName'] ?? trip['routeId'] ?? 'Unknown Route';
           final type = trip['type'] ?? 'N/A';
           final vehiclePlate = trip['vehiclePlate'] ?? '';
           final scheduledTime = trip['scheduledTime']?.toString() ?? '';

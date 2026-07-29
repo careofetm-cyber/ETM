@@ -128,11 +128,11 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final status = _trip?['status'] ?? 'scheduled';
-    final routeName = _trip?['routeName'] ?? _trip?['route_id'] ?? 'Unknown Route';
-    final vehiclePlate = _trip?['plate_number'] ?? _trip?['vehiclePlate'] ?? '';
-    final scheduledTime = (_trip?['scheduled_time'] ?? '').toString();
+    final routeName = _trip?['routeName'] ?? _trip?['routeId'] ?? 'Unknown Route';
+    final vehiclePlate = _trip?['plateNumber'] ?? _trip?['vehiclePlate'] ?? '';
+    final scheduledTime = (_trip?['scheduledTime'] ?? '').toString();
     final timePart = scheduledTime.length >= 16 ? scheduledTime.substring(11, 16) : '';
-    final distance = _trip?['total_distance'];
+    final distance = _trip?['totalDistance'];
 
     final statusLabels = {
       'scheduled': 'Scheduled',
@@ -365,12 +365,12 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                             children: _passengers.asMap().entries.map((entry) {
                               final idx = entry.key;
                               final p = entry.value;
-                              final isBoarded = p['is_boarded'] == true;
-                              final isDropped = p['is_dropped'] == true;
-                              final firstName = p['first_name'] ?? '';
-                              final lastName = p['last_name'] ?? '';
+                              final isBoarded = p['isBoarded'] == true;
+                              final isDropped = p['isDropped'] == true;
+                              final firstName = p['firstName'] ?? '';
+                              final lastName = p['lastName'] ?? '';
                               final name = '$firstName $lastName'.trim();
-                              final employeeId = p['employee_id'] ?? '';
+                              final employeeId = p['employeeId'] ?? '';
 
                               return Column(
                                 children: [

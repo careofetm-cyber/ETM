@@ -41,12 +41,12 @@ class _TripListScreenState extends ConsumerState<TripListScreen> with SingleTick
       final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
       _todayTrips = trips.where((t) {
-        final st = (t['scheduled_time'] ?? '').toString();
+        final st = (t['scheduledTime'] ?? '').toString();
         return st.startsWith(todayStr) && t['status'] != 'completed' && t['status'] != 'cancelled';
       }).toList();
 
       _upcomingTrips = trips.where((t) {
-        final st = (t['scheduled_time'] ?? '').toString();
+        final st = (t['scheduledTime'] ?? '').toString();
         return !st.startsWith(todayStr) && (t['status'] == 'scheduled');
       }).toList();
 
@@ -140,8 +140,8 @@ class _TripListScreenState extends ConsumerState<TripListScreen> with SingleTick
           final tripType = trip['type'] ?? 'pickup';
           final isPickup = tripType == 'pickup';
           final status = trip['status'] ?? 'scheduled';
-          final routeName = trip['routeName'] ?? trip['route_id'] ?? 'Unknown Route';
-          final scheduledTime = (trip['scheduled_time'] ?? '').toString();
+          final routeName = trip['routeName'] ?? trip['routeId'] ?? 'Unknown Route';
+          final scheduledTime = (trip['scheduledTime'] ?? '').toString();
           final timePart = scheduledTime.length >= 16 ? scheduledTime.substring(11, 16) : '';
           final passengerCount = trip['passengerCount'] ?? 0;
           final boardedCount = trip['boardedCount'] ?? 0;
@@ -311,8 +311,8 @@ class _TripListScreenState extends ConsumerState<TripListScreen> with SingleTick
         itemCount: trips.length,
         itemBuilder: (context, index) {
           final trip = trips[index];
-          final routeName = trip['routeName'] ?? trip['route_id'] ?? 'Unknown Route';
-          final scheduledTime = (trip['scheduled_time'] ?? '').toString();
+          final routeName = trip['routeName'] ?? trip['routeId'] ?? 'Unknown Route';
+          final scheduledTime = (trip['scheduledTime'] ?? '').toString();
           final datePart = scheduledTime.length >= 10 ? scheduledTime.substring(0, 10) : '';
           final timePart = scheduledTime.length >= 16 ? scheduledTime.substring(11, 16) : '';
           final passengerCount = trip['passengerCount'] ?? 0;
