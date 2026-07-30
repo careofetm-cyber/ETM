@@ -41,7 +41,8 @@ class TripRoutes {
     
     var allTrips = db.findAll('trips', filters: filters);
     if (date != null) {
-      allTrips = allTrips.where((t) => t['scheduled_time']?.toString().startsWith(date) == true).toList();
+      final dateOnly = date.length >= 10 ? date.substring(0, 10) : date;
+      allTrips = allTrips.where((t) => t['scheduled_time']?.toString().startsWith(dateOnly) == true).toList();
     }
     
     final total = allTrips.length;

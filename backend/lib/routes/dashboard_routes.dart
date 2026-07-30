@@ -11,6 +11,7 @@ class DashboardRoutes {
     router.get('/admin', authMiddleware(requiredRoles: ['admin', 'manager'])(getAdminDashboard));
     router.get('/driver', authMiddleware(requiredRoles: ['driver'])(getDriverDashboard));
     router.get('/employee', authMiddleware(requiredRoles: ['employee'])(getEmployeeDashboard));
+    router.get('/employee/:userId', authMiddleware(requiredRoles: ['employee'])(getEmployeeDashboardByUserId));
   }
   
   Future<Response> getAdminDashboard(Request request) async {
@@ -169,6 +170,98 @@ class DashboardRoutes {
       'next_trip_route': nextTrip?['route_name'],
       'total_trips_this_month': totalTripsThisMonth,
       'attended_trips': attendedTrips,
+      'assigned_route': routeName,
+      'assigned_stop': stopName,
+    });
+  }
+
+  Future<Response> getEmployeeDashboardByUserId(Request request) async {
+    final userId = request.params['userId'];
+    final db = DatabaseConfig.db;
+    
+    final employee = db.findOne('employees', where: {'user_id': userId});
+    
+    if (employee == null) {
+      return jsonResponse({'error': 'Employee not found'}, statusCode: 404);
+    }
+    
+    final employeeId = employee['id'];
+    
+    final tripPassengers = db.findAll('trip_passengers', filters: {'employee_id': employeeId});
+    final now = DateTime.now();
+    
+    Map<String, dynamic>? nextTrip;
+    for (final tp in tripPassengers) {
+      final trip = db.findOne('trips', where: {'id': tp['trip_id'], 'status': 'scheduled'});
+      if (trip != null && trip['scheduled_time'] != null) {
+        final scheduledTime = trip['scheduled_time'].toString();
+        if (scheduledTime.compareTo(now.toIso8601String()) > 0) {
+          if (nextTrip == null || scheduledTime.compareTo(nextTrip['scheduled_time'].toString()) < 0) {
+            final route = trip['route_id'] != null ? db.findOne('routes', where: {'id': trip['route_id']}) : null;
+            final vehicle = trip['vehicle_id'] != null ? db.findOne('vehicles', where: {'id': trip['vehicle_id']}) : null;
+            final driver = trip['driver_id'] != null ? db.findOne('users', where: {'id': trip['driver_id']}) : null;
+            nextTrip = {
+              ...trip,
+              'routeName': route?['name'] ?? '',
+              'vehiclePlate': vehicle?['plate_number'] ?? '',
+              'driverName': driver != null ? '${driver['first_name']} ${driver['last_name']}' : '',
+            };
+          }
+        }
+      }
+    }
+
+    final today = now.toIso8601String().substring(0, 10);
+    int todayTrips = 0;
+    int completedTrips = 0;
+    int weekTrips = 0;
+    final weekStart = now.subtract(Duration(days: now.weekday - 1)).toIso8601String().substring(0, 10);
+    
+    for (final tp in tripPassengers) {
+      final trip = db.findOne('trips', where: {'id': tp['trip_id']});
+      if (trip != null) {
+        final st = trip['scheduled_time']?.toString() ?? '';
+        if (st.startsWith(today)) {
+          todayTrips++;
+          if (trip['status'] == 'completed') completedTrips++;
+        }
+        if (st.compareTo(weekStart) >= 0) weekTrips++;
+      }
+    }
+    
+    final monthStart = DateTime(now.year, now.month, 1).toIso8601String();
+    int totalTripsThisMonth = 0;
+    for (final tp in tripPassengers) {
+      final trip = db.findOne('trips', where: {'id': tp['trip_id']});
+      if (trip != null && (trip['scheduled_time']?.toString() ?? '').compareTo(monthStart) >= 0) {
+        totalTripsThisMonth++;
+      }
+    }
+    
+    String? routeName;
+    String? stopName;
+    
+    if (employee['assigned_route_id'] != null) {
+      final route = db.findOne('routes', where: {'id': employee['assigned_route_id']});
+      routeName = route?['name'];
+    }
+    
+    if (employee['assigned_stop_id'] != null) {
+      final stop = db.findOne('stops', where: {'id': employee['assigned_stop_id']});
+      stopName = stop?['name'];
+    }
+    
+    return jsonResponse({
+      'has_upcoming_trip': nextTrip != null,
+      'next_trip': nextTrip,
+      'next_trip_id': nextTrip?['id'],
+      'next_trip_time': nextTrip?['scheduled_time'],
+      'next_trip_route': nextTrip?['routeName'] ?? nextTrip?['route_name'],
+      'todayTrips': todayTrips,
+      'weekTrips': weekTrips,
+      'completedTrips': completedTrips,
+      'pendingRequests': 0,
+      'total_trips_this_month': totalTripsThisMonth,
       'assigned_route': routeName,
       'assigned_stop': stopName,
     });

@@ -60,6 +60,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   if (_dashboard != null) ...[
                     _buildStatGrid(),
                     const SizedBox(height: 24),
+                    if (_dashboard!['has_upcoming_trip'] == true) ...[
+                      _buildNextTripCard(),
+                      const SizedBox(height: 24),
+                    ],
                     _buildSOSButton(),
                     const SizedBox(height: 24),
                     _buildQuickActionsHeader(),
@@ -171,6 +175,76 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           const SizedBox(height: 2),
           Text(label, style: TextStyle(fontSize: 13, color: color.withOpacity(0.7), fontWeight: FontWeight.w500)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNextTripCard() {
+    final cs = Theme.of(context).colorScheme;
+    final trip = _dashboard!['next_trip'];
+    if (trip == null) return const SizedBox.shrink();
+    final routeName = trip['routeName'] ?? trip['route_name'] ?? 'Assigned Route';
+    final vehiclePlate = trip['vehiclePlate'] ?? '';
+    final driverName = trip['driverName'] ?? '';
+    final scheduledTime = (trip['scheduledTime'] ?? trip['scheduled_time'] ?? '').toString();
+    final timePart = scheduledTime.length >= 16 ? scheduledTime.substring(11, 16) : scheduledTime;
+    final datePart = scheduledTime.length >= 10 ? scheduledTime.substring(0, 10) : '';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.directions_bus, color: cs.onPrimaryContainer),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Next Assigned Trip', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 2),
+                      Text(routeName, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (vehiclePlate.isNotEmpty) ...[
+                  Icon(Icons.directions_car, size: 16, color: cs.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text(vehiclePlate, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+                  const SizedBox(width: 16),
+                ],
+                if (driverName.isNotEmpty) ...[
+                  Icon(Icons.person, size: 16, color: cs.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text(driverName, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+                  const SizedBox(width: 16),
+                ],
+                if (timePart.isNotEmpty) ...[
+                  Icon(Icons.access_time, size: 16, color: cs.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text('$datePart $timePart', style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+                ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
