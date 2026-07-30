@@ -69,7 +69,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       await dio.put('/notifications/$id/read');
       setState(() {
         final idx = _notifications.indexWhere((n) => n['id'] == id);
-        if (idx >= 0) _notifications[idx]['is_read'] = true;
+        if (idx >= 0) _notifications[idx]['isRead'] = true;
         if (_unreadCount > 0) _unreadCount--;
       });
     } catch (_) {}
@@ -80,7 +80,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       final dio = ref.read(dioProvider);
       await dio.put('/notifications/read-all');
       setState(() {
-        for (var n in _notifications) n['is_read'] = true;
+        for (var n in _notifications) n['isRead'] = true;
         _unreadCount = 0;
       });
       if (mounted) {
@@ -245,7 +245,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Widget _buildNotificationTile(dynamic notification) {
-    final isRead = notification['is_read'] == true || notification['isRead'] == true;
+    final isRead = notification['isRead'] == true || notification['is_read'] == true;
     final type = notification['type'] ?? 'general';
     final typeColor = _typeColor(type);
 
@@ -270,7 +270,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(
-            notification['body'] ?? '',
+            notification['body'] ?? notification['message'] ?? '',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
@@ -287,7 +287,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               ),
             const SizedBox(height: 4),
             Text(
-              _timeAgo(notification['created_at']),
+              _timeAgo(notification['createdAt'] ?? notification['created_at']),
               style: const TextStyle(fontSize: 11, color: Colors.grey),
             ),
           ],

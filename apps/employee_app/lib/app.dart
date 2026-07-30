@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
 import 'features/auth/login_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/trips/my_trips_screen.dart';
@@ -161,6 +163,41 @@ class _AppShellState extends State<AppShell> {
     NavigationRailDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: Text('Settings')),
   ];
 
+  int _unreadNotificationCount = 0;
+  Timer? _unreadTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUnreadCount();
+    _unreadTimer = Timer.periodic(const Duration(seconds: 30), (_) => _fetchUnreadCount());
+  }
+
+  @override
+  void dispose() {
+    _unreadTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchUnreadCount() async {
+    try {
+      final dio = Dio(BaseOptions(
+        baseUrl: 'https://etm-gp12.onrender.com/api/v1',
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+      ));
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token == null || token.isEmpty) return;
+      dio.options.headers['Authorization'] = 'Bearer $token';
+      dio.options.headers['Content-Type'] = 'application/json';
+      final resp = await dio.get('/notifications/unread-count');
+      if (mounted) {
+        setState(() => _unreadNotificationCount = resp.data['count'] ?? 0);
+      }
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentPath = GoRouterState.of(context).matchedLocation;
@@ -172,8 +209,15 @@ class _AppShellState extends State<AppShell> {
 
     final actions = [
       IconButton(
-        icon: const Icon(Icons.notifications_outlined),
-        onPressed: () => context.push('/notifications'),
+        icon: Badge(
+          isLabelVisible: _unreadNotificationCount > 0,
+          label: Text('$_unreadNotificationCount', style: const TextStyle(fontSize: 10, color: Colors.white)),
+          child: const Icon(Icons.notifications_outlined),
+        ),
+        onPressed: () async {
+          await context.push('/notifications');
+          _fetchUnreadCount();
+        },
         tooltip: 'Notifications',
       ),
     ];

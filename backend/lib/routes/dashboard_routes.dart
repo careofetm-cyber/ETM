@@ -135,6 +135,24 @@ class DashboardRoutes {
         }
       }
     }
+
+    final today = now.toIso8601String().substring(0, 10);
+    int todayTrips = 0;
+    int completedTrips = 0;
+    int weekTrips = 0;
+    final weekStart = now.subtract(Duration(days: now.weekday - 1)).toIso8601String().substring(0, 10);
+    
+    for (final tp in tripPassengers) {
+      final trip = db.findOne('trips', where: {'id': tp['trip_id']});
+      if (trip != null) {
+        final st = trip['scheduled_time']?.toString() ?? '';
+        if (st.startsWith(today)) {
+          todayTrips++;
+          if (trip['status'] == 'completed') completedTrips++;
+        }
+        if (st.compareTo(weekStart) >= 0) weekTrips++;
+      }
+    }
     
     final monthStart = DateTime(now.year, now.month, 1).toIso8601String();
     int totalTripsThisMonth = 0;
@@ -144,11 +162,6 @@ class DashboardRoutes {
         totalTripsThisMonth++;
       }
     }
-    
-    final attendances = db.findAll('attendance', filters: {'employee_id': employeeId, 'status': 'present'});
-    final attendedTrips = attendances.where((a) =>
-      (a['date']?.toString() ?? '').compareTo(monthStart) >= 0
-    ).length;
     
     String? routeName;
     String? stopName;
@@ -165,11 +178,15 @@ class DashboardRoutes {
     
     return jsonResponse({
       'has_upcoming_trip': nextTrip != null,
+      'next_trip': nextTrip,
       'next_trip_id': nextTrip?['id'],
       'next_trip_time': nextTrip?['scheduled_time'],
       'next_trip_route': nextTrip?['route_name'],
+      'today_trips': todayTrips,
+      'week_trips': weekTrips,
+      'completed_trips': completedTrips,
+      'pending_requests': 0,
       'total_trips_this_month': totalTripsThisMonth,
-      'attended_trips': attendedTrips,
       'assigned_route': routeName,
       'assigned_stop': stopName,
     });
@@ -257,10 +274,10 @@ class DashboardRoutes {
       'next_trip_id': nextTrip?['id'],
       'next_trip_time': nextTrip?['scheduled_time'],
       'next_trip_route': nextTrip?['routeName'] ?? nextTrip?['route_name'],
-      'todayTrips': todayTrips,
-      'weekTrips': weekTrips,
-      'completedTrips': completedTrips,
-      'pendingRequests': 0,
+      'today_trips': todayTrips,
+      'week_trips': weekTrips,
+      'completed_trips': completedTrips,
+      'pending_requests': 0,
       'total_trips_this_month': totalTripsThisMonth,
       'assigned_route': routeName,
       'assigned_stop': stopName,

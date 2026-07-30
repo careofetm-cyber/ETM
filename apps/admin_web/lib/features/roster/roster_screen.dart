@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:etm_core/etm_core.dart';
-import 'package:dio/dio.dart';
 import '../../shared/providers/api_providers.dart';
 
 class RosterScreen extends ConsumerStatefulWidget {
@@ -16,32 +15,29 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
   List<dynamic> _rosters = [];
   List<dynamic> _requests = [];
   List<dynamic> _shifts = [];
-  Map<String, dynamic>? _docAlerts;
   bool _isLoading = true;
-  String _selectedWeekStart = '';
-  String _selectedWeekEnd = '';
+  DateTime _selectedMonth = DateTime.now();
+  String _selectedEmployeeId = '';
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _calculateWeek();
     _loadData();
   }
 
-  void _calculateWeek() {
-    final now = DateTime.now();
-    final monday = now.subtract(Duration(days: now.weekday - 1));
-    final sunday = monday.add(const Duration(days: 6));
-    _selectedWeekStart = monday.toIso8601String().substring(0, 10);
-    _selectedWeekEnd = sunday.toIso8601String().substring(0, 10);
+  String get _monthStart =>
+      '${_selectedMonth.year}-${_selectedMonth.month.toString().padLeft(2, '0')}-01';
+  String get _monthEnd {
+    final lastDay = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
+    return '${_selectedMonth.year}-${_selectedMonth.month.toString().padLeft(2, '0')}-$lastDay';
   }
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
       final rosterApi = await ref.read(rosterApiProvider.future);
-      _rosters = await rosterApi.getRosters(startDate: _selectedWeekStart, endDate: _selectedWeekEnd);
+      _rosters = await rosterApi.getRosters(startDate: _monthStart, endDate: _monthEnd);
       _requests = await rosterApi.getRosterRequests();
     } catch (e) {
       debugPrint('Error: $e');
@@ -72,26 +68,21 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
                   IconButton(
                     icon: const Icon(Icons.chevron_left),
                     onPressed: () {
-                      final start = DateTime.parse(_selectedWeekStart);
-                      final newStart = start.subtract(const Duration(days: 7));
-                      final newEnd = newStart.add(const Duration(days: 6));
                       setState(() {
-                        _selectedWeekStart = newStart.toIso8601String().substring(0, 10);
-                        _selectedWeekEnd = newEnd.toIso8601String().substring(0, 10);
+                        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
                       });
                       _loadData();
                     },
                   ),
-                  Text('$_selectedWeekStart to $_selectedWeekEnd', style: const TextStyle(fontWeight: FontWeight.w500)),
+                  Text(
+                    '${_selectedMonth.month.toString().padLeft(2, '0')}/${_selectedMonth.year}',
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.chevron_right),
                     onPressed: () {
-                      final start = DateTime.parse(_selectedWeekStart);
-                      final newStart = start.add(const Duration(days: 7));
-                      final newEnd = newStart.add(const Duration(days: 6));
                       setState(() {
-                        _selectedWeekStart = newStart.toIso8601String().substring(0, 10);
-                        _selectedWeekEnd = newEnd.toIso8601String().substring(0, 10);
+                        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
                       });
                       _loadData();
                     },
@@ -138,74 +129,196 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
   }
 
   Widget _buildCalendarView() {
-    if (_rosters.isEmpty) {
-      return const Center(child: Text('No roster entries for this week'));
-    }
+    final year = _selectedMonth.year;
+    final month = _selectedMonth.month;
+    final daysInMonth = DateTime(year, month + 1, 0).day;
+    final firstWeekday = DateTime(year, month, 1).weekday % 7;
 
-    // Group rosters by date
-    final Map<String, List<dynamic>> byDate = {};
+    final Map<String, List<dynamic>> rostersByDate = {};
     for (var r in _rosters) {
       final date = r['date']?.toString() ?? '';
-      byDate.putIfAbsent(date, () => []).add(r);
+      rostersByDate.putIfAbsent(date, () => []).add(r);
     }
 
-    // Get unique dates sorted
-    final dates = byDate.keys.toList()..sort();
+    final employeeIds = _rosters
+        .map((r) => r['employee_id']?.toString() ?? '')
+        .toSet()
+        .toList();
 
-    return SingleChildScrollView(
-      child: Card(
-        child: DataTable(
-          columns: [
-            DataColumn(label: Row(children: [Icon(Icons.person_outline, size: 16), const SizedBox(width: 6), const Text('Employee', style: TextStyle(fontWeight: FontWeight.bold))])),
-            ...dates.map((d) => DataColumn(
-              label: Row(children: [Icon(Icons.calendar_today_outlined, size: 14), const SizedBox(width: 4), Text(d.length > 5 ? d.substring(5) : d, style: const TextStyle(fontWeight: FontWeight.bold))]),
-            )),
-          ],
-          rows: _buildCalendarRows(dates, byDate),
+    return Column(
+      children: [
+        if (employeeIds.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                const Text('Filter by employee: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 240,
+                  child: DropdownButton<String>(
+                    value: _selectedEmployeeId.isEmpty ? null : _selectedEmployeeId,
+                    hint: const Text('All employees'),
+                    isExpanded: true,
+                    underline: const SizedBox(),
+                    items: [
+                      const DropdownMenuItem(value: '', child: Text('All employees')),
+                      ...employeeIds.map((id) => DropdownMenuItem(
+                            value: id,
+                            child: Text(id.replaceAll(RegExp(r'usr_|_emp'), '').toUpperCase()),
+                          )),
+                    ],
+                    onChanged: (v) => setState(() => _selectedEmployeeId = v ?? ''),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    Row(
+                      children: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                          .map((d) => Expanded(
+                                child: Center(
+                                  child: Text(d,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w700, fontSize: 12, color: Colors.grey)),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                    const Divider(height: 8),
+                    ..._buildCalendarWeeks(
+                      year, month, daysInMonth, firstWeekday, rostersByDate,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  List<DataRow> _buildCalendarRows(List<String> dates, Map<String, List<dynamic>> byDate) {
-    // Get unique employee IDs
-    final employeeIds = _rosters.map((r) => r['employee_id']?.toString() ?? '').toSet().toList();
+  List<Widget> _buildCalendarWeeks(
+    int year,
+    int month,
+    int daysInMonth,
+    int firstWeekday,
+    Map<String, List<dynamic>> rostersByDate,
+  ) {
+    final weeks = <Widget>[];
+    int day = 1;
+    for (int week = 0; week < 6; week++) {
+      final cells = <Widget>[];
+      bool hasDays = false;
+      for (int weekday = 0; weekday < 7; weekday++) {
+        if (week == 0 && weekday < firstWeekday || day > daysInMonth) {
+          cells.add(Expanded(child: Container(height: 72)));
+        } else {
+          hasDays = true;
+          final dateStr =
+              '$year-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+          final entries = rostersByDate[dateStr] ?? [];
+          final filteredEntries = _selectedEmployeeId.isEmpty
+              ? entries
+              : entries.where((e) => e['employee_id']?.toString() == _selectedEmployeeId).toList();
+          final isToday = DateTime.now().year == year &&
+              DateTime.now().month == month &&
+              DateTime.now().day == day;
 
-    return employeeIds.map((empId) {
-      return DataRow(cells: [
-          DataCell(Text(empId.replaceAll('_emp', '').replaceAll('usr_', '').toUpperCase())),
-        ...dates.map((date) {
-          final entries = byDate[date]?.where((r) => r['employee_id'] == empId).toList() ?? [];
-          if (entries.isEmpty) return const DataCell(Text('-'));
-          final entry = entries.first;
-          final shiftType = entry['shift_type'] ?? '';
-          return DataCell(
-            Container(
-              padding: const EdgeInsets.all(4),
+          cells.add(Expanded(
+            child: Container(
+              height: 72,
+              margin: const EdgeInsets.all(2),
               decoration: BoxDecoration(
-                color: entry['status'] == 'approved' ? Colors.green.shade50 : Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(4),
+                color: isToday
+                    ? Theme.of(context).colorScheme.primary.withOpacity(0.06)
+                    : filteredEntries.isNotEmpty
+                        ? Colors.green.shade50
+                        : Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(6),
+                border: isToday
+                    ? Border.all(color: Theme.of(context).colorScheme.primary, width: 1.5)
+                    : null,
               ),
+              padding: const EdgeInsets.all(4),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(shiftType == 'morning' ? Icons.wb_sunny_outlined : Icons.nights_stay_outlined, size: 12, color: shiftType == 'morning' ? Colors.orange : Colors.indigo),
-                      const SizedBox(width: 3),
-                      Text(shiftType, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                    ],
+                  Text(
+                    '$day',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+                      color: isToday
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.black87,
+                    ),
                   ),
-                  Text(entry['route_id'] ?? '', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                  if (filteredEntries.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    ...filteredEntries.take(2).map((e) {
+                      final shiftType = e['shift_type'] ?? '';
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 1),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: shiftType == 'morning'
+                              ? Colors.orange.shade100
+                              : Colors.indigo.shade100,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              shiftType == 'morning'
+                                  ? Icons.wb_sunny_outlined
+                                  : Icons.nights_stay_outlined,
+                              size: 9,
+                              color: shiftType == 'morning'
+                                  ? Colors.orange.shade700
+                                  : Colors.indigo.shade700,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              shiftType,
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w600,
+                                color: shiftType == 'morning'
+                                    ? Colors.orange.shade700
+                                    : Colors.indigo.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    if (filteredEntries.length > 2)
+                      Text(
+                        '+${filteredEntries.length - 2} more',
+                        style: TextStyle(fontSize: 8, color: Colors.grey.shade600),
+                      ),
+                  ],
                 ],
               ),
             ),
-          );
-        }),
-      ]);
-    }).toList();
+          ));
+          day++;
+        }
+      }
+      if (!hasDays) break;
+      weeks.add(Row(children: cells));
+    }
+    return weeks;
   }
 
   Widget _buildRequestsView() {
@@ -445,7 +558,7 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
   void _showExportDialog() async {
     try {
       final dio = ref.read(dioProvider);
-      final resp = await dio.get('/rosters', queryParameters: {'startDate': _selectedWeekStart, 'endDate': _selectedWeekEnd, 'limit': 500});
+      final resp = await dio.get('/rosters', queryParameters: {'startDate': _monthStart, 'endDate': _monthEnd, 'limit': 500});
       final rosters = resp.data['data'] as List? ?? [];
 
       String csv = 'Employee ID,Date,Route ID,Stop ID,Shift Type,Status\n';
@@ -464,7 +577,7 @@ class _RosterScreenState extends ConsumerState<RosterScreen> with SingleTickerPr
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Week: $_selectedWeekStart to $_selectedWeekEnd'),
+                Text('Month: ${_selectedMonth.month.toString().padLeft(2, '0')}/${_selectedMonth.year}'),
                 Text('Total entries: ${rosters.length}'),
                 const SizedBox(height: 16),
                 const Text('CSV Data (copy and save as .csv):', style: TextStyle(fontWeight: FontWeight.bold)),

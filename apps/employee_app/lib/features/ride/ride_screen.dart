@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import '../../providers.dart';
 
@@ -413,35 +414,208 @@ class _RideScreenState extends ConsumerState<RideScreen> {
   }
 
   Widget _buildVerified() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF059669).withOpacity(0.1),
-                shape: BoxShape.circle,
+    final tripStatus = _trip?['status'] ?? '';
+    final isInProgress = tripStatus == 'inProgress';
+    final cs = Theme.of(context).colorScheme;
+    final routeName = _trip!['routeName'] ?? 'Assigned Route';
+    final vehiclePlate = _trip!['vehiclePlate'] ?? '';
+    final driverName = _trip!['driverName'] ?? '';
+
+    return RefreshIndicator(
+      onRefresh: _loadRideInfo,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Status Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isInProgress
+                    ? [const Color(0xFF059669).withOpacity(0.1), const Color(0xFF059669).withOpacity(0.05)]
+                    : [const Color(0xFF059669).withOpacity(0.1), const Color(0xFF059669).withOpacity(0.05)],
               ),
-              child: const Icon(Icons.check_circle, size: 56, color: Color(0xFF059669)),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF059669).withOpacity(0.2)),
             ),
-            const SizedBox(height: 20),
-            Text(
-              'Ride Verified!',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF059669).withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isInProgress ? Icons.directions_bus : Icons.check_circle,
+                    size: 48,
+                    color: const Color(0xFF059669),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  isInProgress ? 'Trip In Progress' : 'Ride Verified!',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF059669),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isInProgress
+                      ? 'Your driver is on the way. Track your trip live.'
+                      : 'Your OTP has been verified. Trip is in progress.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Trip Info
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: cs.primaryContainer,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.directions_bus, color: cs.onPrimaryContainer),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(routeName, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                            if (vehiclePlate.isNotEmpty)
+                              Text('Vehicle: $vehiclePlate', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                            if (driverName.isNotEmpty)
+                              Text('Driver: $driverName', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Track Trip Button (only when in progress)
+          if (isInProgress) ...[
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: () => context.push('/tracking'),
+                icon: const Icon(Icons.location_on),
+                label: const Text('Track Trip Live'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF059669),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // SOS Button
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _showSOSDialog(),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFDC2626), Color(0xFFB91C1C)],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.emergency, color: Colors.white, size: 22),
+                    SizedBox(width: 10),
+                    Text(
+                      'SOS - Emergency',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Passengers
+          if (_passengers.isNotEmpty) ...[
+            Row(
+              children: [
+                Icon(Icons.people, size: 20, color: cs.primary),
+                const SizedBox(width: 8),
+                Text(
+                  'Passengers (${_passengers.length})',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
-            const Text('Your OTP has been verified. Trip is in progress.'),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: _loadRideInfo,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Refresh'),
+            Card(
+              child: Column(
+                children: _passengers.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final p = entry.value;
+                  final isBoarded = p['isBoarded'] == true;
+                  final isDropped = p['isDropped'] == true;
+                  final firstName = p['firstName'] ?? '';
+                  final lastName = p['lastName'] ?? '';
+                  final name = '$firstName $lastName'.trim();
+
+                  final statusColor = isDropped ? const Color(0xFF059669) : isBoarded ? const Color(0xFFD97706) : Colors.grey;
+                  final statusText = isDropped ? 'Dropped' : isBoarded ? 'Boarded' : 'Pending';
+                  final statusIcon = isDropped ? Icons.check_circle : isBoarded ? Icons.person : Icons.person_outline;
+
+                  return Column(
+                    children: [
+                      ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: statusColor.withOpacity(0.12),
+                          child: Icon(statusIcon, color: statusColor, size: 20),
+                        ),
+                        title: Text(name.isNotEmpty ? name : 'Unknown', style: const TextStyle(fontWeight: FontWeight.w500)),
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            statusText,
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor),
+                          ),
+                        ),
+                      ),
+                      if (idx < _passengers.length - 1) const Divider(height: 1, indent: 56),
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }

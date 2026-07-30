@@ -93,7 +93,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ],
                           ),
                         ),
-                        if (_dashboard?['assigned_vehicle'] != null)
+                        if (_dashboard?['assignedVehicle'] != null)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
@@ -105,7 +105,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               children: [
                                 const Icon(Icons.directions_bus, color: Colors.white, size: 16),
                                 const SizedBox(width: 6),
-                                Text(_dashboard!['assigned_vehicle'], style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                                Text(_dashboard!['assignedVehicle'], style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                               ],
                             ),
                           ),
@@ -118,17 +118,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _StatCard(title: 'Total Trips', value: '${_dashboard?['today_trips'] ?? 0}', icon: Icons.route_outlined, color: cs.primary, bgColor: cs.primaryContainer),
+                      _StatCard(title: 'Total Trips', value: '${_dashboard?['todayTrips'] ?? 0}', icon: Icons.route_outlined, color: cs.primary, bgColor: cs.primaryContainer),
                       const SizedBox(width: 12),
-                      _StatCard(title: 'Completed', value: '${_dashboard?['completed_trips'] ?? 0}', icon: Icons.check_circle_outlined, color: Colors.green.shade700, bgColor: Colors.green.shade50),
+                      _StatCard(title: 'Completed', value: '${_dashboard?['completedTrips'] ?? 0}', icon: Icons.check_circle_outlined, color: Colors.green.shade700, bgColor: Colors.green.shade50),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _StatCard(title: 'Passengers', value: '${_dashboard?['total_passengers'] ?? 0}', icon: Icons.people_outlined, color: Colors.orange.shade700, bgColor: Colors.orange.shade50),
+                      _StatCard(title: 'Passengers', value: '${_dashboard?['totalPassengers'] ?? 0}', icon: Icons.people_outlined, color: Colors.orange.shade700, bgColor: Colors.orange.shade50),
                       const SizedBox(width: 12),
-                      _StatCard(title: 'Distance', value: '${(_dashboard?['total_distance'] ?? 0).toStringAsFixed(1)} km', icon: Icons.straighten, color: Colors.purple.shade700, bgColor: Colors.purple.shade50),
+                      _StatCard(title: 'Distance', value: '${(_dashboard?['totalDistance'] ?? 0).toStringAsFixed(1)} km', icon: Icons.straighten, color: Colors.purple.shade700, bgColor: Colors.purple.shade50),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -151,7 +151,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     const SizedBox(height: 20),
                   ],
 
-                  if (_dashboard?['current_trip_id'] != null) ...[
+                  if (_dashboard?['currentTripId'] != null) ...[
                     Text('Current Trip', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
                     Card(
@@ -184,10 +184,50 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             SizedBox(
                               width: double.infinity,
                               child: FilledButton.icon(
-                                onPressed: () => context.push('/trip/${_dashboard!['current_trip_id']}'),
+                                onPressed: () => context.push('/trip/${_dashboard!['currentTripId']}'),
                                 icon: const Icon(Icons.open_in_new),
                                 label: const Text('View Trip'),
                               ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  if (_dashboard?['nextScheduledTrip'] != null) ...[
+                    Text('Next Scheduled Trip', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(12)),
+                                  child: Icon(Icons.schedule_outlined, color: Colors.orange.shade700, size: 24),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(_dashboard!['nextScheduledTrip']['routeName'] ?? 'Scheduled Trip',
+                                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Time: ${(_dashboard!['nextScheduledTrip']['scheduledTime'] ?? '').toString().substring(11, 16)}',
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+                              ],
                             ),
                           ],
                         ),

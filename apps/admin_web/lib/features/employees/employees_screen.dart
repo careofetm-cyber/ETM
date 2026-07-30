@@ -9,9 +9,28 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:etm_core/etm_core.dart';
 import 'package:file_saver/file_saver.dart';
 import '../../shared/providers/api_providers.dart';
+import '../../shared/widgets/column_selector.dart';
 
 final employeesPageProvider = StateProvider<int>((ref) => 1);
 final employeesSearchProvider = StateProvider<String>((ref) => '');
+
+const _employeeColumnOptions = [
+  ColumnOption(key: 'name', label: 'Name'),
+  ColumnOption(key: 'email', label: 'Email'),
+  ColumnOption(key: 'phone', label: 'Phone'),
+  ColumnOption(key: 'department', label: 'Department'),
+  ColumnOption(key: 'designation', label: 'Designation'),
+  ColumnOption(key: 'code', label: 'Code'),
+  ColumnOption(key: 'transportRequired', label: 'Transport Required'),
+];
+
+final employeesSelectedColumnsProvider = StateProvider<Set<String>>((ref) => {
+      'name',
+      'code',
+      'department',
+      'email',
+      'transportRequired',
+    });
 
 final employeesProvider = FutureProvider<List<Employee>>((ref) async {
   final api = await ref.watch(employeeApiProvider.future);
@@ -59,11 +78,12 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
   @override
   Widget build(BuildContext context) {
     final employeesAsync = ref.watch(employeesProvider);
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(isMobile ? 12 : 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -73,34 +93,36 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                   'Employees',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    fontSize: 24,
+                    fontSize: isMobile ? 20 : 24,
                   ),
                 ),
                 const Spacer(),
-                OutlinedButton.icon(
-                  onPressed: () => _exportXLS(employeesAsync),
-                  icon: const Icon(Icons.table_chart_outlined, size: 18),
-                  label: const Text('Export XLS'),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: () => _exportPDF(employeesAsync),
-                  icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                  label: const Text('Export PDF'),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: () => _showBulkImportDialog(context),
-                  icon: const Icon(Icons.upload_file_rounded, size: 18),
-                  label: const Text('Import CSV'),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: () => _showBulkUploadDialog(context),
-                  icon: const Icon(Icons.cloud_upload_outlined, size: 18),
-                  label: const Text('Bulk Upload'),
-                ),
-                const SizedBox(width: 8),
+                if (!isMobile) ...[
+                  OutlinedButton.icon(
+                    onPressed: () => _exportXLS(employeesAsync),
+                    icon: const Icon(Icons.table_chart_outlined, size: 18),
+                    label: const Text('Export XLS'),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => _exportPDF(employeesAsync),
+                    icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                    label: const Text('Export PDF'),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => _showBulkImportDialog(context),
+                    icon: const Icon(Icons.upload_file_rounded, size: 18),
+                    label: const Text('Import CSV'),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => _showBulkUploadDialog(context),
+                    icon: const Icon(Icons.cloud_upload_outlined, size: 18),
+                    label: const Text('Bulk Upload'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 ElevatedButton.icon(
                   onPressed: () => _showAddEmployeeDialog(context),
                   icon: const Icon(Icons.person_add_rounded, size: 18),
@@ -109,29 +131,43 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              width: 320,
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search employees...',
-                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear_rounded, size: 18),
-                          onPressed: () {
-                            _searchController.clear();
-                            ref.read(employeesSearchProvider.notifier).state = '';
-                            ref.read(employeesPageProvider.notifier).state = 1;
-                          },
-                        )
-                      : null,
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                SizedBox(
+                  width: isMobile ? double.infinity : 320,
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search employees...',
+                      prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear_rounded, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                ref.read(employeesSearchProvider.notifier).state = '';
+                                ref.read(employeesPageProvider.notifier).state = 1;
+                              },
+                            )
+                          : null,
+                    ),
+                    onChanged: (value) {
+                      ref.read(employeesSearchProvider.notifier).state = value;
+                      ref.read(employeesPageProvider.notifier).state = 1;
+                    },
+                  ),
                 ),
-                onChanged: (value) {
-                  ref.read(employeesSearchProvider.notifier).state = value;
-                  ref.read(employeesPageProvider.notifier).state = 1;
-                },
-              ),
+                ColumnSelector(
+                  tooltip: 'Select columns',
+                  allColumns: _employeeColumnOptions,
+                  selectedKeys: ref.watch(employeesSelectedColumnsProvider),
+                  onChanged: (keys) =>
+                      ref.read(employeesSelectedColumnsProvider.notifier).state = keys,
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             Expanded(
@@ -177,25 +213,35 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
   }
 
   Widget _buildEmployeesTable(List<Employee> employees) {
+    final selected = ref.watch(employeesSelectedColumnsProvider);
+
+    final columns = <DataColumn2>[
+      if (selected.contains('name'))
+        const DataColumn2(label: Text('EMPLOYEE'), size: ColumnSize.L),
+      if (selected.contains('code'))
+        const DataColumn2(label: Text('CODE')),
+      if (selected.contains('department'))
+        const DataColumn2(label: Text('DEPARTMENT')),
+      if (selected.contains('designation'))
+        const DataColumn2(label: Text('DESIGNATION')),
+      if (selected.contains('email'))
+        const DataColumn2(label: Text('EMAIL')),
+      if (selected.contains('phone'))
+        const DataColumn2(label: Text('PHONE')),
+      if (selected.contains('transportRequired'))
+        const DataColumn2(label: Text('TRANSPORT')),
+      const DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
+    ];
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable2(
-        columns: [
-          DataColumn2(label: Row(children: [Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('EMPLOYEE')]), size: ColumnSize.L),
-          DataColumn2(label: Row(children: [Icon(Icons.badge_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('CODE')])),
-          DataColumn2(label: Row(children: [Icon(Icons.business_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('DEPARTMENT')])),
-          DataColumn2(label: Row(children: [Icon(Icons.email_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('EMAIL')])),
-          DataColumn2(label: Row(children: [Icon(Icons.directions_bus_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('TRANSPORT')])),
-          DataColumn2(label: Row(children: [Icon(Icons.settings_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('ACTIONS')]), size: ColumnSize.S),
-        ],
+        columns: columns,
         rows: employees.asMap().entries.map((entry) {
           final index = entry.key;
           final employee = entry.value;
-          return DataRow2(
-            color: index % 2 == 0
-                ? WidgetStateProperty.all(Colors.white)
-                : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
-            cells: [
+          final cells = <DataCell>[
+            if (selected.contains('name'))
               DataCell(Row(
                 children: [
                   CircleAvatar(
@@ -229,9 +275,17 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                   ),
                 ],
               )),
+            if (selected.contains('code'))
               DataCell(Text(employee.employeeCode ?? '-')),
+            if (selected.contains('department'))
               DataCell(Text(employee.department ?? '-')),
+            if (selected.contains('designation'))
+              DataCell(Text(employee.designation ?? '-')),
+            if (selected.contains('email'))
               DataCell(Text(employee.email ?? '-')),
+            if (selected.contains('phone'))
+              DataCell(Text(employee.phone ?? '-')),
+            if (selected.contains('transportRequired'))
               DataCell(Switch(
                 value: employee.isTransportRequired ?? false,
                 onChanged: (value) async {
@@ -242,33 +296,31 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                   ref.invalidate(employeesProvider);
                 },
               )),
-              DataCell(Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Tooltip(
-                    message: 'View',
-                    child: IconButton(
-                      icon: Icon(Icons.visibility_outlined, size: 18, color: AppColors.info),
-                      onPressed: () {},
-                    ),
+            DataCell(Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Tooltip(
+                  message: 'Edit',
+                  child: IconButton(
+                    icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+                    onPressed: () => _showEditEmployeeDialog(context, employee),
                   ),
-                  Tooltip(
-                    message: 'Edit',
-                    child: IconButton(
-                      icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
-                      onPressed: () => _showEditEmployeeDialog(context, employee),
-                    ),
+                ),
+                Tooltip(
+                  message: 'Delete',
+                  child: IconButton(
+                    icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.error),
+                    onPressed: () => _showDeleteConfirmation(context, employee),
                   ),
-                  Tooltip(
-                    message: 'Delete',
-                    child: IconButton(
-                      icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.error),
-                      onPressed: () => _showDeleteConfirmation(context, employee),
-                    ),
-                  ),
-                ],
-              )),
-            ],
+                ),
+              ],
+            )),
+          ];
+          return DataRow2(
+            color: index % 2 == 0
+                ? WidgetStateProperty.all(Colors.white)
+                : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+            cells: cells,
           );
         }).toList(),
       ),

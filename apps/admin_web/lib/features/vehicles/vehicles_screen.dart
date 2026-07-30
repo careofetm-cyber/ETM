@@ -3,10 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:etm_core/etm_core.dart';
 import '../../shared/providers/api_providers.dart';
+import '../../shared/widgets/column_selector.dart';
 
 final vehiclesPageProvider = StateProvider<int>((ref) => 1);
 final vehiclesStatusProvider = StateProvider<String>((ref) => 'all');
 final vehiclesSearchProvider = StateProvider<String>((ref) => '');
+
+const _vehicleColumnOptions = [
+  ColumnOption(key: 'plateNumber', label: 'Plate Number'),
+  ColumnOption(key: 'model', label: 'Model'),
+  ColumnOption(key: 'brand', label: 'Brand'),
+  ColumnOption(key: 'year', label: 'Year'),
+  ColumnOption(key: 'seatingCapacity', label: 'Seating Capacity'),
+  ColumnOption(key: 'color', label: 'Color'),
+  ColumnOption(key: 'status', label: 'Status'),
+  ColumnOption(key: 'driver', label: 'Driver'),
+];
+
+final vehiclesSelectedColumnsProvider = StateProvider<Set<String>>((ref) => {
+      'plateNumber',
+      'model',
+      'brand',
+      'status',
+    });
 
 final vehiclesProvider = FutureProvider<List<Vehicle>>((ref) async {
   final api = await ref.watch(vehicleApiProvider.future);
@@ -50,11 +69,12 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
   @override
   Widget build(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(isMobile ? 12 : 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -64,7 +84,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                   'Vehicles',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    fontSize: 24,
+                    fontSize: isMobile ? 20 : 24,
                   ),
                 ),
                 const Spacer(),
@@ -76,10 +96,13 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 SizedBox(
-                  width: 320,
+                  width: isMobile ? double.infinity : 320,
                   child: TextField(
                     controller: _searchController,
                     decoration: const InputDecoration(
@@ -91,7 +114,6 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
@@ -114,6 +136,13 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                       ref.read(vehiclesPageProvider.notifier).state = 1;
                     },
                   ),
+                ),
+                ColumnSelector(
+                  tooltip: 'Select columns',
+                  allColumns: _vehicleColumnOptions,
+                  selectedKeys: ref.watch(vehiclesSelectedColumnsProvider),
+                  onChanged: (keys) =>
+                      ref.read(vehiclesSelectedColumnsProvider.notifier).state = keys,
                 ),
               ],
             ),
@@ -176,72 +205,78 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
   }
 
   Widget _buildVehiclesTable(List<Vehicle> vehicles) {
+    final selected = ref.watch(vehiclesSelectedColumnsProvider);
+
+    final columns = <DataColumn2>[
+      if (selected.contains('brand'))
+        const DataColumn2(label: Text('BRAND'), size: ColumnSize.L),
+      if (selected.contains('model'))
+        const DataColumn2(label: Text('MODEL')),
+      if (selected.contains('plateNumber'))
+        const DataColumn2(label: Text('PLATE NUMBER')),
+      if (selected.contains('year'))
+        const DataColumn2(label: Text('YEAR')),
+      if (selected.contains('seatingCapacity'))
+        const DataColumn2(label: Text('CAPACITY')),
+      if (selected.contains('color'))
+        const DataColumn2(label: Text('COLOR')),
+      if (selected.contains('status'))
+        const DataColumn2(label: Text('STATUS')),
+      if (selected.contains('driver'))
+        const DataColumn2(label: Text('DRIVER')),
+      const DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
+    ];
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable2(
-        columns: [
-          DataColumn2(label: Row(children: [Icon(Icons.directions_bus_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('VEHICLE')]), size: ColumnSize.L),
-          DataColumn2(label: Row(children: [Icon(Icons.pin_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('PLATE NUMBER')])),
-          DataColumn2(label: Row(children: [Icon(Icons.people_outline, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('CAPACITY')])),
-          DataColumn2(label: Row(children: [Icon(Icons.flag_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('STATUS')])),
-          DataColumn2(label: Row(children: [Icon(Icons.settings_outlined, size: 16, color: AppColors.textSecondary), const SizedBox(width: 6), const Text('ACTIONS')]), size: ColumnSize.S),
-        ],
+        columns: columns,
         rows: vehicles.asMap().entries.map((entry) {
           final index = entry.key;
           final vehicle = entry.value;
           final statusStr = vehicle.status?.name ?? 'active';
+          final cells = <DataCell>[
+            if (selected.contains('brand'))
+              DataCell(Text(vehicle.brand, style: const TextStyle(fontWeight: FontWeight.w500))),
+            if (selected.contains('model'))
+              DataCell(Text(vehicle.model)),
+            if (selected.contains('plateNumber'))
+              DataCell(Text(vehicle.plateNumber)),
+            if (selected.contains('year'))
+              DataCell(Text(vehicle.year.toString())),
+            if (selected.contains('seatingCapacity'))
+              DataCell(Text('${vehicle.seatingCapacity} seats')),
+            if (selected.contains('color'))
+              DataCell(Text(vehicle.color ?? '-')),
+            if (selected.contains('status'))
+              DataCell(_buildStatusChip(statusStr)),
+            if (selected.contains('driver'))
+              DataCell(Text(vehicle.driverId ?? '-')),
+            DataCell(Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Tooltip(
+                  message: 'Edit',
+                  child: IconButton(
+                    icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+                    onPressed: () => _showEditVehicleDialog(context, vehicle),
+                  ),
+                ),
+                Tooltip(
+                  message: 'Delete',
+                  child: IconButton(
+                    icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.error),
+                    onPressed: () => _showDeleteConfirmation(context, vehicle),
+                  ),
+                ),
+              ],
+            )),
+          ];
           return DataRow2(
             color: index % 2 == 0
                 ? WidgetStateProperty.all(Colors.white)
                 : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
-            cells: [
-              DataCell(Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Icon(Icons.directions_bus_rounded, size: 16, color: AppColors.primary),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    '${vehicle.brand} ${vehicle.model}',
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                ],
-              )),
-              DataCell(Text(vehicle.plateNumber)),
-              DataCell(Text('${vehicle.seatingCapacity} seats')),
-              DataCell(_buildStatusChip(statusStr)),
-              DataCell(Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Tooltip(
-                    message: 'View',
-                    child: IconButton(
-                      icon: Icon(Icons.visibility_outlined, size: 18, color: AppColors.info),
-                      onPressed: () {},
-                    ),
-                  ),
-                  Tooltip(
-                    message: 'Edit',
-                    child: IconButton(
-                      icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
-                      onPressed: () => _showEditVehicleDialog(context, vehicle),
-                    ),
-                  ),
-                  Tooltip(
-                    message: 'Delete',
-                    child: IconButton(
-                      icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.error),
-                      onPressed: () => _showDeleteConfirmation(context, vehicle),
-                    ),
-                  ),
-                ],
-              )),
-            ],
+            cells: cells,
           );
         }).toList(),
       ),

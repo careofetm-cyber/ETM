@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
 import 'providers.dart';
 import 'features/auth/login_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
@@ -9,6 +10,8 @@ import 'features/trips/trip_list_screen.dart';
 import 'features/trip_detail/trip_detail_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/notifications/notifications_screen.dart';
+import 'features/tracking/tracking_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -35,11 +38,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/trips', builder: (_, __) => const TripListScreen()),
           GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
           GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+          GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
         ],
       ),
       GoRoute(
         path: '/trip/:id',
         builder: (_, state) => TripDetailScreen(tripId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/tracking/:id',
+        builder: (_, state) => TrackingScreen(tripId: state.pathParameters['id']!),
       ),
     ],
   );
@@ -113,13 +121,44 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   static const _tabs = ['/dashboard', '/trips', '/profile', '/settings'];
+  int _unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    try {
+      final dio = Dio(BaseOptions(
+        baseUrl: 'https://etm-gp12.onrender.com/api/v1',
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+      ));
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null && token.isNotEmpty) {
+        final resp = await dio.get(
+          '/notifications',
+          options: Options(headers: {'Authorization': 'Bearer $token'}),
+        );
+        final notifications = resp.data is List ? resp.data : (resp.data['data'] ?? []);
+        if (mounted) {
+          setState(() {
+            _unreadCount = notifications.where((n) => n['isRead'] != true).length;
+          });
+        }
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
     final currentPath = GoRouterState.of(context).matchedLocation;
     final index = _tabs.indexOf(currentPath);
     final cs = Theme.of(context).colorScheme;
-    final titles = {'/dashboard': 'Dashboard', '/trips': 'My Trips', '/profile': 'Profile', '/settings': 'Settings'};
+    final titles = {'/dashboard': 'Dashboard', '/trips': 'My Trips', '/profile': 'Profile', '/settings': 'Settings', '/notifications': 'Notifications'};
 
     return Scaffold(
       appBar: AppBar(
@@ -127,8 +166,15 @@ class _AppShellState extends State<AppShell> {
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
+            icon: Badge(
+              isLabelVisible: _unreadCount > 0,
+              label: _unreadCount > 99 ? const Text('99+') : Text('$_unreadCount'),
+              child: const Icon(Icons.notifications_outlined),
+            ),
+            onPressed: () async {
+              await context.push('/notifications');
+              _loadUnreadCount();
+            },
           ),
         ],
       ),

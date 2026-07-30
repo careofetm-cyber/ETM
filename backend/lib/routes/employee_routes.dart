@@ -20,6 +20,7 @@ class EmployeeRoutes {
     router.post('/drivers', authMiddleware(requiredRoles: ['admin', 'manager', 'transport_manager'])(createDriver));
     router.put('/drivers/<id>', authMiddleware(requiredRoles: ['admin', 'manager', 'transport_manager'])(updateDriver));
     router.delete('/drivers/<id>', authMiddleware(requiredRoles: ['admin'])(deleteDriver));
+    router.put('/user/:userId/location', authMiddleware(requiredRoles: ['employee'])(updateEmployeeLocation));
   }
   
   Future<Response> getEmployees(Request request) async {
@@ -272,5 +273,26 @@ class EmployeeRoutes {
     }, where: {'id': id});
     
     return jsonResponse({'message': 'Driver deleted successfully'});
+  }
+
+  Future<Response> updateEmployeeLocation(Request request) async {
+    final userId = request.params['userId'];
+    final body = jsonDecode(await request.readAsString());
+    final db = DatabaseConfig.db;
+
+    final employee = db.findOne('employees', where: {'user_id': userId});
+    if (employee == null) {
+      return errorResponse('Employee not found', statusCode: 404);
+    }
+
+    final updates = <String, dynamic>{};
+    if (body['homeLatitude'] != null) updates['home_latitude'] = body['homeLatitude'];
+    if (body['homeLongitude'] != null) updates['home_longitude'] = body['homeLongitude'];
+    if (body['homeAddress'] != null) updates['home_address'] = body['homeAddress'];
+    updates['updated_at'] = DateTime.now().toIso8601String();
+
+    db.update('employees', updates, where: {'id': employee['id']});
+
+    return jsonResponse({'message': 'Location updated successfully'});
   }
 }

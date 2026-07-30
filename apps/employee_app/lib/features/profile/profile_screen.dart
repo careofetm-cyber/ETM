@@ -37,6 +37,92 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     setState(() {});
   }
 
+  void _showUpdateHomeLocationDialog() {
+    final addressController = TextEditingController(text: _profile?['homeAddress'] ?? '');
+    final latController = TextEditingController(
+      text: (_profile?['homeLatitude'] ?? '').toString(),
+    );
+    final lngController = TextEditingController(
+      text: (_profile?['homeLongitude'] ?? '').toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Update Home Location'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: addressController,
+                decoration: const InputDecoration(
+                  labelText: 'Home Address',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.home),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: latController,
+                decoration: const InputDecoration(
+                  labelText: 'Latitude',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: lngController,
+                decoration: const InputDecoration(
+                  labelText: 'Longitude',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton.icon(
+            onPressed: () async {
+              final prefs = await ref.read(sharedPreferencesProvider.future);
+              final userId = prefs.getString('user_id');
+              if (userId == null) return;
+              try {
+                final dio = ref.read(dioProvider);
+                await dio.put('/employees/user/$userId/location', data: {
+                  'homeAddress': addressController.text.trim(),
+                  'homeLatitude': double.tryParse(latController.text.trim()) ?? 0,
+                  'homeLongitude': double.tryParse(lngController.text.trim()) ?? 0,
+                });
+                Navigator.pop(ctx);
+                await _loadProfile();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Home location updated'), backgroundColor: Colors.green),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to update location: $e')),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.check),
+            label: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showChangePasswordDialog() {
     final currentPwController = TextEditingController();
     final newPwController = TextEditingController();
@@ -164,6 +250,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             const SizedBox(height: 16),
 
+            // Home Location Section
+            _buildSectionHeader('Home Location'),
+            const SizedBox(height: 8),
+            Card(
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF059669).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.home, color: Color(0xFF059669), size: 20),
+                    ),
+                    title: const Text('Home / Pickup Location'),
+                    subtitle: Text(
+                      _profile?['homeAddress'] ?? 'Not set',
+                      style: TextStyle(
+                        color: _profile?['homeAddress'] != null ? null : Colors.grey,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _showUpdateHomeLocationDialog,
+                  ),
+                  if (_profile?['homeAddress'] != null) ...[
+                    const Divider(height: 1, indent: 56),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(Icons.location_on, size: 16, color: Colors.grey.shade500),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_profile?['homeLatitude'] ?? 0}, ${_profile?['homeLongitude'] ?? 0}',
+                            style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: Colors.grey.shade600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // Actions Card
             Card(
               child: Column(
@@ -222,6 +354,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       title: Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
       subtitle: Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Theme.of(context).colorScheme.primary,
+          letterSpacing: 0.5,
+        ),
+      ),
     );
   }
 }

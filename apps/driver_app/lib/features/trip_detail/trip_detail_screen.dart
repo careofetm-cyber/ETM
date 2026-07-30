@@ -14,23 +14,14 @@ class TripDetailScreen extends ConsumerStatefulWidget {
 class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
   Map<String, dynamic>? _trip;
   List<dynamic> _passengers = [];
-  final _otpController = TextEditingController();
   bool _isLoading = true;
-  bool _isVerifyingOtp = false;
   bool _isCompleting = false;
   String? _error;
-  String? _otpError;
 
   @override
   void initState() {
     super.initState();
     _loadTrip();
-  }
-
-  @override
-  void dispose() {
-    _otpController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadTrip() async {
@@ -50,31 +41,115 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     setState(() => _isLoading = false);
   }
 
-  Future<void> _verifyOtp() async {
-    final otp = _otpController.text.trim();
-    if (otp.length != 6) {
-      setState(() => _otpError = 'Enter 6-digit OTP');
-      return;
-    }
-    setState(() { _isVerifyingOtp = true; _otpError = null; });
-    try {
-      final dio = ref.read(dioProvider);
-      await dio.post('/otp/verify', data: {
-        'tripId': widget.tripId,
-        'otp': otp,
-      });
-      await _loadTrip();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('OTP verified! Trip started'), backgroundColor: Colors.green),
-        );
+  Future<void> _verifyPassengerOtp(String employeeId) async {
+    final otpController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Verify Employee OTP'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Enter OTP for employee', style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 12),
+            TextField(
+              controller: otpController,
+              decoration: const InputDecoration(
+                hintText: '• • • • • •',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.pin_outlined),
+              ),
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
+              maxLength: 6,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              if (otpController.text.trim().length == 6) {
+                Navigator.pop(ctx, true);
+              }
+            },
+            child: const Text('Verify'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      try {
+        final dio = ref.read(dioProvider);
+        await dio.post('/otp/verify', data: {
+          'tripId': widget.tripId,
+          'employeeId': employeeId,
+          'otp': otpController.text.trim(),
+        });
+        await dio.post('/trips/${widget.tripId}/passengers/$employeeId/board');
+        await _loadTrip();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Passenger verified and boarded'), backgroundColor: Colors.green),
+          );
+        }
+      } on DioException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.response?.data?['error'] ?? 'Verification failed'), backgroundColor: Theme.of(context).colorScheme.error),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Network error'), backgroundColor: Colors.red),
+          );
+        }
       }
-    } on DioException catch (e) {
-      setState(() => _otpError = e.response?.data?['error'] ?? 'Verification failed');
-    } catch (e) {
-      setState(() => _otpError = 'Network error');
     }
-    setState(() => _isVerifyingOtp = false);
+  }
+
+  Future<void> _markNcns(String employeeId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Mark as NCNS?'),
+        content: const Text('This will mark the passenger as No Call No Show. This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Mark NCNS'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      try {
+        final dio = ref.read(dioProvider);
+        await dio.post('/trips/${widget.tripId}/passengers/$employeeId/ncns');
+        await _loadTrip();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Passenger marked as NCNS'), backgroundColor: Colors.orange),
+          );
+        }
+      } on DioException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.response?.data?['error'] ?? 'Failed to mark NCNS'), backgroundColor: Theme.of(context).colorScheme.error),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Network error'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _completeTrip() async {
@@ -98,18 +173,6 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
       }
     }
     setState(() => _isCompleting = false);
-  }
-
-  Future<void> _boardPassenger(String employeeId) async {
-    try {
-      final dio = ref.read(dioProvider);
-      await dio.post('/trips/${widget.tripId}/passengers/$employeeId/board');
-      await _loadTrip();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to board passenger'), backgroundColor: Colors.red));
-      }
-    }
   }
 
   Future<void> _dropPassenger(String employeeId) async {
@@ -259,39 +322,15 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                                     color: cs.primaryContainer,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Icon(Icons.lock_outline, size: 32, color: cs.onPrimaryContainer),
+                                  child: Icon(Icons.how_to_reg, size: 32, color: cs.onPrimaryContainer),
                                 ),
                                 const SizedBox(height: 12),
-                                Text('Enter OTP to Start Trip', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                                Text('Passenger Verification', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 4),
-                                Text('Ask the passenger for their OTP', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-                                const SizedBox(height: 16),
-                                TextField(
-                                  controller: _otpController,
-                                  decoration: InputDecoration(
-                                    hintText: '• • • • • •',
-                                    border: const OutlineInputBorder(),
-                                    prefixIcon: const Icon(Icons.pin_outlined),
-                                    errorText: _otpError,
-                                    filled: true,
-                                    fillColor: cs.surfaceContainerHighest.withOpacity(0.3),
-                                  ),
-                                  keyboardType: TextInputType.number,
+                                Text(
+                                  'Verify each passenger OTP or mark as NCNS below',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
-                                  maxLength: 6,
-                                ),
-                                const SizedBox(height: 12),
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 50,
-                                  child: FilledButton.icon(
-                                    onPressed: _isVerifyingOtp ? null : _verifyOtp,
-                                    icon: _isVerifyingOtp
-                                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                        : const Icon(Icons.check_circle_outline),
-                                    label: const Text('Verify OTP & Start Trip'),
-                                  ),
                                 ),
                               ],
                             ),
@@ -367,51 +406,92 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                               final p = entry.value;
                               final isBoarded = p['isBoarded'] == true;
                               final isDropped = p['isDropped'] == true;
+                              final isNcns = p['isNcns'] == true || p['ncns'] == true;
                               final firstName = p['firstName'] ?? '';
                               final lastName = p['lastName'] ?? '';
                               final name = '$firstName $lastName'.trim();
                               final employeeId = p['employeeId'] ?? '';
+
+                              Color statusColor;
+                              String statusLabel;
+                              if (isNcns) {
+                                statusColor = Colors.red;
+                                statusLabel = 'NCNS';
+                              } else if (isDropped) {
+                                statusColor = Colors.green;
+                                statusLabel = 'Dropped';
+                              } else if (isBoarded) {
+                                statusColor = Colors.orange;
+                                statusLabel = 'Boarded';
+                              } else {
+                                statusColor = cs.onSurfaceVariant;
+                                statusLabel = 'Pending';
+                              }
 
                               return Column(
                                 children: [
                                   ListTile(
                                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                     leading: CircleAvatar(
-                                      backgroundColor: isDropped ? Colors.green.shade50 : isBoarded ? Colors.orange.shade50 : cs.surfaceContainerHighest,
+                                      backgroundColor: statusColor.withOpacity(0.1),
                                       child: Icon(
-                                        isDropped ? Icons.check_circle : isBoarded ? Icons.person : Icons.person_outline,
-                                        color: isDropped ? Colors.green.shade600 : isBoarded ? Colors.orange.shade600 : cs.onSurfaceVariant,
+                                        isNcns ? Icons.cancel : isDropped ? Icons.check_circle : isBoarded ? Icons.person : Icons.person_outline,
+                                        color: statusColor,
                                         size: 20,
                                       ),
                                     ),
                                     title: Text(name.isNotEmpty ? name : 'Unknown', style: const TextStyle(fontWeight: FontWeight.w600)),
-                                    subtitle: Text(
-                                      isDropped ? 'Dropped' : isBoarded ? 'Boarded' : 'Pending',
-                                      style: TextStyle(
-                                        color: isDropped ? Colors.green.shade600 : isBoarded ? Colors.orange.shade600 : cs.onSurfaceVariant,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                    subtitle: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: statusColor.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(statusLabel, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                                        ),
+                                        if (p['stopName'] != null) ...[
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(p['stopName'], style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant), overflow: TextOverflow.ellipsis),
+                                          ),
+                                        ],
+                                      ],
                                     ),
-                                    trailing: (status == 'in_progress' || status == 'inProgress')
+                                    trailing: (status == 'scheduled' && !isBoarded && !isDropped && !isNcns)
                                         ? Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              if (!isBoarded)
-                                                FilledButton.tonalIcon(
-                                                  onPressed: () => _boardPassenger(employeeId),
-                                                  icon: const Icon(Icons.login, size: 16),
-                                                  label: const Text('Board'),
-                                                ),
-                                              if (isBoarded && !isDropped)
-                                                FilledButton.tonalIcon(
-                                                  onPressed: () => _dropPassenger(employeeId),
-                                                  icon: const Icon(Icons.logout, size: 16),
-                                                  label: const Text('Drop'),
-                                                  style: FilledButton.styleFrom(backgroundColor: Colors.green.shade50),
-                                                ),
+                                              FilledButton.tonalIcon(
+                                                onPressed: () => _verifyPassengerOtp(employeeId),
+                                                icon: const Icon(Icons.verified_outlined, size: 16),
+                                                label: const Text('Verify OTP'),
+                                                style: FilledButton.styleFrom(backgroundColor: cs.primaryContainer),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              FilledButton.tonalIcon(
+                                                onPressed: () => _markNcns(employeeId),
+                                                icon: const Icon(Icons.cancel_outlined, size: 16),
+                                                label: const Text('NCNS'),
+                                                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade50),
+                                              ),
                                             ],
                                           )
-                                        : null,
+                                        : (status == 'in_progress' || status == 'inProgress')
+                                            ? Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (isBoarded && !isDropped)
+                                                    FilledButton.tonalIcon(
+                                                      onPressed: () => _dropPassenger(employeeId),
+                                                      icon: const Icon(Icons.logout, size: 16),
+                                                      label: const Text('Drop'),
+                                                      style: FilledButton.styleFrom(backgroundColor: Colors.green.shade50),
+                                                    ),
+                                                ],
+                                              )
+                                            : null,
                                   ),
                                   if (idx < _passengers.length - 1) const Divider(height: 1, indent: 56),
                                 ],

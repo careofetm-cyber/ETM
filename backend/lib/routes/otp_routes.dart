@@ -5,6 +5,7 @@ import 'package:shelf_router/shelf_router.dart';
 import '../config/database.dart';
 import '../middleware/auth_middleware.dart';
 import '../middleware/error_middleware.dart';
+import '../utils/notification_helper.dart';
 
 class OtpRoutes {
   final router = Router();
@@ -38,6 +39,25 @@ class OtpRoutes {
       'expires_at': expiresAt,
       'created_at': DateTime.now().toIso8601String(),
     });
+
+    final passengers = db.findAll('trip_passengers', filters: {'trip_id': tripId});
+    for (final p in passengers) {
+      final employee = db.findOne('employees', where: {'id': p['employee_id']});
+      if (employee != null) {
+        final user = db.findOne('users', where: {'id': employee['user_id']});
+        if (user != null) {
+          NotificationHelper.create(
+            userId: user['id'],
+            title: 'OTP Generated',
+            message: 'An OTP has been generated for your trip.',
+            type: 'otp_generated',
+            referenceId: tripId,
+            referenceType: 'trip',
+            companyId: trip['company_id'],
+          );
+        }
+      }
+    }
 
     return jsonResponse({
       'otp': otp,

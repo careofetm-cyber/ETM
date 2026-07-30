@@ -60,7 +60,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   if (_dashboard != null) ...[
                     _buildStatGrid(),
                     const SizedBox(height: 24),
-                    if (_dashboard!['has_upcoming_trip'] == true) ...[
+                    if (_dashboard!['hasUpcomingTrip'] == true) ...[
                       _buildNextTripCard(),
                       const SizedBox(height: 24),
                     ],
@@ -181,12 +181,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildNextTripCard() {
     final cs = Theme.of(context).colorScheme;
-    final trip = _dashboard!['next_trip'];
+    final trip = _dashboard!['nextTrip'];
     if (trip == null) return const SizedBox.shrink();
-    final routeName = trip['routeName'] ?? trip['route_name'] ?? 'Assigned Route';
+    final routeName = trip['routeName'] ?? 'Assigned Route';
     final vehiclePlate = trip['vehiclePlate'] ?? '';
     final driverName = trip['driverName'] ?? '';
-    final scheduledTime = (trip['scheduledTime'] ?? trip['scheduled_time'] ?? '').toString();
+    final scheduledTime = (trip['scheduledTime'] ?? '').toString();
     final timePart = scheduledTime.length >= 16 ? scheduledTime.substring(11, 16) : scheduledTime;
     final datePart = scheduledTime.length >= 10 ? scheduledTime.substring(0, 10) : '';
 

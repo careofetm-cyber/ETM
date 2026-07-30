@@ -70,6 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final branding = ref.watch(brandingProvider);
+    final isMobile = MediaQuery.sizeOf(context).width < 768;
 
     ref.listen<AuthState>(authProvider, (prev, next) {
       if (next.isAuthenticated) {
@@ -83,6 +84,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     });
 
     final primaryColor = branding.primaryColorValue ?? AppColors.primary;
+
+    if (isMobile) {
+      return Scaffold(
+        backgroundColor: AppColors.surface,
+        body: SafeArea(
+          child: _buildLoginForm(authState, branding, primaryColor),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,

@@ -217,7 +217,7 @@ class AdminLayout extends StatelessWidget {
     if (isMobile) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('ETM Admin'),
+          title: Text(_getPageTitle(context)),
           leading: Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu),
@@ -225,9 +225,9 @@ class AdminLayout extends StatelessWidget {
             ),
           ),
         ),
-        drawer: const SizedBox(
+        drawer: SizedBox(
           width: _sidebarWidth,
-          child: Sidebar(),
+          child: const Sidebar(),
         ),
         body: child,
       );

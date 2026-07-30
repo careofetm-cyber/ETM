@@ -5,6 +5,7 @@ import '../config/database.dart';
 import '../config/billing_service.dart';
 import '../middleware/auth_middleware.dart';
 import '../middleware/error_middleware.dart';
+import '../utils/notification_helper.dart';
 
 class TripRoutes {
   final router = Router();
@@ -26,6 +27,9 @@ class TripRoutes {
     router.post('/<id>/passengers/<employeeId>/drop', authMiddleware(requiredRoles: ['driver'])(dropPassenger));
     router.post('/location', authMiddleware(requiredRoles: ['driver'])(sendLocationUpdate));
     router.get('/gps/<vehicleId>', authMiddleware()(getGPSLogs));
+    router.get('/<id>/location', authMiddleware()(getTripLocation));
+    router.get('/<id>/stops', authMiddleware()(getTripStops));
+    router.post('/<id>/passengers/<employeeId>/ncns', authMiddleware(requiredRoles: ['driver'])(markPassengerNcns));
   }
   
   Future<Response> getTrips(Request request) async {
@@ -105,7 +109,36 @@ class TripRoutes {
           'is_dropped': false,
           'created_at': DateTime.now().toIso8601String(),
         });
+
+        final employee = db.findOne('employees', where: {'id': empMap['employeeId']});
+        if (employee != null) {
+          final user = db.findOne('users', where: {'id': employee['user_id']});
+          if (user != null) {
+            NotificationHelper.create(
+              userId: user['id'],
+              title: 'New Trip Assigned',
+              message: 'You have been assigned a new trip.',
+              type: 'trip_assigned',
+              referenceId: id,
+              referenceType: 'trip',
+              companyId: companyId,
+            );
+          }
+        }
       }
+    }
+
+    final driverUser = db.findOne('users', where: {'id': body['driverId']});
+    if (driverUser != null) {
+      NotificationHelper.create(
+        userId: driverUser['id'],
+        title: 'New Trip Assigned',
+        message: 'A new trip has been assigned to you.',
+        type: 'trip_assigned',
+        referenceId: id,
+        referenceType: 'trip',
+        companyId: companyId,
+      );
     }
 
     return jsonResponse({'id': id, 'message': 'Trip created successfully'}, statusCode: 201);
@@ -138,6 +171,28 @@ class TripRoutes {
       'actual_start_time': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
     }, where: {'id': id});
+
+    final trip = db.findOne('trips', where: {'id': id});
+    if (trip != null) {
+      final passengers = db.findAll('trip_passengers', filters: {'trip_id': id});
+      for (final p in passengers) {
+        final employee = db.findOne('employees', where: {'id': p['employee_id']});
+        if (employee != null) {
+          final user = db.findOne('users', where: {'id': employee['user_id']});
+          if (user != null) {
+            NotificationHelper.create(
+              userId: user['id'],
+              title: 'Trip Started',
+              message: 'Your trip has started.',
+              type: 'trip_started',
+              referenceId: id,
+              referenceType: 'trip',
+              companyId: trip['company_id'],
+            );
+          }
+        }
+      }
+    }
     
     return jsonResponse({'message': 'Trip started successfully'});
   }
@@ -170,6 +225,25 @@ class TripRoutes {
     db.update('trips', updates, where: {'id': id});
 
     BillingService.processTripCompletion(id);
+
+    final passengers = db.findAll('trip_passengers', filters: {'trip_id': id});
+    for (final p in passengers) {
+      final employee = db.findOne('employees', where: {'id': p['employee_id']});
+      if (employee != null) {
+        final user = db.findOne('users', where: {'id': employee['user_id']});
+        if (user != null) {
+          NotificationHelper.create(
+            userId: user['id'],
+            title: 'Trip Completed',
+            message: 'Your trip has been completed.',
+            type: 'trip_completed',
+            referenceId: id,
+            referenceType: 'trip',
+            companyId: trip['company_id'],
+          );
+        }
+      }
+    }
 
     return jsonResponse({'message': 'Trip completed successfully'});
   }
@@ -219,6 +293,23 @@ class TripRoutes {
         'boarded_at': DateTime.now().toIso8601String(),
       }, where: {'trip_id': tripId, 'employee_id': employeeId});
     }
+
+    final employee = db.findOne('employees', where: {'id': employeeId});
+    if (employee != null) {
+      final user = db.findOne('users', where: {'id': employee['user_id']});
+      final trip = db.findOne('trips', where: {'id': tripId});
+      if (user != null && trip != null) {
+        NotificationHelper.create(
+          userId: user['id'],
+          title: 'Passenger Boarded',
+          message: 'You have been boarded on the trip.',
+          type: 'passenger_boarded',
+          referenceId: tripId,
+          referenceType: 'trip',
+          companyId: trip['company_id'],
+        );
+      }
+    }
     
     return jsonResponse({'message': 'Passenger boarded successfully'});
   }
@@ -234,6 +325,23 @@ class TripRoutes {
         'is_dropped': true,
         'dropped_at': DateTime.now().toIso8601String(),
       }, where: {'trip_id': tripId, 'employee_id': employeeId});
+    }
+
+    final employee = db.findOne('employees', where: {'id': employeeId});
+    if (employee != null) {
+      final user = db.findOne('users', where: {'id': employee['user_id']});
+      final trip = db.findOne('trips', where: {'id': tripId});
+      if (user != null && trip != null) {
+        NotificationHelper.create(
+          userId: user['id'],
+          title: 'Passenger Dropped',
+          message: 'You have been dropped at your destination.',
+          type: 'passenger_dropped',
+          referenceId: tripId,
+          referenceType: 'trip',
+          companyId: trip['company_id'],
+        );
+      }
     }
     
     return jsonResponse({'message': 'Passenger dropped successfully'});
@@ -293,6 +401,24 @@ class TripRoutes {
 
     db.update('trips', updates, where: {'id': id});
     final updated = db.findOne('trips', where: {'id': id});
+
+    final driverUserId = updated?['driver_id'];
+    if (driverUserId != null) {
+      final driverUser = db.findOne('users', where: {'id': driverUserId});
+      if (driverUser != null) {
+        final vehicle = updated?['vehicle_id'] != null ? db.findOne('vehicles', where: {'id': updated!['vehicle_id']}) : null;
+        NotificationHelper.create(
+          userId: driverUser['id'],
+          title: 'Cab Assigned',
+          message: 'A cab has been assigned to your trip${vehicle != null ? ' (${vehicle['plate_number']})' : ''}.',
+          type: 'cab_assigned',
+          referenceId: id,
+          referenceType: 'trip',
+          companyId: trip['company_id'],
+        );
+      }
+    }
+
     return jsonResponse(updated!);
   }
 
@@ -397,5 +523,92 @@ class TripRoutes {
     }
 
     return errorResponse('Invalid action');
+  }
+
+  Future<Response> getTripLocation(Request request) async {
+    final tripId = request.params['id'];
+    final db = DatabaseConfig.db;
+
+    final trip = db.findOne('trips', where: {'id': tripId});
+    if (trip == null) {
+      return errorResponse('Trip not found', statusCode: 404);
+    }
+
+    final vehicleId = trip['vehicle_id'];
+    if (vehicleId == null) {
+      return errorResponse('No vehicle assigned to this trip', statusCode: 404);
+    }
+
+    var logs = db.findAll('gps_logs', filters: {'vehicle_id': vehicleId});
+    if (logs.isEmpty) {
+      return jsonResponse({'data': null});
+    }
+
+    logs.sort((a, b) => (b['timestamp'] ?? '').toString().compareTo((a['timestamp'] ?? '').toString()));
+    return jsonResponse({'data': logs.first});
+  }
+
+  Future<Response> getTripStops(Request request) async {
+    final tripId = request.params['id'];
+    final db = DatabaseConfig.db;
+
+    final trip = db.findOne('trips', where: {'id': tripId});
+    if (trip == null) {
+      return errorResponse('Trip not found', statusCode: 404);
+    }
+
+    final routeId = trip['route_id'];
+    if (routeId == null) {
+      return jsonResponse({'data': []});
+    }
+
+    var stops = db.findAll('stops', filters: {'route_id': routeId});
+    stops.sort((a, b) => (a['sequence'] ?? 0).compareTo(b['sequence'] ?? 0));
+
+    return jsonResponse({'data': stops});
+  }
+
+  Future<Response> markPassengerNcns(Request request) async {
+    final tripId = request.params['id'];
+    final employeeId = request.params['employeeId'];
+    final db = DatabaseConfig.db;
+
+    final record = db.findOne('trip_passengers', where: {'trip_id': tripId, 'employee_id': employeeId});
+    if (record == null) {
+      return errorResponse('Passenger not found on this trip', statusCode: 404);
+    }
+
+    db.update('trip_passengers', {
+      'is_ncns': true,
+      'ncns_at': DateTime.now().toIso8601String(),
+    }, where: {'id': record['id']});
+
+    db.insert('ncns_log', {
+      'id': 'ncns_${DateTime.now().millisecondsSinceEpoch}',
+      'trip_id': tripId,
+      'employee_id': employeeId,
+      'recorded_by': request.context['userId'],
+      'ncns_at': DateTime.now().toIso8601String(),
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    final employee = db.findOne('employees', where: {'id': employeeId});
+    if (employee != null) {
+      final user = db.findOne('users', where: {'id': employee['user_id']});
+      final trip = db.findOne('trips', where: {'id': tripId});
+      if (user != null && trip != null) {
+        NotificationHelper.create(
+          userId: user['id'],
+          title: 'NCNS Marked',
+          message: 'You have been marked as NCNS (Not Called, Not Showed) for a trip.',
+          type: 'ncns_marked',
+          referenceId: tripId,
+          referenceType: 'trip',
+          companyId: trip['company_id'],
+        );
+      }
+    }
+
+    return jsonResponse({'message': 'Passenger marked as NCNS successfully'});
   }
 }

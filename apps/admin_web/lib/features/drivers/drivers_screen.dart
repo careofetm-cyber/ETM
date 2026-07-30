@@ -3,9 +3,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:etm_core/etm_core.dart';
 import '../../shared/providers/api_providers.dart';
+import '../../shared/widgets/column_selector.dart';
 
 final driversPageProvider = StateProvider<int>((ref) => 1);
 final driversSearchProvider = StateProvider<String>((ref) => '');
+
+const _driverColumnOptions = [
+  ColumnOption(key: 'name', label: 'Name'),
+  ColumnOption(key: 'email', label: 'Email'),
+  ColumnOption(key: 'phone', label: 'Phone'),
+  ColumnOption(key: 'license', label: 'License'),
+  ColumnOption(key: 'status', label: 'Status'),
+  ColumnOption(key: 'vehicle', label: 'Vehicle'),
+];
+
+final driversSelectedColumnsProvider = StateProvider<Set<String>>((ref) => {
+      'name',
+      'email',
+      'license',
+      'status',
+    });
 
 final driversProvider = FutureProvider<List<Driver>>((ref) async {
   final api = await ref.watch(driverApiProvider.future);
@@ -49,10 +66,11 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
   @override
   Widget build(BuildContext context) {
     final driversAsync = ref.watch(driversProvider);
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(isMobile ? 12 : 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -60,7 +78,9 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
               children: [
                 Text(
                   'Drivers',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontSize: isMobile ? 20 : null,
+                  ),
                 ),
                 const Spacer(),
                 ElevatedButton.icon(
@@ -71,19 +91,33 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: 300,
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: 'Search drivers...',
-                  prefixIcon: Icon(Icons.search),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                SizedBox(
+                  width: isMobile ? double.infinity : 300,
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: const InputDecoration(
+                      hintText: 'Search drivers...',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (value) {
+                      ref.read(driversSearchProvider.notifier).state = value;
+                      ref.read(driversPageProvider.notifier).state = 1;
+                    },
+                  ),
                 ),
-                onChanged: (value) {
-                  ref.read(driversSearchProvider.notifier).state = value;
-                  ref.read(driversPageProvider.notifier).state = 1;
-                },
-              ),
+                ColumnSelector(
+                  tooltip: 'Select columns',
+                  allColumns: _driverColumnOptions,
+                  selectedKeys: ref.watch(driversSelectedColumnsProvider),
+                  onChanged: (keys) =>
+                      ref.read(driversSelectedColumnsProvider.notifier).state = keys,
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             Expanded(
@@ -110,53 +144,65 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
   }
 
   Widget _buildDriversTable(List<Driver> drivers) {
-    return DataTable2(
-      columns: const [
-        DataColumn2(label: Text('Driver'), size: ColumnSize.L),
-        DataColumn2(label: Text('License')),
-        DataColumn2(label: Text('Expiry')),
-        DataColumn2(label: Text('Rating')),
-        DataColumn2(label: Text('Total Trips')),
-        DataColumn2(label: Text('Available')),
-        DataColumn2(label: Text('Actions'), size: ColumnSize.S),
-      ],
-      rows: drivers.map((driver) {
-        return DataRow2(cells: [
-          DataCell(Text(driver.displayName)),
-          DataCell(Text(driver.licenseNumber ?? '-')),
-          DataCell(Text(driver.licenseExpiry != null
-              ? '${driver.licenseExpiry!.day}/${driver.licenseExpiry!.month}/${driver.licenseExpiry!.year}'
-              : '-')),
-          DataCell(Row(
-            children: [
-              const Icon(Icons.star, color: Colors.amber, size: 16),
-              const SizedBox(width: 4),
-              Text(driver.rating?.toStringAsFixed(1) ?? '-'),
-            ],
-          )),
-          DataCell(Text(driver.totalTrips?.toString() ?? '0')),
-          DataCell(Switch(
-            value: driver.isAvailable ?? false,
-            onChanged: (value) async {
-              final api = await ref.read(driverApiProvider.future);
-              await api.updateAvailability(driver.id, value);
-              ref.invalidate(driversProvider);
-            },
-          )),
-          DataCell(Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit, size: 20),
-                onPressed: () => _showEditDriverDialog(context, driver),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete, size: 20, color: AppColors.error),
-                onPressed: () => _showDeleteConfirmation(context, driver),
-              ),
-            ],
-          )),
-        ]);
-      }).toList(),
+    final selected = ref.watch(driversSelectedColumnsProvider);
+
+    final columns = <DataColumn2>[
+      if (selected.contains('name'))
+        const DataColumn2(label: Text('NAME'), size: ColumnSize.L),
+      if (selected.contains('email'))
+        const DataColumn2(label: Text('EMAIL')),
+      if (selected.contains('phone'))
+        const DataColumn2(label: Text('PHONE')),
+      if (selected.contains('license'))
+        const DataColumn2(label: Text('LICENSE')),
+      if (selected.contains('vehicle'))
+        const DataColumn2(label: Text('VEHICLE')),
+      if (selected.contains('status'))
+        const DataColumn2(label: Text('STATUS')),
+      const DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable2(
+        columns: columns,
+        rows: drivers.map((driver) {
+          final cells = <DataCell>[
+            if (selected.contains('name'))
+              DataCell(Text(driver.displayName)),
+            if (selected.contains('email'))
+              DataCell(Text(driver.email ?? '-')),
+            if (selected.contains('phone'))
+              DataCell(Text(driver.phone ?? '-')),
+            if (selected.contains('license'))
+              DataCell(Text(driver.licenseNumber ?? '-')),
+            if (selected.contains('vehicle'))
+              DataCell(Text(driver.assignedVehicleId ?? '-')),
+            if (selected.contains('status'))
+              DataCell(Switch(
+                value: driver.isAvailable ?? false,
+                onChanged: (value) async {
+                  final api = await ref.read(driverApiProvider.future);
+                  await api.updateAvailability(driver.id, value);
+                  ref.invalidate(driversProvider);
+                },
+              )),
+            DataCell(Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20),
+                  onPressed: () => _showEditDriverDialog(context, driver),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, size: 20, color: AppColors.error),
+                  onPressed: () => _showDeleteConfirmation(context, driver),
+                ),
+              ],
+            )),
+          ];
+          return DataRow2(cells: cells);
+        }).toList(),
+      ),
     );
   }
 

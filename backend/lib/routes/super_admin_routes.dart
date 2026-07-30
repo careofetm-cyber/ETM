@@ -20,6 +20,7 @@ class SuperAdminRoutes {
     router.get('/billing/summary', authMiddleware(requiredRoles: ['super_admin'])(getBillingSummary));
     router.get('/invoices', authMiddleware(requiredRoles: ['super_admin'])(getInvoices));
     router.put('/invoices/<id>', authMiddleware(requiredRoles: ['super_admin'])(updateInvoice));
+    router.post('/login-as', authMiddleware(requiredRoles: ['super_admin'])(loginAsCompanyUser));
   }
 
   Future<Response> getCompanies(Request request) async {
@@ -278,5 +279,42 @@ class SuperAdminRoutes {
     db.update('invoices', updates, where: {'id': id});
 
     return jsonResponse({'message': 'Invoice updated successfully'});
+  }
+
+  Future<Response> loginAsCompanyUser(Request request) async {
+    final body = jsonDecode(await request.readAsString());
+    final targetUserId = body['userId'] as String?;
+    if (targetUserId == null) {
+      return errorResponse('userId is required');
+    }
+
+    final db = DatabaseConfig.db;
+    final user = db.findOne('users', where: {'id': targetUserId});
+    if (user == null) {
+      return errorResponse('User not found', statusCode: 404);
+    }
+
+    if (user['is_active'] != true) {
+      return errorResponse('User is not active', statusCode: 403);
+    }
+
+    final token = generateToken(
+      userId: user['id'],
+      role: user['role'],
+      companyId: user['company_id'],
+    );
+
+    return jsonResponse({
+      'token': token,
+      'user': {
+        'id': user['id'],
+        'email': user['email'],
+        'first_name': user['first_name'],
+        'last_name': user['last_name'],
+        'role': user['role'],
+        'is_active': user['is_active'],
+        'company_id': user['company_id'],
+      },
+    });
   }
 }
