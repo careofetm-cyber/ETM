@@ -6,18 +6,36 @@ part of 'dashboard.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
+int? _toInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
 _$DashboardStatsImpl _$$DashboardStatsImplFromJson(Map<String, dynamic> json) =>
     _$DashboardStatsImpl(
-      totalVehicles: (json['totalVehicles'] as num).toInt(),
-      activeVehicles: (json['activeVehicles'] as num).toInt(),
-      totalDrivers: (json['totalDrivers'] as num).toInt(),
-      activeDrivers: (json['activeDrivers'] as num).toInt(),
-      totalEmployees: (json['totalEmployees'] as num).toInt(),
-      activeTrips: (json['activeTrips'] as num).toInt(),
-      completedTripsToday: (json['completedTripsToday'] as num).toInt(),
-      pendingRequests: (json['pendingRequests'] as num).toInt(),
-      totalRoutes: (json['totalRoutes'] as num).toInt(),
-      alertsCount: (json['alertsCount'] as num?)?.toInt(),
+      totalVehicles: _toInt(json['totalVehicles']) ?? 0,
+      activeVehicles: _toInt(json['activeVehicles']) ?? 0,
+      totalDrivers: _toInt(json['totalDrivers']) ?? 0,
+      activeDrivers: _toInt(json['activeDrivers']) ?? 0,
+      totalEmployees: _toInt(json['totalEmployees']) ?? 0,
+      activeTrips: _toInt(json['activeTrips']) ?? 0,
+      completedTripsToday: _toInt(json['completedTripsToday']) ?? 0,
+      pendingRequests: _toInt(json['pendingRequests']) ?? 0,
+      totalRoutes: _toInt(json['totalRoutes']) ?? 0,
+      alertsCount: _toInt(json['alertsCount']),
     );
 
 Map<String, dynamic> _$$DashboardStatsImplToJson(
@@ -38,11 +56,11 @@ Map<String, dynamic> _$$DashboardStatsImplToJson(
 _$DriverDashboardImpl _$$DriverDashboardImplFromJson(
         Map<String, dynamic> json) =>
     _$DriverDashboardImpl(
-      todayTrips: (json['todayTrips'] as num).toInt(),
-      completedTrips: (json['completedTrips'] as num).toInt(),
-      pendingTrips: (json['pendingTrips'] as num).toInt(),
-      totalDistance: (json['totalDistance'] as num).toDouble(),
-      totalPassengers: (json['totalPassengers'] as num).toInt(),
+      todayTrips: _toInt(json['todayTrips']) ?? 0,
+      completedTrips: _toInt(json['completedTrips']) ?? 0,
+      pendingTrips: _toInt(json['pendingTrips']) ?? 0,
+      totalDistance: _toDouble(json['totalDistance']) ?? 0.0,
+      totalPassengers: _toInt(json['totalPassengers']) ?? 0,
       assignedVehicle: json['assignedVehicle'] as String?,
       currentTripId: json['currentTripId'] as String?,
     );
@@ -69,8 +87,8 @@ _$EmployeeDashboardImpl _$$EmployeeDashboardImplFromJson(
           : DateTime.parse(json['nextTripTime'] as String),
       nextTripRoute: json['nextTripRoute'] as String?,
       nextTripStop: json['nextTripStop'] as String?,
-      totalTripsThisMonth: (json['totalTripsThisMonth'] as num).toInt(),
-      attendedTrips: (json['attendedTrips'] as num).toInt(),
+      totalTripsThisMonth: _toInt(json['totalTripsThisMonth']) ?? 0,
+      attendedTrips: _toInt(json['attendedTrips']) ?? 0,
       assignedRoute: json['assignedRoute'] as String?,
       assignedStop: json['assignedStop'] as String?,
     );

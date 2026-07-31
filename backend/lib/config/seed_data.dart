@@ -143,10 +143,10 @@ class SeedData {
       });
     }
     final employeeData = [
-      {'id': 'emp_usr_01_emp', 'user_id': 'emp_usr_01', 'employee_code': 'EMP001', 'department': 'Engineering', 'designation': 'Senior Developer', 'home_latitude': '19.0760', 'home_longitude': '72.8777', 'home_address': 'Andheri West, Mumbai'},
-      {'id': 'emp_usr_02_emp', 'user_id': 'emp_usr_02', 'employee_code': 'EMP002', 'department': 'Engineering', 'designation': 'Tech Lead', 'home_latitude': '19.0596', 'home_longitude': '72.8295', 'home_address': 'Bandra East, Mumbai'},
-      {'id': 'emp_usr_03_emp', 'user_id': 'emp_usr_03', 'employee_code': 'EMP003', 'department': 'Design', 'designation': 'UX Designer', 'home_latitude': '19.1197', 'home_longitude': '72.8896', 'home_address': 'Powai, Mumbai'},
-      {'id': 'emp_usr_04_emp', 'user_id': 'emp_usr_04', 'employee_code': 'EMP004', 'department': 'Product', 'designation': 'Product Manager', 'home_latitude': '19.0430', 'home_longitude': '72.8686', 'home_address': 'Lower Parel, Mumbai'},
+      {'id': 'emp_usr_01_emp', 'user_id': 'emp_usr_01', 'employee_code': 'EMP001', 'department': 'Engineering', 'designation': 'Senior Developer', 'home_latitude': 19.0760, 'home_longitude': 72.8777, 'home_address': 'Andheri West, Mumbai'},
+      {'id': 'emp_usr_02_emp', 'user_id': 'emp_usr_02', 'employee_code': 'EMP002', 'department': 'Engineering', 'designation': 'Tech Lead', 'home_latitude': 19.0596, 'home_longitude': 72.8295, 'home_address': 'Bandra East, Mumbai'},
+      {'id': 'emp_usr_03_emp', 'user_id': 'emp_usr_03', 'employee_code': 'EMP003', 'department': 'Design', 'designation': 'UX Designer', 'home_latitude': 19.1197, 'home_longitude': 72.8896, 'home_address': 'Powai, Mumbai'},
+      {'id': 'emp_usr_04_emp', 'user_id': 'emp_usr_04', 'employee_code': 'EMP004', 'department': 'Product', 'designation': 'Product Manager', 'home_latitude': 19.0430, 'home_longitude': 72.8686, 'home_address': 'Lower Parel, Mumbai'},
     ];
     for (final e in employeeData) {
       db.insert('employees', {
@@ -175,15 +175,9 @@ class SeedData {
       'id': 'route_001',
       'name': 'Andheri - TechPark (Morning)',
       'company_id': 'comp_001',
-      'type': 'pickup',
-      'start_location': 'Andheri West',
-      'end_location': 'TechPark Office, Andheri East',
-      'start_latitude': '19.0760',
-      'start_longitude': '72.8777',
-      'end_latitude': '19.1100',
-      'end_longitude': '72.8700',
-      'estimated_duration': '30',
-      'estimated_distance': '12.5',
+      'description': 'Morning pickup route from Andheri to TechPark',
+      'total_distance': 12.5,
+      'estimated_duration': 30,
       'is_active': true,
       'created_at': nowStr,
     });
@@ -191,15 +185,9 @@ class SeedData {
       'id': 'route_002',
       'name': 'Bandra - TechPark (Morning)',
       'company_id': 'comp_001',
-      'type': 'pickup',
-      'start_location': 'Bandra East',
-      'end_location': 'TechPark Office, Andheri East',
-      'start_latitude': '19.0596',
-      'start_longitude': '72.8295',
-      'end_latitude': '19.1100',
-      'end_longitude': '72.8700',
-      'estimated_duration': '35',
-      'estimated_distance': '14.2',
+      'description': 'Morning pickup route from Bandra to TechPark',
+      'total_distance': 14.2,
+      'estimated_duration': 35,
       'is_active': true,
       'created_at': nowStr,
     });
@@ -207,31 +195,25 @@ class SeedData {
       'id': 'route_003',
       'name': 'TechPark - Andheri (Evening)',
       'company_id': 'comp_001',
-      'type': 'drop',
-      'start_location': 'TechPark Office, Andheri East',
-      'end_location': 'Andheri West',
-      'start_latitude': '19.1100',
-      'start_longitude': '72.8700',
-      'end_latitude': '19.0760',
-      'end_longitude': '72.8777',
-      'estimated_duration': '30',
-      'estimated_distance': '12.5',
+      'description': 'Evening drop route from TechPark to Andheri',
+      'total_distance': 12.5,
+      'estimated_duration': 30,
       'is_active': true,
       'created_at': nowStr,
     });
 
     // === DEMO STOPS ===
     db.insert('stops', {
-      'id': 'stop_001', 'name': 'Andheri Station', 'route_id': 'route_001', 'latitude': '19.0760', 'longitude': '72.8777', 'sequence': 1, 'company_id': 'comp_001', 'created_at': nowStr,
+      'id': 'stop_001', 'name': 'Andheri Station', 'route_id': 'route_001', 'latitude': 19.0760, 'longitude': 72.8777, 'sequence': 1, 'company_id': 'comp_001', 'created_at': nowStr,
     });
     db.insert('stops', {
-      'id': 'stop_002', 'name': 'MIDC Junction', 'route_id': 'route_001', 'latitude': '19.0900', 'longitude': '72.8750', 'sequence': 2, 'company_id': 'comp_001', 'created_at': nowStr,
+      'id': 'stop_002', 'name': 'MIDC Junction', 'route_id': 'route_001', 'latitude': 19.0900, 'longitude': 72.8750, 'sequence': 2, 'company_id': 'comp_001', 'created_at': nowStr,
     });
     db.insert('stops', {
-      'id': 'stop_003', 'name': 'Bandra Station', 'route_id': 'route_002', 'latitude': '19.0596', 'longitude': '72.8295', 'sequence': 1, 'company_id': 'comp_001', 'created_at': nowStr,
+      'id': 'stop_003', 'name': 'Bandra Station', 'route_id': 'route_002', 'latitude': 19.0596, 'longitude': 72.8295, 'sequence': 1, 'company_id': 'comp_001', 'created_at': nowStr,
     });
     db.insert('stops', {
-      'id': 'stop_004', 'name': 'Kurla Signal', 'route_id': 'route_002', 'latitude': '19.0750', 'longitude': '72.8500', 'sequence': 2, 'company_id': 'comp_001', 'created_at': nowStr,
+      'id': 'stop_004', 'name': 'Kurla Signal', 'route_id': 'route_002', 'latitude': 19.0750, 'longitude': 72.8500, 'sequence': 2, 'company_id': 'comp_001', 'created_at': nowStr,
     });
 
     // === DEMO TRIPS (Morning today + one scheduled) ===

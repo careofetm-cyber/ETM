@@ -22,6 +22,8 @@ dependencies:
     path: ../../packages/core
   etm_networking:
     path: ../../packages/networking
+  etm_maps:
+    path: ../../packages/maps
   excel: ^4.0.6
   pdf: ^3.11.1
   file_saver: ^0.2.9

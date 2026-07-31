@@ -6,21 +6,39 @@ part of 'vehicle.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
+int? _toInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
 _$VehicleImpl _$$VehicleImplFromJson(Map<String, dynamic> json) =>
     _$VehicleImpl(
       id: json['id'] as String,
       plateNumber: json['plateNumber'] as String,
       model: json['model'] as String,
       brand: json['brand'] as String,
-      year: (json['year'] as num).toInt(),
-      seatingCapacity: (json['seatingCapacity'] as num).toInt(),
+      year: _toInt(json['year']) ?? 2024,
+      seatingCapacity: _toInt(json['seatingCapacity']) ?? 4,
       color: json['color'] as String?,
       imageUrl: json['imageUrl'] as String?,
       status: $enumDecodeNullable(_$VehicleStatusEnumMap, json['status']),
       driverId: json['driverId'] as String?,
       companyId: json['companyId'] as String?,
-      currentLatitude: (json['currentLatitude'] as num?)?.toDouble(),
-      currentLongitude: (json['currentLongitude'] as num?)?.toDouble(),
+      currentLatitude: _toDouble(json['currentLatitude']),
+      currentLongitude: _toDouble(json['currentLongitude']),
       lastLocationUpdate: json['lastLocationUpdate'] == null
           ? null
           : DateTime.parse(json['lastLocationUpdate'] as String),

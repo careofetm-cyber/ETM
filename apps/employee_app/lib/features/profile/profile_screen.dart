@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers.dart';
+import 'location_picker_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -37,90 +38,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     setState(() {});
   }
 
-  void _showUpdateHomeLocationDialog() {
-    final addressController = TextEditingController(text: _profile?['homeAddress'] ?? '');
-    final latController = TextEditingController(
-      text: (_profile?['homeLatitude'] ?? '').toString(),
-    );
-    final lngController = TextEditingController(
-      text: (_profile?['homeLongitude'] ?? '').toString(),
-    );
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Update Home Location'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: addressController,
-                decoration: const InputDecoration(
-                  labelText: 'Home Address',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.home),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: latController,
-                decoration: const InputDecoration(
-                  labelText: 'Latitude',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: lngController,
-                decoration: const InputDecoration(
-                  labelText: 'Longitude',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-              ),
-            ],
-          ),
+  void _showUpdateHomeLocationDialog() async {
+    final result = await Navigator.push<LocationPickerResult>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          initialLatitude: _profile?['homeLatitude'] is num
+              ? (_profile!['homeLatitude'] as num).toDouble()
+              : double.tryParse('${_profile?['homeLatitude'] ?? ''}'),
+          initialLongitude: _profile?['homeLongitude'] is num
+              ? (_profile!['homeLongitude'] as num).toDouble()
+              : double.tryParse('${_profile?['homeLongitude'] ?? ''}'),
+          initialAddress: _profile?['homeAddress'],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton.icon(
-            onPressed: () async {
-              final prefs = await ref.read(sharedPreferencesProvider.future);
-              final userId = prefs.getString('user_id');
-              if (userId == null) return;
-              try {
-                final dio = ref.read(dioProvider);
-                await dio.put('/employees/user/$userId/location', data: {
-                  'homeAddress': addressController.text.trim(),
-                  'homeLatitude': double.tryParse(latController.text.trim()) ?? 0,
-                  'homeLongitude': double.tryParse(lngController.text.trim()) ?? 0,
-                });
-                Navigator.pop(ctx);
-                await _loadProfile();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Home location updated'), backgroundColor: Colors.green),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to update location: $e')),
-                  );
-                }
-              }
-            },
-            icon: const Icon(Icons.check),
-            label: const Text('Update'),
-          ),
-        ],
       ),
     );
+
+    if (result == null || !mounted) return;
+
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    final userId = prefs.getString('user_id');
+    if (userId == null) return;
+
+    try {
+      final dio = ref.read(dioProvider);
+      await dio.put('/employees/user/$userId/location', data: {
+        'homeAddress': result.address,
+        'homeLatitude': result.latitude,
+        'homeLongitude': result.longitude,
+      });
+      await _loadProfile();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Home location updated'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update location: $e')),
+        );
+      }
+    }
   }
 
   void _showChangePasswordDialog() {

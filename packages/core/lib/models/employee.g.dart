@@ -6,6 +6,24 @@ part of 'employee.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
+int? _toInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
 _$EmployeeImpl _$$EmployeeImplFromJson(Map<String, dynamic> json) =>
     _$EmployeeImpl(
       id: json['id'] as String,
@@ -20,8 +38,8 @@ _$EmployeeImpl _$$EmployeeImplFromJson(Map<String, dynamic> json) =>
       alternatePhone: json['alternatePhone'] as String?,
       email: json['email'] as String?,
       address: json['address'] as String?,
-      homeLatitude: (json['homeLatitude'] as num?)?.toDouble(),
-      homeLongitude: (json['homeLongitude'] as num?)?.toDouble(),
+      homeLatitude: _toDouble(json['homeLatitude']),
+      homeLongitude: _toDouble(json['homeLongitude']),
       homeAddress: json['homeAddress'] as String?,
       assignedRouteId: json['assignedRouteId'] as String?,
       assignedStopId: json['assignedStopId'] as String?,
@@ -72,8 +90,8 @@ _$DriverImpl _$$DriverImplFromJson(Map<String, dynamic> json) => _$DriverImpl(
           ? null
           : DateTime.parse(json['licenseExpiry'] as String),
       phone: json['phone'] as String?,
-      rating: (json['rating'] as num?)?.toDouble(),
-      totalTrips: (json['totalTrips'] as num?)?.toInt(),
+      rating: _toDouble(json['rating']),
+      totalTrips: _toInt(json['totalTrips']),
       isAvailable: json['isAvailable'] as bool?,
       isActive: json['isActive'] as bool?,
       assignedVehicleId: json['assignedVehicleId'] as String?,
@@ -123,10 +141,10 @@ _$CompanyImpl _$$CompanyImplFromJson(Map<String, dynamic> json) =>
       favicon: json['favicon'] as String?,
       primaryColor: json['primaryColor'] as String?,
       backgroundColor: json['backgroundColor'] as String?,
-      tripCostPerTrip: (json['tripCostPerTrip'] as num?)?.toDouble(),
-      minimumKmForBilling: (json['minimumKmForBilling'] as num?)?.toDouble(),
-      monthlyTripLimit: (json['monthlyTripLimit'] as num?)?.toInt(),
-      tripsUsedThisMonth: (json['tripsUsedThisMonth'] as num?)?.toInt(),
+      tripCostPerTrip: _toDouble(json['tripCostPerTrip']),
+      minimumKmForBilling: _toDouble(json['minimumKmForBilling']),
+      monthlyTripLimit: _toInt(json['monthlyTripLimit']),
+      tripsUsedThisMonth: _toInt(json['tripsUsedThisMonth']),
       subscriptionStatus: json['subscriptionStatus'] as String?,
       subscriptionStartDate: json['subscriptionStartDate'] == null
           ? null

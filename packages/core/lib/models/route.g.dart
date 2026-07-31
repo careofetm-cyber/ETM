@@ -6,6 +6,24 @@ part of 'route.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
+int? _toInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
 _$RouteImpl _$$RouteImplFromJson(Map<String, dynamic> json) => _$RouteImpl(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -14,8 +32,8 @@ _$RouteImpl _$$RouteImplFromJson(Map<String, dynamic> json) => _$RouteImpl(
       stops: (json['stops'] as List<dynamic>?)
           ?.map((e) => RouteStop.fromJson(e as Map<String, dynamic>))
           .toList(),
-      totalDistance: (json['totalDistance'] as num?)?.toDouble(),
-      estimatedDuration: (json['estimatedDuration'] as num?)?.toInt(),
+      totalDistance: _toDouble(json['totalDistance']),
+      estimatedDuration: _toInt(json['estimatedDuration']),
       isActive: json['isActive'] as bool?,
       createdAt: json['createdAt'] == null
           ? null
@@ -43,14 +61,14 @@ _$RouteStopImpl _$$RouteStopImplFromJson(Map<String, dynamic> json) =>
     _$RouteStopImpl(
       id: json['id'] as String,
       name: json['name'] as String,
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      sequenceOrder: (json['sequenceOrder'] as num).toInt(),
+      latitude: _toDouble(json['latitude']) ?? 0.0,
+      longitude: _toDouble(json['longitude']) ?? 0.0,
+      sequenceOrder: _toInt(json['sequenceOrder']) ?? 0,
       address: json['address'] as String?,
       landmark: json['landmark'] as String?,
       estimatedTimeFromPrevious:
-          (json['estimatedTimeFromPrevious'] as num?)?.toInt(),
-      distanceFromPrevious: (json['distanceFromPrevious'] as num?)?.toDouble(),
+          _toInt(json['estimatedTimeFromPrevious']),
+      distanceFromPrevious: _toDouble(json['distanceFromPrevious']),
     );
 
 Map<String, dynamic> _$$RouteStopImplToJson(_$RouteStopImpl instance) =>
@@ -69,8 +87,8 @@ Map<String, dynamic> _$$RouteStopImplToJson(_$RouteStopImpl instance) =>
 _$StopImpl _$$StopImplFromJson(Map<String, dynamic> json) => _$StopImpl(
       id: json['id'] as String,
       name: json['name'] as String,
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
+      latitude: _toDouble(json['latitude']) ?? 0.0,
+      longitude: _toDouble(json['longitude']) ?? 0.0,
       address: json['address'] as String?,
       landmark: json['landmark'] as String?,
       companyId: json['companyId'] as String?,

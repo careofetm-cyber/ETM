@@ -4,7 +4,7 @@ part 'trip.freezed.dart';
 part 'trip.g.dart';
 
 enum TripStatus { scheduled, inProgress, completed, cancelled }
-enum TripType { pickup, dropoff }
+enum TripType { pickup, dropoff, drop }
 
 @freezed
 class Trip with _$Trip {

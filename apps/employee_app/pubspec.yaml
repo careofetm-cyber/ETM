@@ -13,6 +13,12 @@ dependencies:
     path: ../../packages/core
   etm_networking:
     path: ../../packages/networking
+  etm_maps:
+    path: ../../packages/maps
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  geolocator: ^11.0.0
+  http: ^1.2.2
   flutter_riverpod: ^2.6.1
   go_router: ^14.8.1
   dio: ^5.7.0
@@ -29,5 +35,7 @@ dependency_overrides:
     path: ../../packages/core
   etm_networking:
     path: ../../packages/networking
+  etm_maps:
+    path: ../../packages/maps
 
 

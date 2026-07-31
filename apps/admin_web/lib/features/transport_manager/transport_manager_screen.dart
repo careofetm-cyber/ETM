@@ -645,7 +645,7 @@ class _TransportManagerScreenState extends ConsumerState<TransportManagerScreen>
                           decoration: const InputDecoration(labelText: 'Driver *'),
                           items: drivers.map<DropdownMenuItem<String>>((Driver d) => DropdownMenuItem<String>(
                             value: d.id,
-                            child: Text('${d.userId} ${d.licenseNumber != null ? '(${d.licenseNumber})' : ''}'),
+                            child: Text('${d.displayName} ${d.licenseNumber != null ? '(${d.licenseNumber})' : ''}'),
                           )).toList(),
                           onChanged: (v) => setDialogState(() => selectedDriver = v),
                           validator: (v) => v == null ? 'Driver is required' : null,

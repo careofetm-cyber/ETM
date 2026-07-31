@@ -6,6 +6,24 @@ part of 'trip.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
+int? _toInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
 _$TripImpl _$$TripImplFromJson(Map<String, dynamic> json) => _$TripImpl(
       id: json['id'] as String,
       routeId: json['routeId'] as String,
@@ -21,9 +39,9 @@ _$TripImpl _$$TripImplFromJson(Map<String, dynamic> json) => _$TripImpl(
           ? null
           : DateTime.parse(json['actualEndTime'] as String),
       companyId: json['companyId'] as String?,
-      totalPassengers: (json['totalPassengers'] as num?)?.toInt(),
-      boardedPassengers: (json['boardedPassengers'] as num?)?.toInt(),
-      totalDistance: (json['totalDistance'] as num?)?.toDouble(),
+      totalPassengers: _toInt(json['totalPassengers']),
+      boardedPassengers: _toInt(json['boardedPassengers']),
+      totalDistance: _toDouble(json['totalDistance']),
       notes: json['notes'] as String?,
       createdAt: json['createdAt'] == null
           ? null
@@ -56,6 +74,7 @@ Map<String, dynamic> _$$TripImplToJson(_$TripImpl instance) =>
 const _$TripTypeEnumMap = {
   TripType.pickup: 'pickup',
   TripType.dropoff: 'dropoff',
+  TripType.drop: 'drop',
 };
 
 const _$TripStatusEnumMap = {
@@ -101,11 +120,11 @@ _$GPSLogImpl _$$GPSLogImplFromJson(Map<String, dynamic> json) => _$GPSLogImpl(
       id: json['id'] as String,
       vehicleId: json['vehicleId'] as String,
       tripId: json['tripId'] as String?,
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      speed: (json['speed'] as num?)?.toDouble(),
-      heading: (json['heading'] as num?)?.toDouble(),
-      altitude: (json['altitude'] as num?)?.toDouble(),
+      latitude: _toDouble(json['latitude']) ?? 0.0,
+      longitude: _toDouble(json['longitude']) ?? 0.0,
+      speed: _toDouble(json['speed']),
+      heading: _toDouble(json['heading']),
+      altitude: _toDouble(json['altitude']),
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
 
@@ -125,10 +144,10 @@ Map<String, dynamic> _$$GPSLogImplToJson(_$GPSLogImpl instance) =>
 _$LocationUpdateImpl _$$LocationUpdateImplFromJson(Map<String, dynamic> json) =>
     _$LocationUpdateImpl(
       vehicleId: json['vehicleId'] as String,
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      speed: (json['speed'] as num?)?.toDouble(),
-      heading: (json['heading'] as num?)?.toDouble(),
+      latitude: _toDouble(json['latitude']) ?? 0.0,
+      longitude: _toDouble(json['longitude']) ?? 0.0,
+      speed: _toDouble(json['speed']),
+      heading: _toDouble(json['heading']),
       timestamp: json['timestamp'] == null
           ? null
           : DateTime.parse(json['timestamp'] as String),

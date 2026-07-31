@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ETM needs your location to set your home/pickup address for transport pickup.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>ETM needs your location to set your home/pickup address for transport pickup.</string>
 </dict>
 </plist>
