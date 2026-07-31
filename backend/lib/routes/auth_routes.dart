@@ -147,7 +147,7 @@ class AuthRoutes {
       return errorResponse('User not found', statusCode: 404);
     }
     
-    return jsonResponse({
+    final profile = {
       'id': user['id'],
       'email': user['email'],
       'first_name': user['first_name'],
@@ -157,7 +157,25 @@ class AuthRoutes {
       'role': user['role'],
       'is_active': user['is_active'] ?? true,
       'company_id': user['company_id'],
-    });
+    };
+
+    if (user['role'] == 'employee') {
+      final employee = db.findOne('employees', where: {'user_id': userId});
+      if (employee != null) {
+        profile['employee_id'] = employee['id'];
+        profile['employee_code'] = employee['employee_code'];
+        profile['department'] = employee['department'];
+        profile['designation'] = employee['designation'];
+        profile['home_latitude'] = employee['home_latitude'];
+        profile['home_longitude'] = employee['home_longitude'];
+        profile['home_address'] = employee['home_address'];
+        profile['is_transport_required'] = employee['is_transport_required'];
+        profile['assigned_route_id'] = employee['assigned_route_id'];
+        profile['assigned_stop_id'] = employee['assigned_stop_id'];
+      }
+    }
+
+    return jsonResponse(profile);
   }
   
   Future<Response> updateProfile(Request request) async {
