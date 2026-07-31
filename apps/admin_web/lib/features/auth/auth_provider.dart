@@ -50,6 +50,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
       
       final client = await ref.read(apiClientProvider.future);
       client.setToken(response.token);
+
+      final prefs = await ref.read(sharedPreferencesProvider.future);
+      await prefs.setString('auth_token', response.token);
+      await prefs.setString('user_name', response.user.fullName);
+      await prefs.setString('user_id', response.user.id);
+      await prefs.setString('user_role', response.user.role.name);
+      if (response.user.email != null) {
+        await prefs.setString('user_email', response.user.email!);
+      }
       
       state = state.copyWith(
         isAuthenticated: true,
@@ -75,6 +84,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     
     final client = await ref.read(apiClientProvider.future);
     client.clearToken();
+
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.remove('auth_token');
+    await prefs.remove('user_name');
+    await prefs.remove('user_id');
+    await prefs.remove('user_role');
+    await prefs.remove('user_email');
+    
     state = AuthState();
   }
 
@@ -85,6 +102,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (token != null) {
         final authApi = await ref.read(authApiProvider.future);
         final user = await authApi.getProfile();
+
+        await prefs.setString('user_name', user.fullName);
+        await prefs.setString('user_id', user.id);
+        await prefs.setString('user_role', user.role.name);
+        if (user.email != null) {
+          await prefs.setString('user_email', user.email!);
+        }
+        
         state = state.copyWith(
           isAuthenticated: true,
           user: user,

@@ -12,7 +12,6 @@ import '../features/drivers/drivers_screen.dart';
 import '../features/attendance/attendance_screen.dart';
 import '../features/incidents/incidents_screen.dart';
 import '../features/notifications/notifications_screen.dart';
-import '../features/settings/settings_screen.dart';
 import '../features/companies/companies_screen.dart';
 import '../features/billing/billing_screen.dart';
 import '../features/super_dashboard/super_dashboard_screen.dart';
@@ -28,6 +27,18 @@ import '../features/transport_requests/transport_requests_screen.dart';
 import '../features/sos_alerts/sos_alerts_screen.dart';
 import '../features/ncns/ncns_screen.dart';
 import '../features/hcm_integration/hcm_screen.dart';
+import '../features/driver/dashboard/driver_dashboard_screen.dart';
+import '../features/driver/trips/driver_trips_screen.dart';
+import '../features/driver/trip_detail/driver_trip_detail_screen.dart';
+import '../features/driver/tracking/driver_tracking_screen.dart';
+import '../features/employee/dashboard/employee_dashboard_screen.dart';
+import '../features/employee/trips/employee_trips_screen.dart';
+import '../features/employee/ride/employee_ride_screen.dart';
+import '../features/employee/roster/employee_roster_screen.dart';
+import '../features/employee/tracking/employee_tracking_screen.dart';
+import '../features/employee/sos/employee_sos_screen.dart';
+import '../features/shared/profile/shared_profile_screen.dart';
+import '../features/shared/settings/shared_settings_screen.dart';
 import '../shared/widgets/sidebar.dart';
 import 'package:etm_core/etm_core.dart';
 
@@ -39,18 +50,19 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isLoggedIn = authState.isAuthenticated;
       final isLoginRoute = state.matchedLocation == '/login';
-      final isSuperAdmin = authState.user?.role == UserRole.super_admin;
+      final role = authState.user?.role;
 
       if (!isLoggedIn && !isLoginRoute) {
         return '/login';
       }
 
       if (isLoggedIn && isLoginRoute) {
-        return isSuperAdmin ? '/super-dashboard' : '/dashboard';
-      }
-
-      if (isLoggedIn && state.matchedLocation == '/dashboard' && isSuperAdmin) {
-        return '/super-dashboard';
+        switch (role) {
+          case UserRole.super_admin: return '/super-dashboard';
+          case UserRole.driver: return '/driver/dashboard';
+          case UserRole.employee: return '/employee/dashboard';
+          default: return '/dashboard';
+        }
       }
 
       return null;
@@ -137,7 +149,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/settings',
-            builder: (context, state) => const SettingsScreen(),
+            builder: (context, state) => const SharedSettingsScreen(),
+          ),
+          GoRoute(
+            path: '/profile',
+            builder: (context, state) => const SharedProfileScreen(),
           ),
           GoRoute(
             path: '/roster',
@@ -162,6 +178,49 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/hcm-integration',
             builder: (context, state) => const HcmIntegrationScreen(),
+          ),
+          GoRoute(
+            path: '/driver/dashboard',
+            builder: (context, state) => const DriverDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/driver/trips',
+            builder: (context, state) => const DriverTripsScreen(),
+          ),
+          GoRoute(
+            path: '/driver/trip/:id',
+            builder: (context, state) {
+              final tripId = state.pathParameters['id'] ?? '';
+              return DriverTripDetailScreen(tripId: tripId);
+            },
+          ),
+          GoRoute(
+            path: '/driver/tracking',
+            builder: (context, state) => const DriverTrackingScreen(),
+          ),
+          GoRoute(
+            path: '/employee/dashboard',
+            builder: (context, state) => const EmployeeDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/employee/trips',
+            builder: (context, state) => const EmployeeTripsScreen(),
+          ),
+          GoRoute(
+            path: '/employee/ride',
+            builder: (context, state) => const EmployeeRideScreen(),
+          ),
+          GoRoute(
+            path: '/employee/roster',
+            builder: (context, state) => const EmployeeRosterScreen(),
+          ),
+          GoRoute(
+            path: '/employee/tracking',
+            builder: (context, state) => const EmployeeTrackingScreen(),
+          ),
+          GoRoute(
+            path: '/employee/sos',
+            builder: (context, state) => const EmployeeSOSScreen(),
           ),
         ],
       ),
@@ -191,6 +250,7 @@ class AdminLayout extends StatelessWidget {
       case '/incidents': return 'Incidents';
       case '/notifications': return 'Notifications';
       case '/settings': return 'Settings';
+      case '/profile': return 'Profile';
       case '/companies': return 'Companies';
       case '/billing': return 'Billing';
       case '/super-settings': return 'System Settings';
@@ -205,6 +265,15 @@ class AdminLayout extends StatelessWidget {
       case '/sos-alerts': return 'SOS Alerts';
       case '/ncns': return 'NCNS';
       case '/hcm-integration': return 'HCM Integration';
+      case '/driver/dashboard': return 'Dashboard';
+      case '/driver/trips': return 'My Trips';
+      case '/driver/tracking': return 'Tracking';
+      case '/employee/dashboard': return 'Dashboard';
+      case '/employee/trips': return 'My Trips';
+      case '/employee/ride': return 'Ride / OTP';
+      case '/employee/roster': return 'Roster';
+      case '/employee/tracking': return 'Tracking';
+      case '/employee/sos': return 'SOS';
       default: return 'Dashboard';
     }
   }

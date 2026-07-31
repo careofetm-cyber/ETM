@@ -12,7 +12,7 @@ class Sidebar extends ConsumerWidget {
     final currentRoute = GoRouterState.of(context).matchedLocation;
     final authState = ref.watch(authProvider);
     final user = authState.user;
-    final isSuperAdmin = user?.role == UserRole.super_admin;
+    final role = user?.role;
 
     return Container(
       width: 260,
@@ -70,7 +70,7 @@ class Sidebar extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      isSuperAdmin ? 'Super Admin Panel' : 'Admin Panel',
+                      _panelLabel(role),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textTertiary,
                         fontSize: 11,
@@ -87,9 +87,14 @@ class Sidebar extends ConsumerWidget {
               children: [
                 const _SectionLabel(label: 'MAIN'),
                 const SizedBox(height: 4),
-                ...isSuperAdmin
-                    ? _buildSuperAdminNav(currentRoute, context)
-                    : _buildAdminNav(currentRoute, context, user?.role),
+                if (role == UserRole.super_admin)
+                  ..._buildSuperAdminNav(currentRoute, context)
+                else if (role == UserRole.driver)
+                  ..._buildDriverNav(currentRoute, context)
+                else if (role == UserRole.employee)
+                  ..._buildEmployeeNav(currentRoute, context)
+                else
+                  ..._buildAdminNav(currentRoute, context, role),
               ],
             ),
           ),
@@ -130,7 +135,7 @@ class Sidebar extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        _roleLabel(user?.role),
+                        _roleLabel(role),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textTertiary,
                           fontSize: 11,
@@ -154,6 +159,15 @@ class Sidebar extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _panelLabel(UserRole? role) {
+    switch (role) {
+      case UserRole.super_admin: return 'Super Admin Panel';
+      case UserRole.driver: return 'Driver Panel';
+      case UserRole.employee: return 'Employee Panel';
+      default: return 'Admin Panel';
+    }
   }
 
   String _roleLabel(UserRole? role) {
@@ -210,6 +224,140 @@ class Sidebar extends ConsumerWidget {
         route: '/super-settings',
         isSelected: currentRoute == '/super-settings',
         onTap: () => context.go('/super-settings'),
+      ),
+    ];
+  }
+
+  List<Widget> _buildDriverNav(String currentRoute, BuildContext context) {
+    return [
+      _NavItem(
+        icon: Icons.dashboard_outlined,
+        selectedIcon: Icons.dashboard_rounded,
+        label: 'Dashboard',
+        route: '/driver/dashboard',
+        isSelected: currentRoute == '/driver/dashboard',
+        onTap: () => context.go('/driver/dashboard'),
+      ),
+      _NavItem(
+        icon: Icons.trip_origin_outlined,
+        selectedIcon: Icons.trip_origin_rounded,
+        label: 'My Trips',
+        route: '/driver/trips',
+        isSelected: currentRoute == '/driver/trips',
+        onTap: () => context.go('/driver/trips'),
+      ),
+      _NavItem(
+        icon: Icons.gps_fixed_outlined,
+        selectedIcon: Icons.gps_fixed_rounded,
+        label: 'Tracking',
+        route: '/driver/tracking',
+        isSelected: currentRoute == '/driver/tracking',
+        onTap: () => context.go('/driver/tracking'),
+      ),
+      _NavItem(
+        icon: Icons.notifications_outlined,
+        selectedIcon: Icons.notifications_rounded,
+        label: 'Notifications',
+        route: '/notifications',
+        isSelected: currentRoute == '/notifications',
+        onTap: () => context.go('/notifications'),
+      ),
+      const _SectionLabel(label: 'ACCOUNT'),
+      const SizedBox(height: 4),
+      _NavItem(
+        icon: Icons.person_outline,
+        selectedIcon: Icons.person_rounded,
+        label: 'Profile',
+        route: '/profile',
+        isSelected: currentRoute == '/profile',
+        onTap: () => context.go('/profile'),
+      ),
+      _NavItem(
+        icon: Icons.settings_outlined,
+        selectedIcon: Icons.settings_rounded,
+        label: 'Settings',
+        route: '/settings',
+        isSelected: currentRoute == '/settings',
+        onTap: () => context.go('/settings'),
+      ),
+    ];
+  }
+
+  List<Widget> _buildEmployeeNav(String currentRoute, BuildContext context) {
+    return [
+      _NavItem(
+        icon: Icons.dashboard_outlined,
+        selectedIcon: Icons.dashboard_rounded,
+        label: 'Dashboard',
+        route: '/employee/dashboard',
+        isSelected: currentRoute == '/employee/dashboard',
+        onTap: () => context.go('/employee/dashboard'),
+      ),
+      _NavItem(
+        icon: Icons.trip_origin_outlined,
+        selectedIcon: Icons.trip_origin_rounded,
+        label: 'My Trips',
+        route: '/employee/trips',
+        isSelected: currentRoute == '/employee/trips',
+        onTap: () => context.go('/employee/trips'),
+      ),
+      _NavItem(
+        icon: Icons.pin_outlined,
+        selectedIcon: Icons.pin_rounded,
+        label: 'Ride / OTP',
+        route: '/employee/ride',
+        isSelected: currentRoute == '/employee/ride',
+        onTap: () => context.go('/employee/ride'),
+      ),
+      _NavItem(
+        icon: Icons.calendar_month_outlined,
+        selectedIcon: Icons.calendar_month_rounded,
+        label: 'Roster',
+        route: '/employee/roster',
+        isSelected: currentRoute == '/employee/roster',
+        onTap: () => context.go('/employee/roster'),
+      ),
+      _NavItem(
+        icon: Icons.gps_fixed_outlined,
+        selectedIcon: Icons.gps_fixed_rounded,
+        label: 'Tracking',
+        route: '/employee/tracking',
+        isSelected: currentRoute == '/employee/tracking',
+        onTap: () => context.go('/employee/tracking'),
+      ),
+      _NavItem(
+        icon: Icons.notifications_outlined,
+        selectedIcon: Icons.notifications_rounded,
+        label: 'Notifications',
+        route: '/notifications',
+        isSelected: currentRoute == '/notifications',
+        onTap: () => context.go('/notifications'),
+      ),
+      _NavItem(
+        icon: Icons.emergency_outlined,
+        selectedIcon: Icons.emergency_rounded,
+        label: 'SOS',
+        route: '/employee/sos',
+        isSelected: currentRoute == '/employee/sos',
+        onTap: () => context.go('/employee/sos'),
+      ),
+      const _SectionLabel(label: 'ACCOUNT'),
+      const SizedBox(height: 4),
+      _NavItem(
+        icon: Icons.person_outline,
+        selectedIcon: Icons.person_rounded,
+        label: 'Profile',
+        route: '/profile',
+        isSelected: currentRoute == '/profile',
+        onTap: () => context.go('/profile'),
+      ),
+      _NavItem(
+        icon: Icons.settings_outlined,
+        selectedIcon: Icons.settings_rounded,
+        label: 'Settings',
+        route: '/settings',
+        isSelected: currentRoute == '/settings',
+        onTap: () => context.go('/settings'),
       ),
     ];
   }
