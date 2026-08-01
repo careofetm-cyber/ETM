@@ -66,7 +66,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (userId == null) return;
               try {
                 final dio = ref.read(dioProvider);
-                await dio.put('/employees/user/$userId/location', data: {
+                final employeeId = _profile?['id'] ?? '${userId}_emp';
+                await dio.put('/employees/$employeeId', data: {
                   'homeAddress': addressController.text.trim(),
                   'homeLatitude': double.tryParse(latController.text.trim()) ?? 0,
                   'homeLongitude': double.tryParse(lngController.text.trim()) ?? 0,

@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ETM Driver needs your location to track trips and share your position with passengers.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>ETM Driver needs your location to track trips and share your position with passengers.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>ETM Driver needs your location to track trips and share your position with passengers.</string>
 </dict>
 </plist>

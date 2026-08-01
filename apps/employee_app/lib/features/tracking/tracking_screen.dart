@@ -34,20 +34,13 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     if (!silent) setState(() { _isLoading = true; _error = null; });
     try {
       final dio = ref.read(dioProvider);
-      final prefs = await ref.read(sharedPreferencesProvider.future);
-      final userId = prefs.getString('user_id');
-
-      if (userId == null) {
-        setState(() { _error = 'User not logged in'; _isLoading = false; });
-        return;
-      }
-
-      final empResp = await dio.get('/employees/$userId');
-      final employeeId = empResp.data['id'] ?? '${userId}_emp';
 
       try {
-        final otpResp = await dio.get('/otp/employee/$employeeId');
-        _activeTrip = otpResp.data['trip'];
+        final dashResp = await dio.get('/dashboard/employee');
+        final dashData = dashResp.data;
+        if (dashData['nextTrip'] != null) {
+          _activeTrip = dashData['nextTrip'];
+        }
       } catch (_) {}
 
       if (_activeTrip != null) {

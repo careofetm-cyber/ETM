@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../providers.dart';
 
 class TrackingScreen extends ConsumerStatefulWidget {
@@ -18,18 +19,59 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   bool _isLoading = true;
   String? _error;
   Timer? _refreshTimer;
+  Timer? _gpsTimer;
+  Position? _currentPosition;
 
   @override
   void initState() {
     super.initState();
     _loadData();
     _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) => _loadData());
+    _initGps();
   }
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _gpsTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _initGps() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+    if (permission == LocationPermission.deniedForever) return;
+
+    _gpsTimer = Timer.periodic(const Duration(seconds: 5), (_) => _sendGpsUpdate());
+    _sendGpsUpdate();
+  }
+
+  Future<void> _sendGpsUpdate() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      _currentPosition = position;
+      final dio = ref.read(dioProvider);
+      await dio.post('/trips/location', data: {
+        'tripId': widget.tripId,
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'speed': position.speed,
+        'heading': position.heading,
+      });
+    } catch (e) {
+      debugPrint('GPS update failed: $e');
+    }
   }
 
   Future<void> _loadData() async {

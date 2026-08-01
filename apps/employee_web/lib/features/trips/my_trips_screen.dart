@@ -34,10 +34,26 @@ class _MyTripsScreenState extends ConsumerState<MyTripsScreen> with SingleTicker
       final userId = prefs.getString('user_id');
       if (userId != null) {
         final dio = ref.read(dioProvider);
-        final resp = await dio.get('/trips/employee/${userId}_emp');
-        final trips = resp.data['data'] ?? [];
-        _upcomingTrips = trips.where((t) => t['status'] == 'scheduled' || t['status'] == 'inProgress').toList();
-        _completedTrips = trips.where((t) => t['status'] == 'completed').toList();
+        final employeeId = '${userId}_emp';
+        List<dynamic> myTrips = [];
+        try {
+          final resp = await dio.get('/trips/employee/$employeeId');
+          myTrips = resp.data['data'] ?? [];
+        } catch (_) {
+          final resp = await dio.get('/trips/');
+          final allTrips = resp.data['data'] ?? [];
+          for (final trip in allTrips) {
+            try {
+              final passResp = await dio.get('/trips/${trip['id']}/passengers');
+              final passengers = passResp.data['data'] ?? [];
+              if (passengers.any((p) => (p['employeeId'] ?? '').toString() == employeeId)) {
+                myTrips.add(trip);
+              }
+            } catch (_) {}
+          }
+        }
+        _upcomingTrips = myTrips.where((t) => t['status'] == 'scheduled' || t['status'] == 'inProgress').toList();
+        _completedTrips = myTrips.where((t) => t['status'] == 'completed').toList();
       }
     } catch (e) {
       debugPrint('Trips error: $e');

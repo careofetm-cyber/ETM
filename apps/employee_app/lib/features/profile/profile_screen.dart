@@ -62,7 +62,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     try {
       final dio = ref.read(dioProvider);
-      await dio.put('/employees/user/$userId/location', data: {
+      final employeeId = _profile?['id'] ?? '${userId}_emp';
+      await dio.put('/employees/$employeeId', data: {
         'homeAddress': result.address,
         'homeLatitude': result.latitude,
         'homeLongitude': result.longitude,

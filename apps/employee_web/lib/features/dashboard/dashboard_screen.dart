@@ -33,10 +33,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       final prefs = await ref.read(sharedPreferencesProvider.future);
       _userName = prefs.getString('user_name') ?? 'Employee';
       final dio = ref.read(dioProvider);
-      final userId = prefs.getString('user_id');
-      if (userId != null) {
-        final resp = await dio.get('/dashboard/employee/$userId');
+      try {
+        final resp = await dio.get('/dashboard/employee');
         _dashboard = resp.data;
+      } catch (e) {
+        debugPrint('Dashboard /dashboard/employee failed: $e');
       }
     } catch (e) {
       debugPrint('Dashboard error: $e');

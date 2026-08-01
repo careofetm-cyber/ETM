@@ -36,14 +36,38 @@ class _RideScreenState extends ConsumerState<RideScreen> {
 
       final employeeId = '${userId}_emp';
 
-      final otpResp = await dio.get('/otp/employee/$employeeId');
-      _otpData = otpResp.data;
-      _trip = otpResp.data['trip'];
+      try {
+        final otpResp = await dio.get('/otp/employee/$employeeId');
+        _otpData = otpResp.data;
+        _trip = otpResp.data['trip'];
 
-      if (_trip != null) {
-        final tripId = _trip!['id'];
-        final passResp = await dio.get('/trips/$tripId/passengers');
-        _passengers = passResp.data['data'] ?? [];
+        if (_trip != null) {
+          final tripId = _trip!['id'];
+          final passResp = await dio.get('/trips/$tripId/passengers');
+          _passengers = passResp.data['data'] ?? [];
+        }
+      } on DioException catch (otpErr) {
+        if (otpErr.response?.statusCode == 404 || otpErr.type == DioExceptionType.badResponse) {
+          try {
+            final dashResp = await dio.get('/dashboard/employee');
+            final dashData = dashResp.data;
+            if (dashData['nextTrip'] != null) {
+              _trip = dashData['nextTrip'];
+              if (_trip != null) {
+                final tripId = _trip!['id'];
+                final passResp = await dio.get('/trips/$tripId/passengers');
+                _passengers = passResp.data['data'] ?? [];
+                _otpData = {'otp': 'Check with driver', 'verified': false, 'trip': _trip};
+              }
+            }
+          } catch (_) {
+            _otpData = null;
+            _trip = null;
+          }
+        } else {
+          setState(() => _error = 'Failed to load ride info');
+          return;
+        }
       }
     } on DioException catch (e) {
       setState(() => _error = e.response?.data?['error'] ?? 'Failed to load ride info');

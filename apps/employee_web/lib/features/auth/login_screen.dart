@@ -41,7 +41,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await prefs.setString('user_role', data['user']['role']);
       if (mounted) context.go('/home');
     } on DioException catch (e) {
-      setState(() { _error = e.response?.data?['error'] ?? 'Login failed'; });
+      String msg = 'Login failed. Please try again.';
+      if (e.response?.data is Map && e.response?.data['error'] != null) {
+        msg = e.response!.data['error'];
+      } else if (e.response?.statusCode == 401) {
+        msg = 'Invalid email or password.';
+      } else if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+        msg = 'Server is not responding. Please try again later.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        msg = 'Cannot connect to server. Please check your internet.';
+      }
+      setState(() { _error = msg; });
     } catch (e) {
       setState(() { _error = 'Network error. Please try again.'; });
     }

@@ -28,14 +28,31 @@ class _SOSScreenState extends ConsumerState<SOSScreen> {
     setState(() { _isLoading = true; _error = null; });
     try {
       final dio = ref.read(dioProvider);
-      final activeResp = await dio.get('/sos/active');
-      _activeAlerts = activeResp.data['data'] ?? [];
+      try {
+        final activeResp = await dio.get('/sos/active');
+        _activeAlerts = activeResp.data['data'] ?? [];
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 403 || e.response?.statusCode == 401) {
+          _activeAlerts = [];
+        } else {
+          rethrow;
+        }
+      }
 
-      final histResp = await dio.get('/sos/history', queryParameters: {'page': 1, 'limit': 20});
-      _history = histResp.data['data'] ?? [];
-      _historyPage = 1;
-      final total = histResp.data['pagination']?['totalPages'] ?? 1;
-      _hasMoreHistory = _historyPage < total;
+      try {
+        final histResp = await dio.get('/sos/history', queryParameters: {'page': 1, 'limit': 20});
+        _history = histResp.data['data'] ?? [];
+        _historyPage = 1;
+        final total = histResp.data['pagination']?['totalPages'] ?? 1;
+        _hasMoreHistory = _historyPage < total;
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 403 || e.response?.statusCode == 401) {
+          _history = [];
+          _hasMoreHistory = false;
+        } else {
+          rethrow;
+        }
+      }
     } on DioException catch (e) {
       setState(() => _error = e.response?.data?['error'] ?? 'Failed to load SOS data');
     } catch (e) {

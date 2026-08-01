@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers.dart';
 
 class TripDetailScreen extends ConsumerStatefulWidget {
@@ -150,6 +151,35 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
         }
       }
     }
+  }
+
+  bool _allPassengersProcessed() {
+    if (_passengers.isEmpty) return false;
+    return _passengers.every((p) => p['isBoarded'] == true || p['isDropped'] == true || p['isNcns'] == true || p['ncns'] == true);
+  }
+
+  Future<void> _startTrip() async {
+    setState(() => _isCompleting = true);
+    try {
+      final dio = ref.read(dioProvider);
+      await dio.post('/trips/${widget.tripId}/start', data: {});
+      await _loadTrip();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Trip started!'), backgroundColor: Colors.green),
+        );
+        context.go('/tracking/${widget.tripId}');
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.response?.data?['error'] ?? 'Failed to start trip'), backgroundColor: Theme.of(context).colorScheme.error));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Network error'), backgroundColor: Colors.red));
+      }
+    }
+    setState(() => _isCompleting = false);
   }
 
   Future<void> _completeTrip() async {
@@ -336,6 +366,20 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        if (_allPassengersProcessed())
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: FilledButton.icon(
+                              onPressed: _isCompleting ? null : _startTrip,
+                              icon: _isCompleting
+                                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : const Icon(Icons.play_arrow),
+                              label: const Text('Start Trip'),
+                              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF059669)),
+                            ),
+                          ),
                         const SizedBox(height: 16),
                       ],
 
