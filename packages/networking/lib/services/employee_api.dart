@@ -12,7 +12,20 @@ class EmployeeApi {
       'limit': limit,
       if (search != null) 'search': search,
     });
-    return (response.data['data'] as List).map((e) => Employee.fromJson(e)).toList();
+    final data = response.data['data'];
+    if (data == null) return [];
+    return (data as List).map((e) {
+      try {
+        final map = Map<String, dynamic>.from(e);
+        map['userId'] ??= map['user_id'] ?? '';
+        map['companyId'] ??= map['company_id'] ?? '';
+        map['employeeCode'] ??= map['employee_code'];
+        map['isTransportRequired'] ??= map['is_transport_required'];
+        return Employee.fromJson(map);
+      } catch (_) {
+        return null;
+      }
+    }).whereType<Employee>().toList();
   }
   
   Future<Employee> getEmployee(String id) async {
@@ -44,7 +57,21 @@ class DriverApi {
       'limit': limit,
       if (search != null) 'search': search,
     });
-    return (response.data['data'] as List).map((d) => Driver.fromJson(d)).toList();
+    final data = response.data['data'];
+    if (data == null) return [];
+    return (data as List).map((d) {
+      try {
+        final map = Map<String, dynamic>.from(d);
+        map['userId'] ??= map['user_id'] ?? '';
+        map['companyId'] ??= map['company_id'] ?? '';
+        map['licenseNumber'] ??= map['license_number'];
+        map['licenseExpiry'] ??= map['license_expiry'];
+        map['isAvailable'] ??= map['is_available'];
+        return Driver.fromJson(map);
+      } catch (_) {
+        return null;
+      }
+    }).whereType<Driver>().toList();
   }
   
   Future<Driver> getDriver(String id) async {

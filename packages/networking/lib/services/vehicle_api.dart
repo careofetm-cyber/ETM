@@ -12,7 +12,22 @@ class VehicleApi {
       'limit': limit,
       if (status != null) 'status': status,
     });
-    return (response.data['data'] as List).map((v) => Vehicle.fromJson(v)).toList();
+    final data = response.data['data'];
+    if (data == null) return [];
+    return (data as List).map((v) {
+      try {
+        final map = Map<String, dynamic>.from(v);
+        map['plateNumber'] ??= map['plate_number'] ?? map['plateNumber'] ?? '';
+        map['model'] ??= '';
+        map['brand'] ??= '';
+        map['year'] ??= 2024;
+        map['seatingCapacity'] ??= map['seating_capacity'] ?? 4;
+        map['companyId'] ??= map['company_id'] ?? '';
+        return Vehicle.fromJson(map);
+      } catch (_) {
+        return null;
+      }
+    }).whereType<Vehicle>().toList();
   }
   
   Future<Vehicle> getVehicle(String id) async {

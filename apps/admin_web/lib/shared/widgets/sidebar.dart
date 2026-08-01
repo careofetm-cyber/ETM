@@ -384,6 +384,22 @@ class Sidebar extends ConsumerWidget {
           onTap: () => context.go('/vehicles'),
         ),
         _NavItem(
+          icon: Icons.person_outline,
+          selectedIcon: Icons.person_rounded,
+          label: 'Drivers',
+          route: '/drivers',
+          isSelected: currentRoute == '/drivers',
+          onTap: () => context.go('/drivers'),
+        ),
+        _NavItem(
+          icon: Icons.people_outline,
+          selectedIcon: Icons.people_rounded,
+          label: 'Employees',
+          route: '/employees',
+          isSelected: currentRoute == '/employees',
+          onTap: () => context.go('/employees'),
+        ),
+        _NavItem(
           icon: Icons.route_outlined,
           selectedIcon: Icons.route_rounded,
           label: 'Routes',
@@ -413,22 +429,6 @@ class Sidebar extends ConsumerWidget {
           route: '/transport-manager',
           isSelected: currentRoute == '/transport-manager',
           onTap: () => context.go('/transport-manager'),
-        ),
-        _NavItem(
-          icon: Icons.people_outline,
-          selectedIcon: Icons.people_rounded,
-          label: 'Employees',
-          route: '/employees',
-          isSelected: currentRoute == '/employees',
-          onTap: () => context.go('/employees'),
-        ),
-        _NavItem(
-          icon: Icons.person_outline,
-          selectedIcon: Icons.person_rounded,
-          label: 'Drivers',
-          route: '/drivers',
-          isSelected: currentRoute == '/drivers',
-          onTap: () => context.go('/drivers'),
         ),
       ]);
     }

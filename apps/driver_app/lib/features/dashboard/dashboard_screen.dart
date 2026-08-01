@@ -173,7 +173,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     children: [
                                       Text('Trip In Progress', style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
                                       const SizedBox(height: 2),
-                                      Text('Tap to view details', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                                      Text('Tap to view details or track live', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                                     ],
                                   ),
                                 ),
@@ -181,13 +181,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ],
                             ),
                             const SizedBox(height: 14),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton.icon(
-                                onPressed: () => context.push('/trip/${_dashboard!['currentTripId']}'),
-                                icon: const Icon(Icons.open_in_new),
-                                label: const Text('View Trip'),
-                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    onPressed: () => context.push('/trip/${_dashboard!['currentTripId']}'),
+                                    icon: const Icon(Icons.open_in_new),
+                                    label: const Text('View Trip'),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    onPressed: () => context.push('/tracking/${_dashboard!['currentTripId']}'),
+                                    icon: const Icon(Icons.gps_fixed),
+                                    label: const Text('Track Live'),
+                                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF059669)),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
