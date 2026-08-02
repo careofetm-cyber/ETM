@@ -562,6 +562,17 @@ class Sidebar extends ConsumerWidget {
           isSelected: currentRoute == '/hcm-integration',
           onTap: () => context.go('/hcm-integration'),
         ),
+        const SizedBox(height: 8),
+        const _SectionLabel(label: 'ACCOUNT'),
+        const SizedBox(height: 4),
+        _NavItem(
+          icon: Icons.settings_outlined,
+          selectedIcon: Icons.settings_rounded,
+          label: 'Settings',
+          route: '/settings',
+          isSelected: currentRoute == '/settings',
+          onTap: () => context.go('/settings'),
+        ),
       ]);
     }
 
