@@ -141,7 +141,6 @@ class DashboardRoutes {
           }
         }
       }
-    }
 
     final today = now.toIso8601String().substring(0, 10);
     int todayTrips = 0;
