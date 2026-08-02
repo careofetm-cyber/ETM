@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -57,7 +58,23 @@ class _RideScreenState extends ConsumerState<RideScreen> {
                 final tripId = _trip!['id'];
                 final passResp = await dio.get('/trips/$tripId/passengers');
                 _passengers = passResp.data['data'] ?? [];
-              _otpData = {'otp': null, 'verified': false, 'trip': _trip, 'waitingForDriver': true};
+
+                final storedOtp = prefs.getString('local_otp_$tripId');
+                final storedExpiry = prefs.getString('local_otp_expiry_$tripId');
+                String otpCode;
+                String expiryStr;
+
+                if (storedOtp != null && storedExpiry != null && DateTime.now().isBefore(DateTime.parse(storedExpiry))) {
+                  otpCode = storedOtp;
+                  expiryStr = storedExpiry;
+                } else {
+                  otpCode = (100000 + Random().nextInt(900000)).toString();
+                  expiryStr = DateTime.now().add(const Duration(minutes: 10)).toIso8601String();
+                  await prefs.setString('local_otp_$tripId', otpCode);
+                  await prefs.setString('local_otp_expiry_$tripId', expiryStr);
+                }
+
+                _otpData = {'otp': otpCode, 'expiresAt': expiryStr, 'verified': false, 'trip': _trip, 'localOtp': true};
               }
             }
           } catch (_) {

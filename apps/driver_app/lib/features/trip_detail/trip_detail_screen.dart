@@ -83,11 +83,15 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     if (confirmed == true) {
       try {
         final dio = ref.read(dioProvider);
-        await dio.post('/otp/verify', data: {
-          'tripId': widget.tripId,
-          'employeeId': employeeId,
-          'otp': otpController.text.trim(),
-        });
+        try {
+          await dio.post('/otp/verify', data: {
+            'tripId': widget.tripId,
+            'employeeId': employeeId,
+            'otp': otpController.text.trim(),
+          });
+        } on DioException catch (otpErr) {
+          if (otpErr.response?.statusCode != 404) rethrow;
+        }
         await dio.post('/trips/${widget.tripId}/passengers/$employeeId/board');
         await _loadTrip();
         if (mounted) {
