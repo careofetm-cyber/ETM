@@ -11,6 +11,7 @@ class EmployeeRoutes {
   
   EmployeeRoutes() {
     router.get('/', authMiddleware()(getEmployees));
+    router.put('/user/:userId/location', authMiddleware(requiredRoles: ['employee'])(updateEmployeeLocation));
     router.get('/<id>', authMiddleware()(getEmployee));
     router.post('/', authMiddleware(requiredRoles: ['admin', 'manager', 'transport_manager', 'hr'])(createEmployee));
     router.put('/<id>', authMiddleware(requiredRoles: ['admin', 'manager', 'transport_manager', 'hr'])(updateEmployee));
@@ -20,7 +21,6 @@ class EmployeeRoutes {
     router.post('/drivers', authMiddleware(requiredRoles: ['admin', 'manager', 'transport_manager'])(createDriver));
     router.put('/drivers/<id>', authMiddleware(requiredRoles: ['admin', 'manager', 'transport_manager'])(updateDriver));
     router.delete('/drivers/<id>', authMiddleware(requiredRoles: ['admin'])(deleteDriver));
-    router.put('/user/:userId/location', authMiddleware(requiredRoles: ['employee'])(updateEmployeeLocation));
   }
   
   Future<Response> getEmployees(Request request) async {
