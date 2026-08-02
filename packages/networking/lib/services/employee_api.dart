@@ -7,25 +7,32 @@ class EmployeeApi {
   EmployeeApi(this._client);
   
   Future<List<Employee>> getEmployees({int page = 1, int limit = 20, String? search}) async {
-    final response = await _client.dio.get('/employees', queryParameters: {
-      'page': page,
-      'limit': limit,
-      if (search != null) 'search': search,
-    });
-    final data = response.data['data'];
-    if (data == null) return [];
-    return (data as List).map((e) {
-      try {
-        final map = Map<String, dynamic>.from(e);
-        map['userId'] ??= map['user_id'] ?? '';
-        map['companyId'] ??= map['company_id'] ?? '';
-        map['employeeCode'] ??= map['employee_code'];
-        map['isTransportRequired'] ??= map['is_transport_required'];
-        return Employee.fromJson(map);
-      } catch (_) {
-        return null;
-      }
-    }).whereType<Employee>().toList();
+    try {
+      final response = await _client.dio.get('/employees', queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (search != null) 'search': search,
+      });
+      final data = response.data['data'];
+      if (data == null) return [];
+      return (data as List).map((e) {
+        try {
+          final map = Map<String, dynamic>.from(e);
+          map['userId'] ??= map['user_id'] ?? '';
+          map['companyId'] ??= map['company_id'] ?? '';
+          map['employeeCode'] ??= map['employee_code'];
+          map['isTransportRequired'] ??= map['is_transport_required'];
+          return Employee.fromJson(map);
+        } catch (ex, st) {
+          print('[EmployeeApi] Failed to parse employee: $ex');
+          print('[EmployeeApi] Data: $e');
+          return null;
+        }
+      }).whereType<Employee>().toList();
+    } catch (e, st) {
+      print('[EmployeeApi] FAILED: $e');
+      rethrow;
+    }
   }
   
   Future<Employee> getEmployee(String id) async {
@@ -52,26 +59,33 @@ class DriverApi {
   DriverApi(this._client);
   
   Future<List<Driver>> getDrivers({int page = 1, int limit = 20, String? search}) async {
-    final response = await _client.dio.get('/drivers', queryParameters: {
-      'page': page,
-      'limit': limit,
-      if (search != null) 'search': search,
-    });
-    final data = response.data['data'];
-    if (data == null) return [];
-    return (data as List).map((d) {
-      try {
-        final map = Map<String, dynamic>.from(d);
-        map['userId'] ??= map['user_id'] ?? '';
-        map['companyId'] ??= map['company_id'] ?? '';
-        map['licenseNumber'] ??= map['license_number'];
-        map['licenseExpiry'] ??= map['license_expiry'];
-        map['isAvailable'] ??= map['is_available'];
-        return Driver.fromJson(map);
-      } catch (_) {
-        return null;
-      }
-    }).whereType<Driver>().toList();
+    try {
+      final response = await _client.dio.get('/drivers', queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (search != null) 'search': search,
+      });
+      final data = response.data['data'];
+      if (data == null) return [];
+      return (data as List).map((d) {
+        try {
+          final map = Map<String, dynamic>.from(d);
+          map['userId'] ??= map['user_id'] ?? '';
+          map['companyId'] ??= map['company_id'] ?? '';
+          map['licenseNumber'] ??= map['license_number'];
+          map['licenseExpiry'] ??= map['license_expiry'];
+          map['isAvailable'] ??= map['is_available'];
+          return Driver.fromJson(map);
+        } catch (ex) {
+          print('[DriverApi] Failed to parse driver: $ex');
+          print('[DriverApi] Data: $d');
+          return null;
+        }
+      }).whereType<Driver>().toList();
+    } catch (e) {
+      print('[DriverApi] FAILED: $e');
+      rethrow;
+    }
   }
   
   Future<Driver> getDriver(String id) async {

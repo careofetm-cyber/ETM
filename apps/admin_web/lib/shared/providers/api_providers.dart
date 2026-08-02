@@ -21,41 +21,6 @@ final dioProvider = Provider<Dio>((ref) {
     connectTimeout: const Duration(seconds: 60),
     receiveTimeout: const Duration(seconds: 60),
   ));
-
-  dio.interceptors.add(InterceptorsWrapper(
-    onRequest: (options, handler) async {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      if (token != null && token.isNotEmpty) {
-        options.headers['Authorization'] = 'Bearer $token';
-      }
-      options.headers['Content-Type'] = 'application/json';
-      options.headers['Accept'] = 'application/json';
-      handler.next(options);
-    },
-    onError: (error, handler) async {
-      if (error.response?.statusCode == 401) {
-        final prefs = await SharedPreferences.getInstance();
-        final refreshToken = prefs.getString('refresh_token');
-        if (refreshToken != null) {
-          try {
-            final refreshDio = Dio(BaseOptions(baseUrl: _baseUrl));
-            final response = await refreshDio.post('/auth/refresh', data: {'refreshToken': refreshToken});
-            final data = response.data;
-            await prefs.setString('auth_token', data['token']);
-            await prefs.setString('refresh_token', data['refreshToken']);
-            error.requestOptions.headers['Authorization'] = 'Bearer ${data['token']}';
-            final retryResponse = await dio.fetch(error.requestOptions);
-            return handler.resolve(retryResponse);
-          } catch (_) {
-            await prefs.clear();
-          }
-        }
-      }
-      handler.next(error);
-    },
-  ));
-
   return dio;
 });
 

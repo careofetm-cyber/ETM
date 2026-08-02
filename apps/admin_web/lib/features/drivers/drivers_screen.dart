@@ -146,63 +146,70 @@ class _DriversScreenState extends ConsumerState<DriversScreen> {
   Widget _buildDriversTable(List<Driver> drivers) {
     final selected = ref.watch(driversSelectedColumnsProvider);
 
-    final columns = <DataColumn2>[
-      if (selected.contains('name'))
-        const DataColumn2(label: Text('NAME'), size: ColumnSize.L),
-      if (selected.contains('email'))
-        const DataColumn2(label: Text('EMAIL')),
-      if (selected.contains('phone'))
-        const DataColumn2(label: Text('PHONE')),
-      if (selected.contains('license'))
-        const DataColumn2(label: Text('LICENSE')),
-      if (selected.contains('vehicle'))
-        const DataColumn2(label: Text('VEHICLE')),
-      if (selected.contains('status'))
-        const DataColumn2(label: Text('STATUS')),
-      const DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable2(
-        columns: columns,
-        rows: drivers.map((driver) {
-          final cells = <DataCell>[
-            if (selected.contains('name'))
-              DataCell(Text(driver.displayName)),
-            if (selected.contains('email'))
-              DataCell(Text(driver.email ?? '-')),
-            if (selected.contains('phone'))
-              DataCell(Text(driver.phone ?? '-')),
-            if (selected.contains('license'))
-              DataCell(Text(driver.licenseNumber ?? '-')),
-            if (selected.contains('vehicle'))
-              DataCell(Text(driver.assignedVehicleId ?? '-')),
-            if (selected.contains('status'))
-              DataCell(Switch(
-                value: driver.isAvailable ?? false,
-                onChanged: (value) async {
-                  final api = await ref.read(driverApiProvider.future);
-                  await api.updateAvailability(driver.id, value);
-                  ref.invalidate(driversProvider);
-                },
-              )),
-            DataCell(Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, size: 20),
-                  onPressed: () => _showEditDriverDialog(context, driver),
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          color: const Color(0xFFF1F5F9),
+          child: Row(
+            children: [
+              if (selected.contains('name')) const Expanded(flex: 2, child: Text('NAME', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('email')) const Expanded(flex: 2, child: Text('EMAIL', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('phone')) const Expanded(flex: 2, child: Text('PHONE', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('license')) const Expanded(flex: 2, child: Text('LICENSE', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('vehicle')) const Expanded(flex: 2, child: Text('VEHICLE', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('status')) const Expanded(child: Text('STATUS', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              const SizedBox(width: 100, child: Text('ACTIONS', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: drivers.length,
+            itemBuilder: (context, index) {
+              final driver = drivers[index];
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: index % 2 == 0 ? Colors.white : const Color(0xFFF8FAFC),
+                child: Row(
+                  children: [
+                    if (selected.contains('name')) Expanded(flex: 2, child: Text(driver.displayName, style: const TextStyle(fontWeight: FontWeight.w500))),
+                    if (selected.contains('email')) Expanded(flex: 2, child: Text(driver.email ?? '-')),
+                    if (selected.contains('phone')) Expanded(flex: 2, child: Text(driver.phone ?? '-')),
+                    if (selected.contains('license')) Expanded(flex: 2, child: Text(driver.licenseNumber ?? '-')),
+                    if (selected.contains('vehicle')) Expanded(flex: 2, child: Text(driver.assignedVehicleId ?? '-')),
+                    if (selected.contains('status')) Expanded(
+                      child: Switch(
+                        value: driver.isAvailable ?? false,
+                        onChanged: (value) async {
+                          final api = await ref.read(driverApiProvider.future);
+                          await api.updateAvailability(driver.id, value);
+                          ref.invalidate(driversProvider);
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 100,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, size: 18),
+                            onPressed: () => _showEditDriverDialog(context, driver),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, size: 18, color: AppColors.error),
+                            onPressed: () => _showDeleteConfirmation(context, driver),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete, size: 20, color: AppColors.error),
-                  onPressed: () => _showDeleteConfirmation(context, driver),
-                ),
-              ],
-            )),
-          ];
-          return DataRow2(cells: cells);
-        }).toList(),
-      ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

@@ -215,115 +215,109 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
   Widget _buildEmployeesTable(List<Employee> employees) {
     final selected = ref.watch(employeesSelectedColumnsProvider);
 
-    final columns = <DataColumn2>[
-      if (selected.contains('name'))
-        const DataColumn2(label: Text('EMPLOYEE'), size: ColumnSize.L),
-      if (selected.contains('code'))
-        const DataColumn2(label: Text('CODE')),
-      if (selected.contains('department'))
-        const DataColumn2(label: Text('DEPARTMENT')),
-      if (selected.contains('designation'))
-        const DataColumn2(label: Text('DESIGNATION')),
-      if (selected.contains('email'))
-        const DataColumn2(label: Text('EMAIL')),
-      if (selected.contains('phone'))
-        const DataColumn2(label: Text('PHONE')),
-      if (selected.contains('transportRequired'))
-        const DataColumn2(label: Text('TRANSPORT')),
-      const DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable2(
-        columns: columns,
-        rows: employees.asMap().entries.map((entry) {
-          final index = entry.key;
-          final employee = entry.value;
-          final cells = <DataCell>[
-            if (selected.contains('name'))
-              DataCell(Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
-                    child: Text(
-                      (employee.displayName.isNotEmpty ? employee.displayName.substring(0, 1).toUpperCase() : 'U'),
-                      style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          employee.displayName,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          employee.email ?? '-',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textTertiary,
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          color: const Color(0xFFF1F5F9),
+          child: Row(
+            children: [
+              if (selected.contains('name')) const Expanded(flex: 3, child: Text('EMPLOYEE', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('code')) const Expanded(child: Text('CODE', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('department')) const Expanded(flex: 2, child: Text('DEPARTMENT', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('designation')) const Expanded(flex: 2, child: Text('DESIGNATION', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('email')) const Expanded(flex: 2, child: Text('EMAIL', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('phone')) const Expanded(flex: 2, child: Text('PHONE', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('transportRequired')) const Expanded(child: Text('TRANSPORT', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              const SizedBox(width: 100, child: Text('ACTIONS', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: employees.length,
+            itemBuilder: (context, index) {
+              final employee = employees[index];
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: index % 2 == 0 ? Colors.white : const Color(0xFFF8FAFC),
+                child: Row(
+                  children: [
+                    if (selected.contains('name')) Expanded(
+                      flex: 3,
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                            child: Text(
+                              (employee.displayName.isNotEmpty ? employee.displayName.substring(0, 1).toUpperCase() : 'U'),
+                              style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12),
+                            ),
                           ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  employee.displayName,
+                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  employee.email ?? '-',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textTertiary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              )),
-            if (selected.contains('code'))
-              DataCell(Text(employee.employeeCode ?? '-')),
-            if (selected.contains('department'))
-              DataCell(Text(employee.department ?? '-')),
-            if (selected.contains('designation'))
-              DataCell(Text(employee.designation ?? '-')),
-            if (selected.contains('email'))
-              DataCell(Text(employee.email ?? '-')),
-            if (selected.contains('phone'))
-              DataCell(Text(employee.phone ?? '-')),
-            if (selected.contains('transportRequired'))
-              DataCell(Switch(
-                value: employee.isTransportRequired ?? false,
-                onChanged: (value) async {
-                  final api = await ref.read(employeeApiProvider.future);
-                  await api.updateEmployee(employee.id, {
-                    'isTransportRequired': value,
-                  });
-                  ref.invalidate(employeesProvider);
-                },
-              )),
-            DataCell(Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Tooltip(
-                  message: 'Edit',
-                  child: IconButton(
-                    icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
-                    onPressed: () => _showEditEmployeeDialog(context, employee),
-                  ),
+                    if (selected.contains('code')) Expanded(child: Text(employee.employeeCode ?? '-')),
+                    if (selected.contains('department')) Expanded(flex: 2, child: Text(employee.department ?? '-')),
+                    if (selected.contains('designation')) Expanded(flex: 2, child: Text(employee.designation ?? '-')),
+                    if (selected.contains('email')) Expanded(flex: 2, child: Text(employee.email ?? '-')),
+                    if (selected.contains('phone')) Expanded(flex: 2, child: Text(employee.phone ?? '-')),
+                    if (selected.contains('transportRequired')) Expanded(
+                      child: Switch(
+                        value: employee.isTransportRequired ?? false,
+                        onChanged: (value) async {
+                          final api = await ref.read(employeeApiProvider.future);
+                          await api.updateEmployee(employee.id, {
+                            'isTransportRequired': value,
+                          });
+                          ref.invalidate(employeesProvider);
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 100,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+                            onPressed: () => _showEditEmployeeDialog(context, employee),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.error),
+                            onPressed: () => _showDeleteConfirmation(context, employee),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                Tooltip(
-                  message: 'Delete',
-                  child: IconButton(
-                    icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.error),
-                    onPressed: () => _showDeleteConfirmation(context, employee),
-                  ),
-                ),
-              ],
-            )),
-          ];
-          return DataRow2(
-            color: index % 2 == 0
-                ? WidgetStateProperty.all(Colors.white)
-                : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
-            cells: cells,
-          );
-        }).toList(),
-      ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

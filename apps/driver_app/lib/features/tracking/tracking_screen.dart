@@ -53,7 +53,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     }
     if (permission == LocationPermission.deniedForever) return;
 
-    _gpsTimer = Timer.periodic(const Duration(seconds: 5), (_) => _sendGpsUpdate());
+    _gpsTimer = Timer.periodic(const Duration(seconds: 30), (_) => _sendGpsUpdate());
     _sendGpsUpdate();
   }
 
@@ -262,7 +262,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                                           BoxShadow(color: cs.primary.withOpacity(0.4), blurRadius: 12, spreadRadius: 2),
                                         ],
                                       ),
-                                      child: const Icon(Icons.directions_bus, color: Colors.white, size: 20),
+                                      child: const Icon(Icons.directions_car, color: Colors.white, size: 20),
                                     ),
                                   ),
                                 ..._stops.map((stop) {

@@ -162,13 +162,19 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                       Expanded(
                         child: vehiclesAsync.when(
                           data: (vehicles) {
+                            print('[VehiclesScreen] data callback: ${vehicles.length} vehicles');
+                            for (final v in vehicles) {
+                              print('[VehiclesScreen]   - ${v.plateNumber} ${v.brand} ${v.model} status=${v.status}');
+                            }
                             final query = ref.read(vehiclesSearchProvider).toLowerCase();
+                            print('[VehiclesScreen] query="$query"');
                             final filtered = query.isEmpty
                                 ? vehicles
                                 : vehicles.where((v) =>
                                     v.plateNumber.toLowerCase().contains(query) ||
                                     v.brand.toLowerCase().contains(query) ||
                                     v.model.toLowerCase().contains(query)).toList();
+                            print('[VehiclesScreen] filtered: ${filtered.length}');
                             if (filtered.isEmpty) {
                               return Center(
                                 child: Column(
@@ -207,79 +213,64 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
   Widget _buildVehiclesTable(List<Vehicle> vehicles) {
     final selected = ref.watch(vehiclesSelectedColumnsProvider);
 
-    final columns = <DataColumn2>[
-      if (selected.contains('brand'))
-        const DataColumn2(label: Text('BRAND'), size: ColumnSize.L),
-      if (selected.contains('model'))
-        const DataColumn2(label: Text('MODEL')),
-      if (selected.contains('plateNumber'))
-        const DataColumn2(label: Text('PLATE NUMBER')),
-      if (selected.contains('year'))
-        const DataColumn2(label: Text('YEAR')),
-      if (selected.contains('seatingCapacity'))
-        const DataColumn2(label: Text('CAPACITY')),
-      if (selected.contains('color'))
-        const DataColumn2(label: Text('COLOR')),
-      if (selected.contains('status'))
-        const DataColumn2(label: Text('STATUS')),
-      if (selected.contains('driver'))
-        const DataColumn2(label: Text('DRIVER')),
-      const DataColumn2(label: Text('ACTIONS'), size: ColumnSize.S),
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable2(
-        columns: columns,
-        rows: vehicles.asMap().entries.map((entry) {
-          final index = entry.key;
-          final vehicle = entry.value;
-          final statusStr = vehicle.status?.name ?? 'active';
-          final cells = <DataCell>[
-            if (selected.contains('brand'))
-              DataCell(Text(vehicle.brand, style: const TextStyle(fontWeight: FontWeight.w500))),
-            if (selected.contains('model'))
-              DataCell(Text(vehicle.model)),
-            if (selected.contains('plateNumber'))
-              DataCell(Text(vehicle.plateNumber)),
-            if (selected.contains('year'))
-              DataCell(Text(vehicle.year.toString())),
-            if (selected.contains('seatingCapacity'))
-              DataCell(Text('${vehicle.seatingCapacity} seats')),
-            if (selected.contains('color'))
-              DataCell(Text(vehicle.color ?? '-')),
-            if (selected.contains('status'))
-              DataCell(_buildStatusChip(statusStr)),
-            if (selected.contains('driver'))
-              DataCell(Text(vehicle.driverId ?? '-')),
-            DataCell(Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Tooltip(
-                  message: 'Edit',
-                  child: IconButton(
-                    icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
-                    onPressed: () => _showEditVehicleDialog(context, vehicle),
-                  ),
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          color: const Color(0xFFF1F5F9),
+          child: Row(
+            children: [
+              if (selected.contains('brand')) const Expanded(flex: 2, child: Text('BRAND', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('model')) const Expanded(flex: 2, child: Text('MODEL', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('plateNumber')) const Expanded(flex: 2, child: Text('PLATE NUMBER', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('year')) const Expanded(child: Text('YEAR', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('seatingCapacity')) const Expanded(child: Text('CAPACITY', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('status')) const Expanded(child: Text('STATUS', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              if (selected.contains('driver')) const Expanded(flex: 2, child: Text('DRIVER', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              const SizedBox(width: 100, child: Text('ACTIONS', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: vehicles.length,
+            itemBuilder: (context, index) {
+              final vehicle = vehicles[index];
+              final statusStr = vehicle.status?.name ?? 'active';
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: index % 2 == 0 ? Colors.white : const Color(0xFFF8FAFC),
+                child: Row(
+                  children: [
+                    if (selected.contains('brand')) Expanded(flex: 2, child: Text(vehicle.brand, style: const TextStyle(fontWeight: FontWeight.w500))),
+                    if (selected.contains('model')) Expanded(flex: 2, child: Text(vehicle.model)),
+                    if (selected.contains('plateNumber')) Expanded(flex: 2, child: Text(vehicle.plateNumber)),
+                    if (selected.contains('year')) Expanded(child: Text(vehicle.year.toString())),
+                    if (selected.contains('seatingCapacity')) Expanded(child: Text('${vehicle.seatingCapacity}')),
+                    if (selected.contains('status')) Expanded(child: _buildStatusChip(statusStr)),
+                    if (selected.contains('driver')) Expanded(flex: 2, child: Text(vehicle.driverId ?? '-')),
+                    SizedBox(
+                      width: 100,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+                            onPressed: () => _showEditVehicleDialog(context, vehicle),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.error),
+                            onPressed: () => _showDeleteConfirmation(context, vehicle),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                Tooltip(
-                  message: 'Delete',
-                  child: IconButton(
-                    icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.error),
-                    onPressed: () => _showDeleteConfirmation(context, vehicle),
-                  ),
-                ),
-              ],
-            )),
-          ];
-          return DataRow2(
-            color: index % 2 == 0
-                ? WidgetStateProperty.all(Colors.white)
-                : WidgetStateProperty.all(const Color(0xFFF8FAFC)),
-            cells: cells,
-          );
-        }).toList(),
-      ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../../providers.dart';
 
@@ -17,6 +18,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   String? _error;
   Map<String, dynamic>? _activeTrip;
   LatLng? _driverLatLng;
+  LatLng? _employeeLatLng;
   List<LatLng> _routePoints = [];
   List<dynamic> _stops = [];
   Timer? _pollTimer;
@@ -27,6 +29,27 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     super.initState();
     _loadTracking();
     _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) => _loadTracking(silent: true));
+    _fetchEmployeeLocation();
+  }
+
+  Future<void> _fetchEmployeeLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+      if (permission == LocationPermission.deniedForever) return;
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      );
+      if (mounted) {
+        setState(() => _employeeLatLng = LatLng(position.latitude, position.longitude));
+      }
+    } catch (_) {}
   }
 
   @override
@@ -193,6 +216,21 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                       ),
                     MarkerLayer(
                       markers: [
+                        if (_employeeLatLng != null)
+                          Marker(
+                            point: _employeeLatLng!,
+                            width: 36,
+                            height: 36,
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: Colors.teal,
+                                shape: BoxShape.circle,
+                                boxShadow: [BoxShadow(color: Colors.teal.withOpacity(0.4), blurRadius: 10, spreadRadius: 2)],
+                              ),
+                              child: const Icon(Icons.person, color: Colors.white, size: 18),
+                            ),
+                          ),
                         if (_driverLatLng != null)
                           Marker(
                             point: _driverLatLng!,
@@ -205,7 +243,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                                 shape: BoxShape.circle,
                                 boxShadow: [BoxShadow(color: cs.primary.withOpacity(0.4), blurRadius: 12, spreadRadius: 2)],
                               ),
-                              child: const Icon(Icons.directions_bus, color: Colors.white, size: 20),
+                              child: const Icon(Icons.directions_car, color: Colors.white, size: 20),
                             ),
                           ),
                         ..._stops.map((stop) {
@@ -279,7 +317,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(color: cs.primaryContainer, borderRadius: BorderRadius.circular(10)),
-                    child: Icon(Icons.directions_bus, color: cs.onPrimaryContainer),
+                    child: Icon(Icons.directions_car, color: cs.onPrimaryContainer),
                   ),
                   const SizedBox(width: 14),
                   Expanded(

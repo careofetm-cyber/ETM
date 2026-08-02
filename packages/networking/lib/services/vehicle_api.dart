@@ -7,27 +7,38 @@ class VehicleApi {
   VehicleApi(this._client);
   
   Future<List<Vehicle>> getVehicles({int page = 1, int limit = 20, String? status}) async {
-    final response = await _client.dio.get('/vehicles', queryParameters: {
-      'page': page,
-      'limit': limit,
-      if (status != null) 'status': status,
-    });
-    final data = response.data['data'];
-    if (data == null) return [];
-    return (data as List).map((v) {
-      try {
-        final map = Map<String, dynamic>.from(v);
-        map['plateNumber'] ??= map['plate_number'] ?? map['plateNumber'] ?? '';
-        map['model'] ??= '';
-        map['brand'] ??= '';
-        map['year'] ??= 2024;
-        map['seatingCapacity'] ??= map['seating_capacity'] ?? 4;
-        map['companyId'] ??= map['company_id'] ?? '';
-        return Vehicle.fromJson(map);
-      } catch (_) {
-        return null;
-      }
-    }).whereType<Vehicle>().toList();
+    try {
+      final response = await _client.dio.get('/vehicles', queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (status != null) 'status': status,
+      });
+      print('[VehicleApi] response.data type: ${response.data.runtimeType}');
+      print('[VehicleApi] response.data keys: ${response.data is Map ? (response.data as Map).keys.toList() : "not a map"}');
+      final data = response.data['data'];
+      print('[VehicleApi] data type: ${data?.runtimeType}, length: ${data is List ? data.length : "N/A"}');
+      if (data == null) return [];
+      return (data as List).map((v) {
+        try {
+          final map = Map<String, dynamic>.from(v);
+          map['plateNumber'] ??= map['plate_number'] ?? map['plateNumber'] ?? '';
+          map['model'] ??= '';
+          map['brand'] ??= '';
+          map['year'] ??= 2024;
+          map['seatingCapacity'] ??= map['seating_capacity'] ?? 4;
+          map['companyId'] ??= map['company_id'] ?? '';
+          return Vehicle.fromJson(map);
+        } catch (e, st) {
+          print('[VehicleApi] Failed to parse vehicle: $e');
+          print('[VehicleApi] Vehicle data: $v');
+          return null;
+        }
+      }).whereType<Vehicle>().toList();
+    } catch (e, st) {
+      print('[VehicleApi] FAILED: $e');
+      print('[VehicleApi] Stack: $st');
+      rethrow;
+    }
   }
   
   Future<Vehicle> getVehicle(String id) async {
