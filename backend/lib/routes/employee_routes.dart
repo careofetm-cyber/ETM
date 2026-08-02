@@ -11,7 +11,7 @@ class EmployeeRoutes {
   
   EmployeeRoutes() {
     router.get('/', authMiddleware()(getEmployees));
-    router.put('/user/:userId/location', authMiddleware(requiredRoles: ['employee'])(updateEmployeeLocation));
+    router.put('/home-location', authMiddleware(requiredRoles: ['employee'])(updateEmployeeLocation));
     router.get('/<id>', authMiddleware()(getEmployee));
     router.post('/', authMiddleware(requiredRoles: ['admin', 'manager', 'transport_manager', 'hr'])(createEmployee));
     router.put('/<id>', authMiddleware(requiredRoles: ['admin', 'manager', 'transport_manager', 'hr'])(updateEmployee));
@@ -276,7 +276,7 @@ class EmployeeRoutes {
   }
 
   Future<Response> updateEmployeeLocation(Request request) async {
-    final userId = request.params['userId'];
+    final userId = request.context['userId'] as String;
     final body = jsonDecode(await request.readAsString());
     final db = DatabaseConfig.db;
 

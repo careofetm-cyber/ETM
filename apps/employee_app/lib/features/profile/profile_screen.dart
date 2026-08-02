@@ -57,13 +57,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (result == null || !mounted) return;
 
-    final prefs = await ref.read(sharedPreferencesProvider.future);
-    final userId = prefs.getString('user_id');
-    if (userId == null) return;
-
     try {
       final dio = ref.read(dioProvider);
-      await dio.put('/employees/user/$userId/location', data: {
+      await dio.put('/employees/home-location', data: {
         'homeAddress': result.address,
         'homeLatitude': result.latitude,
         'homeLongitude': result.longitude,
