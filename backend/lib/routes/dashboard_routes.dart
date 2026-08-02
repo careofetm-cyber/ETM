@@ -124,13 +124,20 @@ class DashboardRoutes {
     
     Map<String, dynamic>? nextTrip;
     for (final tp in tripPassengers) {
-      final trip = db.findOne('trips', where: {'id': tp['trip_id'], 'status': 'scheduled'});
-      if (trip != null && trip['scheduled_time'] != null) {
+      final trip = db.findOne('trips', where: {'id': tp['trip_id']});
+      if (trip != null && trip['scheduled_time'] != null && (trip['status'] == 'scheduled' || trip['status'] == 'inProgress')) {
         final scheduledTime = trip['scheduled_time'].toString();
-        if (scheduledTime.compareTo(now.toIso8601String()) > 0) {
-          if (nextTrip == null || scheduledTime.compareTo(nextTrip['scheduled_time'].toString()) < 0) {
+        if (nextTrip == null || scheduledTime.compareTo(nextTrip['scheduled_time'].toString()) < 0) {
             final route = trip['route_id'] != null ? db.findOne('routes', where: {'id': trip['route_id']}) : null;
-            nextTrip = {...trip, 'route_name': route?['name']};
+            final vehicle = trip['vehicle_id'] != null ? db.findOne('vehicles', where: {'id': trip['vehicle_id']}) : null;
+            final driverUser = trip['driver_id'] != null ? db.findOne('users', where: {'id': trip['driver_id']}) : null;
+            nextTrip = {
+              ...trip,
+              'routeName': route?['name'] ?? route?['name'],
+              'route_name': route?['name'],
+              'vehiclePlate': vehicle?['plate_number'] ?? '',
+              'driverName': driverUser != null ? '${driverUser['first_name']} ${driverUser['last_name']}' : '',
+            };
           }
         }
       }
@@ -209,21 +216,19 @@ class DashboardRoutes {
     
     Map<String, dynamic>? nextTrip;
     for (final tp in tripPassengers) {
-      final trip = db.findOne('trips', where: {'id': tp['trip_id'], 'status': 'scheduled'});
-      if (trip != null && trip['scheduled_time'] != null) {
+      final trip = db.findOne('trips', where: {'id': tp['trip_id']});
+      if (trip != null && trip['scheduled_time'] != null && (trip['status'] == 'scheduled' || trip['status'] == 'inProgress')) {
         final scheduledTime = trip['scheduled_time'].toString();
-        if (scheduledTime.compareTo(now.toIso8601String()) > 0) {
-          if (nextTrip == null || scheduledTime.compareTo(nextTrip['scheduled_time'].toString()) < 0) {
-            final route = trip['route_id'] != null ? db.findOne('routes', where: {'id': trip['route_id']}) : null;
-            final vehicle = trip['vehicle_id'] != null ? db.findOne('vehicles', where: {'id': trip['vehicle_id']}) : null;
-            final driver = trip['driver_id'] != null ? db.findOne('users', where: {'id': trip['driver_id']}) : null;
-            nextTrip = {
-              ...trip,
-              'routeName': route?['name'] ?? '',
-              'vehiclePlate': vehicle?['plate_number'] ?? '',
-              'driverName': driver != null ? '${driver['first_name']} ${driver['last_name']}' : '',
-            };
-          }
+        if (nextTrip == null || scheduledTime.compareTo(nextTrip['scheduled_time'].toString()) < 0) {
+          final route = trip['route_id'] != null ? db.findOne('routes', where: {'id': trip['route_id']}) : null;
+          final vehicle = trip['vehicle_id'] != null ? db.findOne('vehicles', where: {'id': trip['vehicle_id']}) : null;
+          final driver = trip['driver_id'] != null ? db.findOne('users', where: {'id': trip['driver_id']}) : null;
+          nextTrip = {
+            ...trip,
+            'routeName': route?['name'] ?? '',
+            'vehiclePlate': vehicle?['plate_number'] ?? '',
+            'driverName': driver != null ? '${driver['first_name']} ${driver['last_name']}' : '',
+          };
         }
       }
     }

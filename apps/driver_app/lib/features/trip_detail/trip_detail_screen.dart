@@ -168,11 +168,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     final lastName = p['lastName'] ?? '';
     final name = '$firstName $lastName'.trim();
     final homeAddress = p['homeAddress'] ?? p['home_address'];
-    final homeLat = p['homeLatitude'] ?? p['home_latitude'];
-    final homeLng = p['homeLongitude'] ?? p['home_longitude'];
     final stopName = p['stopName'] ?? p['stop_name'];
-    final stopLat = p['stopLatitude'] ?? p['stop_latitude'];
-    final stopLng = p['stopLongitude'] ?? p['stop_longitude'];
     final email = p['email'];
     final phone = p['phone'];
 
@@ -198,16 +194,12 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 Row(children: [Icon(Icons.location_on_outlined, size: 16, color: cs.primary), const SizedBox(width: 8), Text('Boarding Stop', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: cs.primary))]),
                 const SizedBox(height: 4),
                 Padding(padding: const EdgeInsets.only(left: 24), child: Text(stopName, style: TextStyle(fontSize: 13, color: cs.onSurface))),
-                if (stopLat != null && stopLng != null)
-                  Padding(padding: const EdgeInsets.only(left: 24, top: 2), child: Text('${double.tryParse(stopLat.toString())?.toStringAsFixed(5) ?? stopLat}, ${double.tryParse(stopLng.toString())?.toStringAsFixed(5) ?? stopLng}', style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant))),
               ],
               if (homeAddress != null && homeAddress.toString().isNotEmpty) ...[
                 const Divider(height: 20),
-                Row(children: [Icon(Icons.home_outlined, size: 16, color: Colors.teal), const SizedBox(width: 8), Text('Home Location', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.teal))]),
+                Row(children: [Icon(Icons.home_outlined, size: 16, color: Colors.teal), const SizedBox(width: 8), Text('Home / Drop Location', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.teal))]),
                 const SizedBox(height: 4),
                 Padding(padding: const EdgeInsets.only(left: 24), child: Text(homeAddress, style: TextStyle(fontSize: 13, color: cs.onSurface))),
-                if (homeLat != null && homeLng != null)
-                  Padding(padding: const EdgeInsets.only(left: 24, top: 2), child: Text('${double.tryParse(homeLat.toString())?.toStringAsFixed(5) ?? homeLat}, ${double.tryParse(homeLng.toString())?.toStringAsFixed(5) ?? homeLng}', style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant))),
               ],
               if ((stopName == null || stopName.toString().isEmpty) && (homeAddress == null || homeAddress.toString().isEmpty))
                 Text('No location data available', style: TextStyle(color: cs.onSurfaceVariant, fontStyle: FontStyle.italic)),

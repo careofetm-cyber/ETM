@@ -19,6 +19,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   Map<String, dynamic>? _activeTrip;
   LatLng? _driverLatLng;
   LatLng? _employeeLatLng;
+  LatLng? _homeLatLng;
+  String? _homeAddress;
   List<LatLng> _routePoints = [];
   List<dynamic> _stops = [];
   Timer? _pollTimer;
@@ -30,6 +32,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     _loadTracking();
     _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) => _loadTracking(silent: true));
     _fetchEmployeeLocation();
+    _fetchHomeLocation();
   }
 
   Future<void> _fetchEmployeeLocation() async {
@@ -52,6 +55,29 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     } catch (_) {}
   }
 
+  Future<void> _fetchHomeLocation() async {
+    try {
+      final dio = ref.read(dioProvider);
+      final resp = await dio.get('/auth/profile');
+      final data = resp.data;
+      final hLat = data['homeLatitude'] ?? data['home_latitude'];
+      final hLng = data['homeLongitude'] ?? data['home_longitude'];
+      final hAddr = data['homeAddress'] ?? data['home_address'];
+      if (hLat != null && hLng != null) {
+        final lat = (hLat is num) ? hLat.toDouble() : double.tryParse('$hLat');
+        final lng = (hLng is num) ? hLng.toDouble() : double.tryParse('$hLng');
+        if (lat != null && lng != null && mounted) {
+          setState(() {
+            _homeLatLng = LatLng(lat, lng);
+            _homeAddress = hAddr?.toString();
+          });
+        }
+      } else if (hAddr != null && hAddr.toString().isNotEmpty) {
+        if (mounted) setState(() => _homeAddress = hAddr.toString());
+      }
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
     _pollTimer?.cancel();
@@ -66,8 +92,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       try {
         final dashResp = await dio.get('/dashboard/employee');
         final dashData = dashResp.data;
-        if (dashData['nextTrip'] != null) {
-          _activeTrip = dashData['nextTrip'];
+        final nextTrip = dashData['nextTrip'];
+        if (nextTrip != null) {
+          _activeTrip = nextTrip;
         }
       } catch (_) {}
 
@@ -181,6 +208,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     final routeName = _activeTrip!['routeName'] ?? 'Unknown';
     final driverName = _activeTrip!['driverName'] ?? '';
     final vehiclePlate = _activeTrip!['vehiclePlate'] ?? '';
+    final tripStatus = _activeTrip!['status'] ?? '';
     final cs = Theme.of(context).colorScheme;
     final scheduledTime = (_activeTrip!['scheduledTime'] ?? '').toString();
     final timePart = scheduledTime.length >= 16 ? scheduledTime.substring(11, 16) : scheduledTime;
@@ -200,7 +228,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                    initialCenter: _driverLatLng ?? defaultCenter,
+                    initialCenter: _driverLatLng ?? _homeLatLng ?? defaultCenter,
                     initialZoom: 15,
                   ),
                   children: [
@@ -216,6 +244,21 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                       ),
                     MarkerLayer(
                       markers: [
+                        if (_homeLatLng != null)
+                          Marker(
+                            point: _homeLatLng!,
+                            width: 36,
+                            height: 36,
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: Colors.teal.shade700,
+                                shape: BoxShape.circle,
+                                boxShadow: [BoxShadow(color: Colors.teal.withOpacity(0.4), blurRadius: 10, spreadRadius: 2)],
+                              ),
+                              child: const Icon(Icons.home, color: Colors.white, size: 18),
+                            ),
+                          ),
                         if (_employeeLatLng != null)
                           Marker(
                             point: _employeeLatLng!,
@@ -224,9 +267,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(5),
                               decoration: BoxDecoration(
-                                color: Colors.teal,
+                                color: Colors.blue,
                                 shape: BoxShape.circle,
-                                boxShadow: [BoxShadow(color: Colors.teal.withOpacity(0.4), blurRadius: 10, spreadRadius: 2)],
+                                boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.4), blurRadius: 10, spreadRadius: 2)],
                               ),
                               child: const Icon(Icons.person, color: Colors.white, size: 18),
                             ),
@@ -270,13 +313,16 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                   right: 12,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(color: const Color(0xFF059669), borderRadius: BorderRadius.circular(20)),
-                    child: const Row(
+                    decoration: BoxDecoration(
+                      color: tripStatus == 'inProgress' ? const Color(0xFF059669) : Colors.orange,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.circle, size: 8, color: Colors.white),
-                        SizedBox(width: 6),
-                        Text('LIVE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(width: 6),
+                        Text(tripStatus == 'inProgress' ? 'LIVE' : 'SCHEDULED', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
                       ],
                     ),
                   ),
@@ -350,14 +396,31 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                   ],
                 ],
               ),
-              if (_driverLatLng != null) ...[
+              if (_homeAddress != null && _homeAddress!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.home_outlined, size: 16, color: Colors.teal.shade700),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        _homeAddress!,
+                        style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ] else if (_driverLatLng != null) ...[
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.location_on, size: 16, color: cs.primary),
+                    Icon(Icons.directions_car, size: 16, color: cs.primary),
                     const SizedBox(width: 4),
                     Text(
-                      '${_driverLatLng!.latitude.toStringAsFixed(4)}, ${_driverLatLng!.longitude.toStringAsFixed(4)}',
+                      'Driver: ${_driverLatLng!.latitude.toStringAsFixed(4)}, ${_driverLatLng!.longitude.toStringAsFixed(4)}',
                       style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: cs.onSurfaceVariant),
                     ),
                   ],

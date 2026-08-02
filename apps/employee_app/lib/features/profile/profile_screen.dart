@@ -76,9 +76,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } on DioException catch (e) {
       if (!mounted) return;
-      final msg = e.response?.statusCode == 403
-          ? 'You do not have permission to update location. Please contact your admin.'
-          : e.response?.data?['error'] ?? 'Failed to update location';
+      String msg;
+      if (e.response?.statusCode == 403) {
+        msg = 'You do not have permission to update location. Please contact your admin.';
+      } else if (e.response?.statusCode == 404) {
+        msg = 'Location update not available. Please contact your admin to set your home location.';
+      } else {
+        msg = e.response?.data?['error'] ?? 'Failed to update location';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg), backgroundColor: Theme.of(context).colorScheme.error),
       );
