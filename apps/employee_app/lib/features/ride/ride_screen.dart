@@ -57,7 +57,7 @@ class _RideScreenState extends ConsumerState<RideScreen> {
                 final tripId = _trip!['id'];
                 final passResp = await dio.get('/trips/$tripId/passengers');
                 _passengers = passResp.data['data'] ?? [];
-                _otpData = {'otp': 'Check with driver', 'verified': false, 'trip': _trip};
+              _otpData = {'otp': null, 'verified': false, 'trip': _trip, 'waitingForDriver': true};
               }
             }
           } catch (_) {
@@ -159,7 +159,8 @@ class _RideScreenState extends ConsumerState<RideScreen> {
   }
 
   Widget _buildOtpView() {
-    final otp = _otpData!['otp'] ?? '';
+    final otp = _otpData!['otp'];
+    final waitingForDriver = _otpData!['waitingForDriver'] == true;
     final expiresAt = _otpData!['expiresAt'] ?? '';
     final routeName = _trip!['routeName'] ?? _trip!['routeId'] ?? 'Unknown Route';
     final vehiclePlate = _trip!['vehiclePlate'] ?? _trip!['plateNumber'] ?? '';
@@ -234,12 +235,18 @@ class _RideScreenState extends ConsumerState<RideScreen> {
             decoration: BoxDecoration(
               gradient: isExpired
                   ? LinearGradient(colors: [Colors.red.shade50, Colors.red.shade100])
-                  : LinearGradient(
-                      colors: [cs.primaryContainer.withOpacity(0.5), cs.primaryContainer.withOpacity(0.2)],
-                    ),
+                  : waitingForDriver
+                      ? LinearGradient(colors: [Colors.orange.shade50, Colors.orange.shade100])
+                      : LinearGradient(
+                          colors: [cs.primaryContainer.withOpacity(0.5), cs.primaryContainer.withOpacity(0.2)],
+                        ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isExpired ? Colors.red.withOpacity(0.3) : cs.primary.withOpacity(0.15),
+                color: isExpired
+                    ? Colors.red.withOpacity(0.3)
+                    : waitingForDriver
+                        ? Colors.orange.withOpacity(0.3)
+                        : cs.primary.withOpacity(0.15),
               ),
             ),
             child: Column(
@@ -247,33 +254,51 @@ class _RideScreenState extends ConsumerState<RideScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isExpired ? Colors.red.withOpacity(0.15) : cs.primary.withOpacity(0.1),
+                    color: isExpired
+                        ? Colors.red.withOpacity(0.15)
+                        : waitingForDriver
+                            ? Colors.orange.withOpacity(0.15)
+                            : cs.primary.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    isExpired ? Icons.timer_off : Icons.pin,
+                    isExpired ? Icons.timer_off : waitingForDriver ? Icons.hourglass_top : Icons.pin,
                     size: 32,
-                    color: isExpired ? Colors.red : cs.primary,
+                    color: isExpired ? Colors.red : waitingForDriver ? Colors.orange : cs.primary,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  isExpired ? 'OTP Expired' : 'Show this OTP to your driver',
+                  isExpired
+                      ? 'OTP Expired'
+                      : waitingForDriver
+                          ? 'Waiting for driver to start trip'
+                          : 'Show this OTP to your driver',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: isExpired ? Colors.red : cs.onSurfaceVariant,
+                    color: isExpired ? Colors.red : waitingForDriver ? Colors.orange : cs.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  otp,
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 12,
-                    color: isExpired ? Colors.red : null,
+                if (waitingForDriver)
+                  Text(
+                    '---',
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 12,
+                      color: Colors.orange,
+                    ),
+                  )
+                else if (otp != null)
+                  Text(
+                    otp,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 12,
+                      color: isExpired ? Colors.red : null,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 16),
                 if (isExpired)
                   FilledButton.icon(
@@ -281,6 +306,18 @@ class _RideScreenState extends ConsumerState<RideScreen> {
                     icon: const Icon(Icons.refresh),
                     label: const Text('Get New OTP'),
                     style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                  )
+                else if (waitingForDriver)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'OTP will appear after driver starts the trip',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.orange),
+                    ),
                   )
                 else
                   Container(

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import '../config/database.dart';
@@ -128,6 +129,17 @@ class TripRoutes {
       }
     }
 
+    final otpCode = (100000 + Random().nextInt(900000)).toString();
+    final otpExpires = DateTime.now().add(const Duration(minutes: 10)).toIso8601String();
+    db.insert('trip_otps', {
+      'id': 'otp_${DateTime.now().millisecondsSinceEpoch}',
+      'trip_id': id,
+      'otp': otpCode,
+      'is_verified': false,
+      'expires_at': otpExpires,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
     final driverUser = db.findOne('users', where: {'id': body['driverId']});
     if (driverUser != null) {
       NotificationHelper.create(
@@ -141,7 +153,7 @@ class TripRoutes {
       );
     }
 
-    return jsonResponse({'id': id, 'message': 'Trip created successfully'}, statusCode: 201);
+    return jsonResponse({'id': id, 'otp': otpCode, 'message': 'Trip created successfully'}, statusCode: 201);
   }
   
   Future<Response> updateTrip(Request request) async {
@@ -317,8 +329,27 @@ class TripRoutes {
   Future<Response> dropPassenger(Request request) async {
     final tripId = request.params['id'];
     final employeeId = request.params['employeeId'];
-    
+    final body = jsonDecode(await request.readAsString());
+    final otp = body['otp'] as String?;
+
     final db = DatabaseConfig.db;
+
+    if (otp != null && otp.isNotEmpty) {
+      final otpRecords = db.findAll('trip_otps', filters: {'trip_id': tripId});
+      otpRecords.sort((a, b) => (b['created_at'] ?? '').toString().compareTo((a['created_at'] ?? '').toString()));
+
+      if (otpRecords.isNotEmpty) {
+        final latestOtp = otpRecords.first;
+        if (latestOtp['otp'] != otp) {
+          return errorResponse('Invalid OTP', statusCode: 400);
+        }
+        final expiresAt = DateTime.parse(latestOtp['expires_at'] as String);
+        if (DateTime.now().isAfter(expiresAt)) {
+          return errorResponse('OTP has expired. Please get a new OTP.', statusCode: 400);
+        }
+      }
+    }
+
     final record = db.findOne('trip_passengers', where: {'trip_id': tripId, 'employee_id': employeeId});
     if (record != null) {
       db.update('trip_passengers', {
@@ -343,7 +374,7 @@ class TripRoutes {
         );
       }
     }
-    
+
     return jsonResponse({'message': 'Passenger dropped successfully'});
   }
   

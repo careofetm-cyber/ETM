@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -74,10 +75,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SnackBar(content: Text('Home location updated'), backgroundColor: Colors.green),
         );
       }
+    } on DioException catch (e) {
+      if (!mounted) return;
+      final msg = e.response?.statusCode == 403
+          ? 'You do not have permission to update location. Please contact your admin.'
+          : e.response?.data?['error'] ?? 'Failed to update location';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), backgroundColor: Theme.of(context).colorScheme.error),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update location: $e')),
+          SnackBar(content: const Text('Failed to update location'), backgroundColor: Theme.of(context).colorScheme.error),
         );
       }
     }

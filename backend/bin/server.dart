@@ -34,6 +34,7 @@ import 'package:etm_backend/routes/hcm_routes.dart';
 import 'package:etm_backend/routes/shift_routes.dart';
 import 'package:etm_backend/routes/driver_routes.dart';
 import 'package:etm_backend/routes/stop_routes.dart';
+import 'package:etm_backend/routes/billing_routes.dart';
 
 void main() async {
   // Load environment variables
@@ -109,7 +110,8 @@ void main() async {
     ..mount('/hcm', HcmRoutes().router)
     ..mount('/shifts', ShiftRoutes().router)
     ..mount('/drivers', DriverRoutes().router)
-    ..mount('/stops', StopRoutes().router);
+    ..mount('/stops', StopRoutes().router)
+    ..mount('/billing', BillingRoutes().router);
   
   router.mount('/api/v1', v1Router);
   

@@ -90,12 +90,8 @@ class OtpRoutes {
     }
 
     db.update('trip_otps', {'is_verified': true}, where: {'id': latestOtp['id']});
-    db.update('trips', {
-      'status': 'in_progress',
-      'otp_verified_at': DateTime.now().toIso8601String(),
-    }, where: {'id': tripId});
 
-    return jsonResponse({'message': 'OTP verified, trip started', 'tripId': tripId});
+    return jsonResponse({'message': 'OTP verified successfully', 'tripId': tripId});
   }
 
   Future<Response> getTripOtp(Request request) async {

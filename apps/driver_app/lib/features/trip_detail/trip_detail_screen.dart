@@ -206,10 +206,57 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
   }
 
   Future<void> _dropPassenger(String employeeId) async {
+    final otpController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Verify OTP to Drop'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Ask passenger for OTP to confirm drop-off', style: TextStyle(fontSize: 13)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: otpController,
+              decoration: const InputDecoration(
+                hintText: '• • • • • •',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.pin_outlined),
+              ),
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
+              maxLength: 6,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              if (otpController.text.trim().length == 6) {
+                Navigator.pop(ctx, true);
+              }
+            },
+            child: const Text('Drop'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     try {
       final dio = ref.read(dioProvider);
-      await dio.post('/trips/${widget.tripId}/passengers/$employeeId/drop');
+      await dio.post('/trips/${widget.tripId}/passengers/$employeeId/drop', data: {
+        'otp': otpController.text.trim(),
+      });
       await _loadTrip();
+    } on DioException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.response?.data?['error'] ?? 'Failed to drop passenger'), backgroundColor: Theme.of(context).colorScheme.error),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to drop passenger'), backgroundColor: Colors.red));
@@ -485,57 +532,70 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                                       ),
                                     ),
                                     title: Text(name.isNotEmpty ? name : 'Unknown', style: const TextStyle(fontWeight: FontWeight.w600)),
-                                    subtitle: Row(
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: statusColor.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Text(statusLabel, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: statusColor.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(statusLabel, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                                            ),
+                                            if (p['stopName'] != null) ...[
+                                              const SizedBox(width: 8),
+                                              Flexible(
+                                                child: Text(p['stopName'], style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant), overflow: TextOverflow.ellipsis),
+                                              ),
+                                            ],
+                                          ],
                                         ),
-                                        if (p['stopName'] != null) ...[
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(p['stopName'], style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant), overflow: TextOverflow.ellipsis),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                    trailing: (status == 'scheduled' && !isBoarded && !isDropped && !isNcns)
-                                        ? Row(
-                                            mainAxisSize: MainAxisSize.min,
+                                        if (status == 'scheduled' && !isBoarded && !isDropped && !isNcns) ...[
+                                          const SizedBox(height: 8),
+                                          Row(
                                             children: [
                                               FilledButton.tonalIcon(
                                                 onPressed: () => _verifyPassengerOtp(employeeId),
-                                                icon: const Icon(Icons.verified_outlined, size: 16),
-                                                label: const Text('Verify OTP'),
-                                                style: FilledButton.styleFrom(backgroundColor: cs.primaryContainer),
+                                                icon: const Icon(Icons.verified_outlined, size: 14),
+                                                label: const Text('Verify OTP', style: TextStyle(fontSize: 12)),
+                                                style: FilledButton.styleFrom(
+                                                  backgroundColor: cs.primaryContainer,
+                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                                  minimumSize: const Size(0, 32),
+                                                ),
                                               ),
                                               const SizedBox(width: 6),
                                               FilledButton.tonalIcon(
                                                 onPressed: () => _markNcns(employeeId),
-                                                icon: const Icon(Icons.cancel_outlined, size: 16),
-                                                label: const Text('NCNS'),
-                                                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade50),
+                                                icon: const Icon(Icons.cancel_outlined, size: 14),
+                                                label: const Text('NCNS', style: TextStyle(fontSize: 12)),
+                                                style: FilledButton.styleFrom(
+                                                  backgroundColor: Colors.red.shade50,
+                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                                  minimumSize: const Size(0, 32),
+                                                ),
                                               ),
                                             ],
-                                          )
-                                        : (status == 'in_progress' || status == 'inProgress')
-                                            ? Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  if (isBoarded && !isDropped)
-                                                    FilledButton.tonalIcon(
-                                                      onPressed: () => _dropPassenger(employeeId),
-                                                      icon: const Icon(Icons.logout, size: 16),
-                                                      label: const Text('Drop'),
-                                                      style: FilledButton.styleFrom(backgroundColor: Colors.green.shade50),
-                                                    ),
-                                                ],
-                                              )
-                                            : null,
+                                          ),
+                                        ] else if ((status == 'in_progress' || status == 'inProgress') && isBoarded && !isDropped) ...[
+                                          const SizedBox(height: 8),
+                                          FilledButton.tonalIcon(
+                                            onPressed: () => _dropPassenger(employeeId),
+                                            icon: const Icon(Icons.logout, size: 14),
+                                            label: const Text('Drop', style: TextStyle(fontSize: 12)),
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor: Colors.green.shade50,
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                              minimumSize: const Size(0, 32),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
                                   ),
                                   if (idx < _passengers.length - 1) const Divider(height: 1, indent: 56),
                                 ],
