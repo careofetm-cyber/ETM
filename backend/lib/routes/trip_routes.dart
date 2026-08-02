@@ -282,11 +282,30 @@ class TripRoutes {
     final enriched = passengers.map((p) {
       final employee = p['employee_id'] != null ? db.findOne('employees', where: {'id': p['employee_id']}) : null;
       final user = employee != null ? db.findOne('users', where: {'id': employee['user_id']}) : null;
+      
+      String? stopName;
+      double? stopLatitude;
+      double? stopLongitude;
+      if (p['stop_id'] != null) {
+        final stop = db.findOne('stops', where: {'id': p['stop_id']});
+        stopName = stop?['name'];
+        stopLatitude = (stop?['latitude'] as num?)?.toDouble();
+        stopLongitude = (stop?['longitude'] as num?)?.toDouble();
+      }
+      
       return {
         ...p,
         'employee_code': employee?['employee_code'],
         'first_name': user?['first_name'],
         'last_name': user?['last_name'],
+        'email': user?['email'],
+        'phone': user?['phone'],
+        'home_latitude': employee?['home_latitude'],
+        'home_longitude': employee?['home_longitude'],
+        'home_address': employee?['home_address'],
+        'stop_name': stopName,
+        'stop_latitude': stopLatitude,
+        'stop_longitude': stopLongitude,
       };
     }).toList();
     

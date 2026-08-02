@@ -449,6 +449,9 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
     _phoneController.text = employee.phone ?? '';
     _departmentController.text = employee.department ?? '';
     _designationController.text = employee.designation ?? '';
+    final homeAddressController = TextEditingController(text: employee.homeAddress ?? '');
+    final homeLatController = TextEditingController(text: employee.homeLatitude?.toString() ?? '');
+    final homeLngController = TextEditingController(text: employee.homeLongitude?.toString() ?? '');
 
     final formKey = GlobalKey<FormState>();
 
@@ -460,42 +463,77 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
           width: 500,
           child: Form(
             key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: _codeController,
-                  decoration: const InputDecoration(labelText: 'Employee Code *'),
-                  validator: (v) => v == null || v.isEmpty ? 'Employee code is required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return null;
-                    if (!v.contains('@') || !v.contains('.')) return 'Invalid email format';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(labelText: 'Phone'),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _departmentController,
-                  decoration: const InputDecoration(labelText: 'Department *'),
-                  validator: (v) => v == null || v.isEmpty ? 'Department is required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _designationController,
-                  decoration: const InputDecoration(labelText: 'Designation'),
-                ),
-              ],
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: _codeController,
+                    decoration: const InputDecoration(labelText: 'Employee Code *'),
+                    validator: (v) => v == null || v.isEmpty ? 'Employee code is required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return null;
+                      if (!v.contains('@') || !v.contains('.')) return 'Invalid email format';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(labelText: 'Phone'),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _departmentController,
+                    decoration: const InputDecoration(labelText: 'Department *'),
+                    validator: (v) => v == null || v.isEmpty ? 'Department is required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _designationController,
+                    decoration: const InputDecoration(labelText: 'Designation'),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      const Icon(Icons.home_outlined, size: 18, color: AppColors.textSecondary),
+                      const SizedBox(width: 8),
+                      Text('Home / Pickup Location', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: homeAddressController,
+                    decoration: const InputDecoration(labelText: 'Home Address', hintText: 'e.g. Andheri West, Mumbai'),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: homeLatController,
+                          decoration: const InputDecoration(labelText: 'Latitude'),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: homeLngController,
+                          decoration: const InputDecoration(labelText: 'Longitude'),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -509,13 +547,21 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
               if (!formKey.currentState!.validate()) return;
               try {
                 final api = await ref.read(employeeApiProvider.future);
-                await api.updateEmployee(employee.id, {
+                final updates = <String, dynamic>{
                   'employeeCode': _codeController.text,
                   'email': _emailController.text,
                   'phone': _phoneController.text,
                   'department': _departmentController.text,
                   'designation': _designationController.text,
-                });
+                };
+                if (homeAddressController.text.isNotEmpty) {
+                  updates['homeAddress'] = homeAddressController.text;
+                }
+                final lat = double.tryParse(homeLatController.text);
+                final lng = double.tryParse(homeLngController.text);
+                if (lat != null) updates['homeLatitude'] = lat;
+                if (lng != null) updates['homeLongitude'] = lng;
+                await api.updateEmployee(employee.id, updates);
                 if (context.mounted) Navigator.pop(context);
                 ref.invalidate(employeesProvider);
                 if (context.mounted) {
