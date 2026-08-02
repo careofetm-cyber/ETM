@@ -46,22 +46,44 @@ class SuperAdminApi {
     int page = 1,
     int limit = 20,
   }) async {
-    final response = await _client.dio.get('/super-admin/billing', queryParameters: {
-      if (companyId != null) 'companyId': companyId,
-      if (billable != null) 'billable': billable,
-      'page': page,
-      'limit': limit,
-    });
-    final data = response.data;
-    final list = data is Map ? data['data'] ?? [] : data;
-    return (list as List).map((b) => BillingRecord.fromJson(b as Map<String, dynamic>)).toList();
+    try {
+      final response = await _client.dio.get('/super-admin/billing', queryParameters: {
+        if (companyId != null) 'companyId': companyId,
+        if (billable != null) 'billable': billable,
+        'page': page,
+        'limit': limit,
+      });
+      final data = response.data;
+      final map = data is Map ? data : {};
+      final list = map['data'] ?? [];
+      return (list as List).map((b) {
+        try {
+          return BillingRecord.fromJson(Map<String, dynamic>.from(b));
+        } catch (_) {
+          return null;
+        }
+      }).whereType<BillingRecord>().toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<List<CompanyBillingSummary>> getBillingSummary() async {
-    final response = await _client.dio.get('/super-admin/billing/summary');
-    final data = response.data;
-    final list = data is Map ? data['data'] ?? [] : data;
-    return (list as List).map((s) => CompanyBillingSummary.fromJson(s as Map<String, dynamic>)).toList();
+    try {
+      final response = await _client.dio.get('/super-admin/billing/summary');
+      final data = response.data;
+      final map = data is Map ? data : {};
+      final list = map['data'] ?? map['summaries'] ?? [];
+      return (list as List).map((s) {
+        try {
+          return CompanyBillingSummary.fromJson(Map<String, dynamic>.from(s));
+        } catch (_) {
+          return null;
+        }
+      }).whereType<CompanyBillingSummary>().toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<List<Invoice>> getInvoices({

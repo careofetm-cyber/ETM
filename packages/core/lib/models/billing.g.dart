@@ -8,22 +8,18 @@ part of 'billing.dart';
 
 _$BillingRecordImpl _$$BillingRecordImplFromJson(Map<String, dynamic> json) =>
     _$BillingRecordImpl(
-      id: json['id'] as String,
-      companyId: json['companyId'] as String,
-      tripId: json['tripId'] as String,
-      tripCost: (json['tripCost'] as num).toDouble(),
-      distance: (json['distance'] as num).toDouble(),
-      duration: (json['duration'] as num?)?.toDouble(),
-      passengers: (json['passengers'] as num?)?.toInt(),
-      isBillable: json['isBillable'] as bool?,
-      discardReason: json['discardReason'] as String?,
-      completedAt: json['completedAt'] == null
-          ? null
-          : DateTime.parse(json['completedAt'] as String),
+      id: (json['id'] ?? '').toString(),
+      companyId: (json['companyId'] ?? json['company_id'] ?? '').toString(),
+      tripId: (json['tripId'] ?? json['trip_id'] ?? '').toString(),
+      tripCost: _toDouble(json['tripCost'] ?? json['trip_cost']),
+      distance: _toDouble(json['distance'] ?? json['total_distance']),
+      duration: _toDoubleNullable(json['duration']),
+      passengers: _toIntNullable(json['passengers']),
+      isBillable: json['isBillable'] ?? json['is_billable'],
+      discardReason: json['discardReason'] ?? json['discard_reason'] as String?,
+      completedAt: _parseDateTime(json['completedAt'] ?? json['completed_at']),
       month: json['month'] as String?,
-      createdAt: json['createdAt'] == null
-          ? null
-          : DateTime.parse(json['createdAt'] as String),
+      createdAt: _parseDateTime(json['createdAt'] ?? json['created_at']),
     );
 
 Map<String, dynamic> _$$BillingRecordImplToJson(_$BillingRecordImpl instance) =>
@@ -44,26 +40,18 @@ Map<String, dynamic> _$$BillingRecordImplToJson(_$BillingRecordImpl instance) =>
 
 _$InvoiceImpl _$$InvoiceImplFromJson(Map<String, dynamic> json) =>
     _$InvoiceImpl(
-      id: json['id'] as String,
-      companyId: json['companyId'] as String,
-      month: json['month'] as String,
-      totalTrips: (json['totalTrips'] as num).toInt(),
-      billableTrips: (json['billableTrips'] as num).toInt(),
-      discardedTrips: (json['discardedTrips'] as num).toInt(),
-      totalAmount: (json['totalAmount'] as num).toDouble(),
-      status: json['status'] as String,
-      dueDate: json['dueDate'] == null
-          ? null
-          : DateTime.parse(json['dueDate'] as String),
-      paidAt: json['paidAt'] == null
-          ? null
-          : DateTime.parse(json['paidAt'] as String),
-      createdAt: json['createdAt'] == null
-          ? null
-          : DateTime.parse(json['createdAt'] as String),
-      updatedAt: json['updatedAt'] == null
-          ? null
-          : DateTime.parse(json['updatedAt'] as String),
+      id: (json['id'] ?? '').toString(),
+      companyId: (json['companyId'] ?? json['company_id'] ?? '').toString(),
+      month: (json['month'] ?? '').toString(),
+      totalTrips: _toInt(json['totalTrips'] ?? json['trip_count']),
+      billableTrips: _toInt(json['billableTrips'] ?? json['billable_trips'] ?? 0),
+      discardedTrips: _toInt(json['discardedTrips'] ?? json['discarded_trips'] ?? 0),
+      totalAmount: _toDouble(json['totalAmount'] ?? json['total_amount']),
+      status: (json['status'] ?? 'pending').toString(),
+      dueDate: _parseDateTime(json['dueDate'] ?? json['due_date']),
+      paidAt: _parseDateTime(json['paidAt'] ?? json['paid_at']),
+      createdAt: _parseDateTime(json['createdAt'] ?? json['created_at']),
+      updatedAt: _parseDateTime(json['updatedAt'] ?? json['updated_at']),
     );
 
 Map<String, dynamic> _$$InvoiceImplToJson(_$InvoiceImpl instance) =>
@@ -85,17 +73,17 @@ Map<String, dynamic> _$$InvoiceImplToJson(_$InvoiceImpl instance) =>
 _$CompanyBillingSummaryImpl _$$CompanyBillingSummaryImplFromJson(
         Map<String, dynamic> json) =>
     _$CompanyBillingSummaryImpl(
-      companyId: json['companyId'] as String,
-      companyName: json['companyName'] as String,
-      totalTripsThisMonth: (json['totalTripsThisMonth'] as num).toInt(),
-      billableTripsThisMonth: (json['billableTripsThisMonth'] as num).toInt(),
-      discardedTripsThisMonth: (json['discardedTripsThisMonth'] as num).toInt(),
-      totalAmountThisMonth: (json['totalAmountThisMonth'] as num).toDouble(),
-      monthlyTripLimit: (json['monthlyTripLimit'] as num).toInt(),
-      tripCostPerTrip: (json['tripCostPerTrip'] as num).toDouble(),
-      minimumKmForBilling: (json['minimumKmForBilling'] as num).toDouble(),
-      plan: json['plan'] as String,
-      subscriptionStatus: json['subscriptionStatus'] as String,
+      companyId: (json['companyId'] ?? json['company_id'] ?? '').toString(),
+      companyName: (json['companyName'] ?? json['company_name'] ?? '').toString(),
+      totalTripsThisMonth: _toInt(json['totalTripsThisMonth'] ?? json['total_trips_this_month'] ?? json['totalTrips'] ?? json['total_trips'] ?? 0),
+      billableTripsThisMonth: _toInt(json['billableTripsThisMonth'] ?? json['billable_trips_this_month'] ?? json['billableTrips'] ?? json['billable_trips'] ?? 0),
+      discardedTripsThisMonth: _toInt(json['discardedTripsThisMonth'] ?? json['discarded_trips_this_month'] ?? 0),
+      totalAmountThisMonth: _toDouble(json['totalAmountThisMonth'] ?? json['total_amount_this_month'] ?? json['totalAmount'] ?? json['total_amount'] ?? 0),
+      monthlyTripLimit: _toInt(json['monthlyTripLimit'] ?? json['monthly_trip_limit'] ?? 0),
+      tripCostPerTrip: _toDouble(json['tripCostPerTrip'] ?? json['trip_cost_per_trip'] ?? 0),
+      minimumKmForBilling: _toDouble(json['minimumKmForBilling'] ?? json['minimum_km_for_billing'] ?? 0),
+      plan: (json['plan'] ?? 'basic').toString(),
+      subscriptionStatus: (json['subscriptionStatus'] ?? json['subscription_status'] ?? 'active').toString(),
     );
 
 Map<String, dynamic> _$$CompanyBillingSummaryImplToJson(
@@ -113,3 +101,12 @@ Map<String, dynamic> _$$CompanyBillingSummaryImplToJson(
       'plan': instance.plan,
       'subscriptionStatus': instance.subscriptionStatus,
     };
+
+double _toDouble(dynamic v) => (v as num?)?.toDouble() ?? 0.0;
+double? _toDoubleNullable(dynamic v) => (v as num?)?.toDouble();
+int _toInt(dynamic v) => (v as num?)?.toInt() ?? 0;
+int? _toIntNullable(dynamic v) => (v as num?)?.toInt();
+DateTime? _parseDateTime(dynamic v) {
+  if (v == null) return null;
+  try { return DateTime.parse(v.toString()); } catch (_) { return null; }
+}
