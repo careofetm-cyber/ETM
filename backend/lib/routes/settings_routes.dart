@@ -14,6 +14,8 @@ class SettingsRoutes {
     router.get('/company/:companyId', authMiddleware(requiredRoles: ['super_admin', 'admin'])(getCompanySettings));
     router.put('/company/:companyId', authMiddleware(requiredRoles: ['super_admin', 'admin'])(updateCompanySettings));
     router.get('/default-password', authMiddleware(requiredRoles: ['admin', 'super_admin'])(getDefaultPassword));
+    router.get('/company', authMiddleware(requiredRoles: ['admin', 'manager', 'transport_manager'])(getMyCompanySettings));
+    router.put('/company', authMiddleware(requiredRoles: ['admin', 'manager', 'transport_manager'])(updateMyCompanySettings));
   }
 
   Future<Response> getSettings(Request request) async {
@@ -82,6 +84,7 @@ class SettingsRoutes {
         'min_password_length': '8',
         'require_special_chars': 'true',
         'require_numbers': 'true',
+        'home_location_enabled': true,
         'created_at': DateTime.now().toIso8601String(),
       };
       db.insert('company_settings', settings);
@@ -98,6 +101,7 @@ class SettingsRoutes {
     final allowedKeys = [
       'employee_id_prefix', 'employee_id_digits', 'default_password_format',
       'min_password_length', 'require_special_chars', 'require_numbers',
+      'home_location_enabled',
     ];
     for (final key in allowedKeys) {
       if (body[key] != null) updates[key] = body[key];
@@ -137,5 +141,47 @@ class SettingsRoutes {
     }
 
     return jsonResponse({'defaultPassword': 'password123'});
+  }
+
+  Future<Response> getMyCompanySettings(Request request) async {
+    final companyId = request.context['companyId'] as String?;
+    if (companyId == null) return errorResponse('No company', statusCode: 400);
+    final db = DatabaseConfig.db;
+
+    var settings = db.findOne('company_settings', where: {'company_id': companyId});
+    if (settings == null) {
+      settings = {
+        'id': 'cs_$companyId',
+        'company_id': companyId,
+        'home_location_enabled': true,
+        'created_at': DateTime.now().toIso8601String(),
+      };
+      db.insert('company_settings', settings);
+    }
+    return jsonResponse(settings);
+  }
+
+  Future<Response> updateMyCompanySettings(Request request) async {
+    final companyId = request.context['companyId'] as String?;
+    if (companyId == null) return errorResponse('No company', statusCode: 400);
+    final body = jsonDecode(await request.readAsString());
+    final db = DatabaseConfig.db;
+
+    final updates = <String, dynamic>{};
+    if (body['homeLocationEnabled'] != null) updates['home_location_enabled'] = body['homeLocationEnabled'];
+    updates['updated_at'] = DateTime.now().toIso8601String();
+
+    final existing = db.findOne('company_settings', where: {'company_id': companyId});
+    if (existing != null) {
+      db.update('company_settings', updates, where: {'company_id': companyId});
+    } else {
+      updates['id'] = 'cs_$companyId';
+      updates['company_id'] = companyId;
+      updates['created_at'] = DateTime.now().toIso8601String();
+      db.insert('company_settings', updates);
+    }
+
+    final settings = db.findOne('company_settings', where: {'company_id': companyId});
+    return jsonResponse(settings!);
   }
 }

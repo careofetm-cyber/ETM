@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:etm_core/etm_core.dart';
 import '../../shared/providers/api_providers.dart';
+import '../auth/auth_provider.dart';
 
 final notificationsPageProvider = StateProvider<int>((ref) => 1);
 final notificationsUnreadOnlyProvider = StateProvider<bool>((ref) => false);
@@ -10,6 +11,12 @@ final notificationsProvider = FutureProvider<List<AppNotification>>((ref) async 
   final api = await ref.watch(notificationApiProvider.future);
   final page = ref.watch(notificationsPageProvider);
   final unreadOnly = ref.watch(notificationsUnreadOnlyProvider);
+  final authState = ref.watch(authProvider);
+  final role = authState.user?.role;
+
+  if (role == UserRole.admin || role == UserRole.manager || role == UserRole.transport_manager) {
+    return api.getAllNotifications(page: page, limit: 50);
+  }
   return api.getNotifications(
     page: page,
     limit: 20,

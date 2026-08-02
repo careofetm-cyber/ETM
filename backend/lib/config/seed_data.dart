@@ -64,6 +64,15 @@ class SeedData {
       'created_at': nowStr,
     });
 
+    db.insert('company_settings', {
+      'id': 'cs_comp_001',
+      'company_id': 'comp_001',
+      'employee_id_prefix': 'EMP',
+      'employee_id_digits': '4',
+      'home_location_enabled': true,
+      'created_at': nowStr,
+    });
+
     // Super Admin
     db.insert('users', {
       'id': 'usr_super_01',

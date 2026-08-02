@@ -9,9 +9,44 @@ class NotificationRoutes {
   
   NotificationRoutes() {
     router.get('/', authMiddleware()(getNotifications));
+    router.get('/all', authMiddleware(requiredRoles: ['admin', 'manager', 'transport_manager'])(getAllNotifications));
     router.put('/<id>/read', authMiddleware()(markAsRead));
     router.put('/read-all', authMiddleware()(markAllAsRead));
     router.get('/unread-count', authMiddleware()(getUnreadCount));
+  }
+  
+  Future<Response> getAllNotifications(Request request) async {
+    final companyId = request.context['companyId'] as String?;
+    final role = request.context['role'] as String?;
+    final page = int.tryParse(request.url.queryParameters['page'] ?? '1') ?? 1;
+    final limit = int.tryParse(request.url.queryParameters['limit'] ?? '50') ?? 50;
+    
+    final db = DatabaseConfig.db;
+    
+    List<Map<String, dynamic>> allNotifications;
+    if (role == 'super_admin') {
+      allNotifications = db.findAll('notifications');
+    } else if (companyId != null) {
+      final companyUsers = db.findAll('users', filters: {'company_id': companyId});
+      final userIds = companyUsers.map((u) => u['id'] as String).toSet();
+      allNotifications = db.findAll('notifications').where((n) => userIds.contains(n['user_id'])).toList();
+    } else {
+      allNotifications = [];
+    }
+    
+    final total = allNotifications.length;
+    allNotifications.sort((a, b) => (b['created_at'] ?? '').toString().compareTo((a['created_at'] ?? '').toString()));
+    final paginated = allNotifications.skip((page - 1) * limit).take(limit).toList();
+    
+    return jsonResponse({
+      'data': paginated,
+      'pagination': {
+        'total': total,
+        'page': page,
+        'limit': limit,
+        'totalPages': (total / limit).ceil(),
+      },
+    });
   }
   
   Future<Response> getNotifications(Request request) async {

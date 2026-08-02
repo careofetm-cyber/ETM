@@ -73,6 +73,18 @@ class NotificationApi {
     });
     return (response.data['data'] as List).map((n) => AppNotification.fromJson(n)).toList();
   }
+
+  Future<List<AppNotification>> getAllNotifications({int page = 1, int limit = 50}) async {
+    try {
+      final response = await _client.dio.get('/notifications/all', queryParameters: {
+        'page': page,
+        'limit': limit,
+      });
+      return (response.data['data'] as List).map((n) => AppNotification.fromJson(n)).toList();
+    } catch (_) {
+      return getNotifications(page: page, limit: limit);
+    }
+  }
   
   Future<void> markAsRead(String id) async {
     await _client.dio.put('/notifications/$id/read');

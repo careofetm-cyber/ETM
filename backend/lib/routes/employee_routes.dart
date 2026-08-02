@@ -285,6 +285,14 @@ class EmployeeRoutes {
       return errorResponse('Employee not found', statusCode: 404);
     }
 
+    final companyId = employee['company_id'];
+    if (companyId != null) {
+      final companySettings = db.findOne('company_settings', where: {'company_id': companyId});
+      if (companySettings != null && companySettings['home_location_enabled'] == false) {
+        return errorResponse('Home location update is disabled by your admin', statusCode: 403);
+      }
+    }
+
     final updates = <String, dynamic>{};
     if (body['homeLatitude'] != null) updates['home_latitude'] = body['homeLatitude'];
     if (body['homeLongitude'] != null) updates['home_longitude'] = body['homeLongitude'];

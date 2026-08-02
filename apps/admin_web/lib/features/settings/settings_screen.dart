@@ -12,6 +12,16 @@ final _companyProvider = FutureProvider<Company?>((ref) async {
   }
 });
 
+final _companySettingsProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+  try {
+    final dio = ref.read(dioProvider);
+    final resp = await dio.get('/settings/company');
+    return resp.data;
+  } catch (e) {
+    return null;
+  }
+});
+
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -34,6 +44,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _minKmController = TextEditingController();
   bool _isLoading = false;
   bool _initialized = false;
+  bool _homeLocationEnabled = true;
 
   @override
   void dispose() {
@@ -68,6 +79,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final companyAsync = ref.watch(_companyProvider);
+    final settingsAsync = ref.watch(_companySettingsProvider);
+
+    settingsAsync.whenData((settings) {
+      if (settings != null && !_initialized) {
+        _homeLocationEnabled = settings['homeLocationEnabled'] ?? settings['home_location_enabled'] ?? true;
+      }
+    });
 
     return Scaffold(
       body: Padding(
@@ -338,6 +356,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.settings_outlined, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text('Transport Settings', style: Theme.of(context).textTheme.titleLarge),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Allow Employee Home Location Update'),
+                    subtitle: const Text('When enabled, employees can set/update their home pickup location from the app'),
+                    secondary: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _homeLocationEnabled ? AppColors.success.withOpacity(0.1) : AppColors.error.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.home_outlined,
+                        color: _homeLocationEnabled ? AppColors.success : AppColors.error,
+                        size: 20,
+                      ),
+                    ),
+                    value: _homeLocationEnabled,
+                    onChanged: (value) {
+                      setState(() => _homeLocationEnabled = value);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -360,10 +418,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         'tripCostPerTrip': double.tryParse(_tripCostController.text) ?? 0,
         'minimumKmForBilling': double.tryParse(_minKmController.text) ?? 0,
       });
+
+      try {
+        final dio = ref.read(dioProvider);
+        await dio.put('/settings/company', data: {
+          'homeLocationEnabled': _homeLocationEnabled,
+        });
+      } catch (_) {}
+
       ref.invalidate(_companyProvider);
+      ref.invalidate(_companySettingsProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Company settings saved'), backgroundColor: AppColors.success),
+          const SnackBar(content: Text('Settings saved'), backgroundColor: AppColors.success),
         );
       }
     } catch (e) {
